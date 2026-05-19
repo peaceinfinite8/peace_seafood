@@ -1,0 +1,123 @@
+{
+  "module": "penitipan",
+  "description": "Consignment/commission management",
+  "tables": [
+    {
+      "name": "titipan",
+      "description": "Main consignment transaction from pengirim (supplier)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_gudang", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "id_pengirim", "type": "INT", "constraint": "NOT NULL" },
+        {
+          "name": "no_titipan",
+          "type": "VARCHAR(20)",
+          "constraint": "NOT NULL UNIQUE"
+        },
+        { "name": "tanggal_masuk", "type": "DATE", "constraint": "NOT NULL" },
+        {
+          "name": "qty_total",
+          "type": "DECIMAL(10,2)",
+          "constraint": "DEFAULT 0"
+        },
+        {
+          "name": "qty_dijual",
+          "type": "DECIMAL(10,2)",
+          "constraint": "DEFAULT 0"
+        },
+        {
+          "name": "qty_tersisa",
+          "type": "DECIMAL(10,2)",
+          "constraint": "DEFAULT 0"
+        },
+        { "name": "nominal_total", "type": "BIGINT", "constraint": "NOT NULL" },
+        {
+          "name": "nominal_terjual",
+          "type": "BIGINT",
+          "constraint": "DEFAULT 0"
+        },
+        {
+          "name": "komisi_persen",
+          "type": "DECIMAL(5,2)",
+          "constraint": "NOT NULL"
+        },
+        {
+          "name": "komisi_tipe",
+          "type": "ENUM('potong', 'bayar_terpisah')",
+          "constraint": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "ENUM('masuk', 'dijual_sebagian', 'dijual_semua', 'selesai')",
+          "constraint": "DEFAULT 'masuk'"
+        },
+        { "name": "created_by", "type": "INT", "constraint": "NOT NULL" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_no_titipan", "columns": ["no_titipan"] },
+        { "name": "idx_id_gudang", "columns": ["id_gudang"] },
+        { "name": "idx_id_pengirim", "columns": ["id_pengirim"] },
+        { "name": "idx_status", "columns": ["status"] }
+      ],
+      "foreignKeys": [
+        { "column": "id_gudang", "references": "gudang(id)" },
+        { "column": "id_pengirim", "references": "supplier(id)" },
+        { "column": "created_by", "references": "users(id)" }
+      ]
+    },
+    {
+      "name": "titipan_penjualan",
+      "description": "Sales from consignment (can be sold by pengirim or penerima)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_titipan", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "id_penjual", "type": "INT" },
+        { "name": "id_pembeli", "type": "INT" },
+        { "name": "qty", "type": "DECIMAL(10,2)", "constraint": "NOT NULL" },
+        { "name": "harga_jual", "type": "BIGINT", "constraint": "NOT NULL" },
+        { "name": "nominal", "type": "BIGINT", "constraint": "NOT NULL" },
+        {
+          "name": "komisi_nominal",
+          "type": "BIGINT",
+          "constraint": "NOT NULL"
+        },
+        { "name": "tanggal_jual", "type": "DATE", "constraint": "NOT NULL" },
+        {
+          "name": "status",
+          "type": "ENUM('pending', 'terjual')",
+          "constraint": "DEFAULT 'pending'"
+        },
+        { "name": "created_by", "type": "INT", "constraint": "NOT NULL" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_id_titipan", "columns": ["id_titipan"] },
+        { "name": "idx_id_penjual", "columns": ["id_penjual"] },
+        { "name": "idx_id_pembeli", "columns": ["id_pembeli"] },
+        { "name": "idx_status", "columns": ["status"] }
+      ],
+      "foreignKeys": [
+        { "column": "id_titipan", "references": "titipan(id)" },
+        { "column": "id_pembeli", "references": "pembeli(id)" },
+        { "column": "created_by", "references": "users(id)" }
+      ]
+    }
+  ]
+}
