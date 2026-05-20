@@ -1,6 +1,6 @@
 <?php /** @var string $activeMenu */ ?>
 <div x-data="stokPage()" x-init="init()">
-    
+
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
@@ -14,7 +14,7 @@
                 <span class="badge badge-warning" x-show="pendingCount > 0" x-text="pendingCount" x-cloak></span>
             </a>
             <a href="/peace_seafood/stok/masuk" class="btn btn-primary"
-               x-show="user.role === 'admin' || user.role === 'bos'">
+                x-show="user.role === 'admin' || user.role === 'bos'">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Input Stok
             </a>
@@ -25,9 +25,9 @@
     <div class="card p-4 mb-6">
         <div class="flex flex-wrap gap-3">
             <div class="relative flex-1 min-w-48">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style="color: var(--text-secondary)"></i>
-                <input type="text" x-model="search" placeholder="Cari produk..." 
-                       class="form-input pl-10">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                    style="color: var(--text-secondary)"></i>
+                <input type="text" x-model="search" placeholder="Cari produk..." class="form-input pl-10">
             </div>
             <select x-model="filterJenis" class="form-input w-auto">
                 <option value="">Semua Jenis</option>
@@ -45,7 +45,8 @@
 
     <!-- Loading -->
     <div x-show="loading" class="flex justify-center py-20">
-        <div class="animate-spin w-8 h-8 rounded-full border-4 border-blue-200" style="border-top-color: var(--color-primary)"></div>
+        <div class="animate-spin w-8 h-8 rounded-full border-4 border-blue-200"
+            style="border-top-color: var(--color-primary)"></div>
     </div>
 
     <!-- Inventory Table -->
@@ -75,41 +76,44 @@
                     <template x-for="item in filteredItems" :key="item.id">
                         <tr>
                             <td>
-                                <p class="font-medium text-sm" style="color: var(--text-primary)" x-text="item.nama"></p>
+                                <p class="font-medium text-sm cursor-pointer hover:opacity-80"
+                                    style="color: var(--text-primary)" @click="window.showProductDetail(item)"
+                                    x-text="item.nama"></p>
                             </td>
                             <td>
                                 <span class="badge badge-info" x-text="item.nama_jenis"></span>
                             </td>
                             <td>
-                                <span class="font-semibold" 
-                                      :style="item.is_low_stock ? 'color: var(--color-danger)' : 'color: var(--color-success)'"
-                                      x-text="parseFloat(item.stok_qty).toLocaleString('id-ID') + ' ' + (item.satuan || 'kg')"></span>
+                                <span class="font-semibold"
+                                    :style="item.is_low_stock ? 'color: var(--color-danger)' : 'color: var(--color-success)'"
+                                    x-text="parseFloat(item.stok_qty).toLocaleString('id-ID') + ' ' + (item.satuan || 'kg')"></span>
                             </td>
                             <td>
                                 <span class="text-sm" style="color: var(--text-secondary)"
-                                      x-text="parseFloat(item.stok_minimum || 0).toLocaleString('id-ID') + ' ' + (item.satuan || 'kg')"></span>
+                                    x-text="parseFloat(item.stok_minimum || 0).toLocaleString('id-ID') + ' ' + (item.satuan || 'kg')"></span>
                             </td>
                             <td>
-                                <span class="text-sm" x-text="'Rp ' + parseFloat(item.harga_beli || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-sm"
+                                    x-text="'Rp ' + parseFloat(item.harga_beli || 0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-medium" style="color: var(--color-primary)"
-                                      x-text="'Rp ' + parseFloat(item.harga_jual || 0).toLocaleString('id-ID')"></span>
+                                    x-text="'Rp ' + parseFloat(item.harga_jual || 0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
-                                <span class="text-sm font-semibold" x-text="'Rp ' + parseFloat(item.stok_value || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-sm font-semibold"
+                                    x-text="'Rp ' + parseFloat(item.stok_value || 0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
-                                <span class="badge"
-                                      :class="item.is_low_stock ? 'badge-danger' : 'badge-success'"
-                                      x-text="item.is_low_stock ? 'MENIPIS' : 'AMAN'"></span>
+                                <span class="badge" :class="item.is_low_stock ? 'badge-danger' : 'badge-success'"
+                                    x-text="item.is_low_stock ? 'MENIPIS' : 'AMAN'"></span>
                             </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Summary -->
         <div class="p-4 border-t flex flex-wrap gap-6" style="border-color: var(--border-color)">
             <div>
@@ -119,11 +123,12 @@
             <div>
                 <span class="text-xs" style="color: var(--text-secondary)">Total Nilai Stok: </span>
                 <span class="text-sm font-bold" style="color: var(--color-primary)"
-                      x-text="'Rp ' + filteredItems.reduce((s,i) => s + parseFloat(i.stok_value||0), 0).toLocaleString('id-ID')"></span>
+                    x-text="'Rp ' + filteredItems.reduce((s,i) => s + parseFloat(i.stok_value||0), 0).toLocaleString('id-ID')"></span>
             </div>
             <div>
                 <span class="text-xs" style="color: var(--color-danger)">Stok Menipis: </span>
-                <span class="text-sm font-bold text-red-500" x-text="filteredItems.filter(i=>i.is_low_stock).length + ' produk'"></span>
+                <span class="text-sm font-bold text-red-500"
+                    x-text="filteredItems.filter(i=>i.is_low_stock).length + ' produk'"></span>
             </div>
         </div>
     </div>

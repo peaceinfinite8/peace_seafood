@@ -419,7 +419,7 @@ $baseUrl = '/peace_seafood';
         <a href="/peace_seafood/dashboard"
             class="flex items-center gap-3 px-6 py-5 border-b cursor-pointer hover:opacity-80 transition-opacity"
             style="border-color: var(--border-color)">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                 style="background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%)">
                 <i data-lucide="fish" class="w-5 h-5 text-white"></i>
             </div>
@@ -707,15 +707,19 @@ $baseUrl = '/peace_seafood';
             <!-- Modal Content: Image (1/3) + Details (2/3) -->
             <div class="flex flex-col md:flex-row gap-6 p-6">
                 <!-- Product Image (1/3) -->
-                <div class="w-full md:w-1/3 flex-shrink-0">
+                <div class="w-full md:w-1/3 shrink-0">
                     <div
                         class="w-full aspect-square bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden flex items-center justify-center">
-                        <img :src="productImage" :alt="product.nama" class="w-full h-full object-cover"
-                            x-show="productImage">
-                        <div x-show="!productImage" class="text-center py-8">
-                            <i data-lucide="image-off" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
-                            <p class="text-sm text-gray-400">Gambar tidak tersedia</p>
-                        </div>
+                        <template x-if="productImage">
+                            <img :src="productImage" :alt="product.nama" class="w-full h-full object-cover"
+                                @error="productImage = ''; console.log('[Product Modal] Image failed to load')">
+                        </template>
+                        <template x-if="!productImage">
+                            <div class="text-center py-8">
+                                <i data-lucide="image-off" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
+                                <p class="text-sm text-gray-400">Gambar tidak tersedia</p>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -793,12 +797,16 @@ $baseUrl = '/peace_seafood';
         const productImageMap = {
             'Ikan Kakap Merah': 'kakap_merah.webp',
             'Ikan Kakap Beku': 'kakap_merah_beku.webp',
+            'Ikan Kakap Merah Beku': 'kakap_merah_beku.webp',
             'Ikan Tenggiri': 'tenggiri.webp',
             'Ikan Tuna': 'tuna.webp',
             'Ikan Nila Segar': 'nila.webp',
+            'Ikan Nila': 'nila.webp',
             'Ikan Lele Segar': 'lele.webp',
+            'Ikan Lele': 'lele.webp',
             'Udang Windu': 'udang_windu.webp',
-            'Cumi-cumi Segar': 'cumi.webp'
+            'Cumi-cumi Segar': 'cumi.webp',
+            'Cumi': 'cumi.webp'
         };
 
         function productModal() {
@@ -809,6 +817,7 @@ $baseUrl = '/peace_seafood';
 
                 init() {
                     productModalInstance = this;
+                    console.log('[Product Modal] Initialized');
                 },
 
                 // Normalize product name to a candidate key
@@ -830,15 +839,51 @@ $baseUrl = '/peace_seafood';
 
                 getProductImageName(productName) {
                     if (!productName) return '';
+                    
+                    console.log('[Product Modal] Looking for image for:', productName);
+                    
                     // explicit exact match
-                    if (productImageMap[productName]) return productImageMap[productName];
+                    if (productImageMap[productName]) {
+                        console.log('[Product Modal] Found exact match:', productImageMap[productName]);
+                        return productImageMap[productName];
+                    }
 
                     const lower = productName.toLowerCase();
+                    const normalized = this.normalizeName(productName);
+                    
+                    console.log('[Product Modal] Normalized name:', normalized);
+
+                    // keyword-based fallbacks for names that vary in prefix/suffix
+                    if (normalized.includes('kakap') && normalized.includes('merah') && normalized.includes('beku')) {
+                        return availableProductImages.includes('kakap_merah_beku.webp') ? 'kakap_merah_beku.webp' : '';
+                    }
+                    if (normalized.includes('kakap') && normalized.includes('merah')) {
+                        return availableProductImages.includes('kakap_merah.webp') ? 'kakap_merah.webp' : '';
+                    }
+                    if (normalized.includes('tenggiri')) {
+                        return availableProductImages.includes('tenggiri.webp') ? 'tenggiri.webp' : '';
+                    }
+                    if (normalized.includes('tuna')) {
+                        return availableProductImages.includes('tuna.webp') ? 'tuna.webp' : '';
+                    }
+                    if (normalized.includes('nila')) {
+                        return availableProductImages.includes('nila.webp') ? 'nila.webp' : '';
+                    }
+                    if (normalized.includes('lele')) {
+                        console.log('[Product Modal] Found lele match');
+                        return availableProductImages.includes('lele.webp') ? 'lele.webp' : '';
+                    }
+                    if (normalized.includes('udang') && normalized.includes('windu')) {
+                        return availableProductImages.includes('udang_windu.webp') ? 'udang_windu.webp' : '';
+                    }
+                    if (normalized.includes('cumi')) {
+                        return availableProductImages.includes('cumi.webp') ? 'cumi.webp' : '';
+                    }
+
                     // try simple variants
                     const candidates = [];
                     candidates.push(lower + '.webp');
-                    const norm = this.normalizeName(productName);
-                    if (norm) candidates.push(norm + '.webp');
+                    if (normalized) candidates.push(normalized + '.webp');
 
                     // try word-based keywords (longer words first)
                     const words = productName.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
@@ -848,29 +893,51 @@ $baseUrl = '/peace_seafood';
                         candidates.push(w.replace(/[^a-z0-9]/g, '_') + '.webp');
                     }
 
+                    console.log('[Product Modal] Checking candidates:', candidates);
+
                     // check candidates against available files
                     for (const c of candidates) {
-                        if (availableProductImages.includes(c)) return c;
+                        if (availableProductImages.includes(c)) {
+                            console.log('[Product Modal] Found candidate match:', c);
+                            return c;
+                        }
                     }
 
                     // last resort: find any available filename that contains a keyword
                     for (const w of words) {
                         const found = availableProductImages.find(f => f.includes(w));
-                        if (found) return found;
+                        if (found) {
+                            console.log('[Product Modal] Found keyword match:', found);
+                            return found;
+                        }
                     }
 
+                    console.log('[Product Modal] No image match found');
                     return '';
                 },
 
                 openModal(product) {
+                    console.log('[Product Modal] Opening modal for product:', product);
                     this.product = product;
+                    this.productImage = ''; // Reset first
+                    
                     const imageName = this.getProductImageName(product.nama || product.name || '');
+                    console.log('[Product Modal] Image name resolved:', imageName);
+                    
                     if (imageName) {
-                        this.productImage = `/peace_seafood/assets/images/products/${imageName}`;
+                        const basePath = '<?= $baseUrl ?>';
+                        this.productImage = basePath + '/assets/images/products/' + imageName;
+                        console.log('[Product Modal] Full image path:', this.productImage);
                     } else {
-                        this.productImage = '';
+                        console.log('[Product Modal] No image found for:', product.nama);
                     }
+                    
                     this.showModal = true;
+                    
+                    // Re-init lucide icons after modal opens
+                    this.$nextTick(() => {
+                        if (window.lucide) lucide.createIcons();
+                    });
                 },
 
                 closeModal() {

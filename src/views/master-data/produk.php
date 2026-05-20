@@ -26,8 +26,10 @@ $initialProduk = \App\Utils\Database::fetchAll(
                 <tbody>
                     <?php foreach ($initialProduk as $row): ?>
                         <tr>
-                            <td class="font-medium text-sm">
-                                <?= htmlspecialchars((string) ($row['nama'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                            <td class="font-medium text-sm cursor-pointer hover:opacity-80"
+                                onclick='window.showProductDetail(<?= json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>)'>
+                                <?= htmlspecialchars((string) ($row['nama'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                            </td>
                             <td><span
                                     class="badge badge-info"><?= htmlspecialchars((string) ($row['nama_jenis'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></span>
                             </td>
@@ -77,7 +79,10 @@ $initialProduk = \App\Utils\Database::fetchAll(
                     </template>
                     <template x-for="p in filtered" :key="p.id">
                         <tr>
-                            <td class="font-medium text-sm" x-text="p.nama"></td>
+                            <td class="font-medium text-sm cursor-pointer hover:opacity-80"
+                                @click="window.showProductDetail(p)">
+                                <span x-text="p.nama"></span>
+                            </td>
                             <td><span class="badge badge-info" x-text="p.nama_jenis"></span></td>
                             <td class="text-sm" x-text="'Rp ' + parseFloat(p.harga_beli||0).toLocaleString('id-ID')">
                             </td>
