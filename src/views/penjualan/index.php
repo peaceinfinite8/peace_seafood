@@ -78,7 +78,10 @@
                     </template>
                     <template x-for="nota in filteredNota" :key="nota.id">
                         <tr>
-                            <td><span class="font-mono text-sm font-medium" x-text="nota.no_nota"></span></td>
+                            <td>
+                                <a href="#" class="font-mono text-sm font-medium" @click.prevent="showDetail(nota.id)"
+                                    x-text="nota.no_nota"></a>
+                            </td>
                             <td><span class="text-sm" x-text="formatDate(nota.tanggal_nota)"></span></td>
                             <td><span class="text-sm" x-text="nota.nama_pembeli || 'Umum'"></span></td>
                             <td><span class="font-semibold" style="color:var(--color-success)"
@@ -242,6 +245,13 @@ function penjualanPage() {
                 if (window.lucide) lucide.createIcons();
                 this.initDatePickers();
             });
+            // expose instance and a global helper to open nota detail from other pages
+            window.penjualanPageInstance = this;
+            window.showNotaDetail = (id) => {
+                if (window.penjualanPageInstance) return window.penjualanPageInstance.showDetail(id);
+                // fallback: navigate to penjualan page
+                window.location.href = '/peace_seafood/penjualan';
+            };
         },
 
         initDatePickers() {

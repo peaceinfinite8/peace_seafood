@@ -15,8 +15,18 @@ $baseUrl = '/peace_seafood';
     <title><?= htmlspecialchars($pageTitle ?? 'Dashboard') ?> — <?= $appName ?></title>
     <meta name="description" content="Peace Seafood - Sistem Manajemen Gudang Ikan">
 
+    <!-- CRITICAL: Initialize theme BEFORE Alpine.js to prevent errors -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.documentElement.style.setProperty('--current-theme', savedTheme);
+        })();
+    </script>
+
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Suppressing warning for development - Use Tailwind CLI in production -->
+    <script data-tailwind-config="true" src="https://cdn.tailwindcss.com"></script>
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -574,7 +584,7 @@ $baseUrl = '/peace_seafood';
                             <template x-for="n in notifList" :key="n.id">
                                 <div class="p-3 border-b hover:opacity-80 cursor-pointer"
                                     style="border-color: var(--border-color)"
-                                    :style="n.is_read == 0 ? 'background: var(--color-primary-light)' : ''"
+                                    :style="n.is_read == 0 ? 'background: var(--color-primary-soft); color: var(--text-primary)' : ''"
                                     @click="markRead(n.id)">
                                     <p class="text-xs" style="color: var(--text-primary)" x-text="n.pesan"></p>
                                     <p class="text-xs mt-1" style="color: var(--text-secondary)" x-text="n.created_at">
@@ -587,9 +597,9 @@ $baseUrl = '/peace_seafood';
 
                 <!-- Dark mode toggle -->
                 <button @click="toggleTheme()" class="p-2 rounded-lg" style="color: var(--text-secondary)"
-                    title="Toggle Dark Mode">
+                    title="Toggle Dark Mode" x-cloak>
                     <i data-lucide="moon" class="w-5 h-5" x-show="theme === 'light'"></i>
-                    <i data-lucide="sun" class="w-5 h-5" x-show="theme === 'dark'" x-cloak></i>
+                    <i data-lucide="sun" class="w-5 h-5" x-show="theme === 'dark'"></i>
                 </button>
             </div>
         </header>
@@ -621,6 +631,9 @@ $baseUrl = '/peace_seafood';
                 unreadCount: 0,
 
                 init() {
+                    /* Ensure theme is initialized before DOM references */
+                    this.theme = localStorage.getItem('theme') || 'light';
+
                     // Apply saved theme
                     document.documentElement.setAttribute('data-theme', this.theme);
 
@@ -710,16 +723,13 @@ $baseUrl = '/peace_seafood';
                 <div class="w-full md:w-1/3 shrink-0">
                     <div
                         class="w-full aspect-square bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden flex items-center justify-center">
-                        <template x-if="productImage">
-                            <img :src="productImage" :alt="product.nama" class="w-full h-full object-cover"
-                                @error="productImage = ''; console.log('[Product Modal] Image failed to load')">
-                        </template>
-                        <template x-if="!productImage">
-                            <div class="text-center py-8">
-                                <i data-lucide="image-off" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
-                                <p class="text-sm text-gray-400">Gambar tidak tersedia</p>
-                            </div>
-                        </template>
+                        <!-- img selalu ada di DOM, src dikontrol Alpine -->
+                        <img x-show="productImage" :src="productImage || ''" :alt="product.nama || ''"
+                            class="max-h-full max-w-full object-contain" @error="productImage = ''">
+                        <div x-show="!productImage" class="text-center py-8">
+                            <i data-lucide="image-off" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
+                            <p class="text-sm text-gray-400">Gambar tidak tersedia</p>
+                        </div>
                     </div>
                 </div>
 
@@ -781,34 +791,6 @@ $baseUrl = '/peace_seafood';
         // Global Product Modal Handler
         let productModalInstance = null;
 
-        // Available product image files (populated from public/assets/images/products)
-        const availableProductImages = [
-            'cumi.webp',
-            'kakap_merah.webp',
-            'kakap_merah_beku.webp',
-            'lele.webp',
-            'nila.webp',
-            'tenggiri.webp',
-            'tuna.webp',
-            'udang_windu.webp'
-        ];
-
-        // Optional explicit mapping for common long names
-        const productImageMap = {
-            'Ikan Kakap Merah': 'kakap_merah.webp',
-            'Ikan Kakap Beku': 'kakap_merah_beku.webp',
-            'Ikan Kakap Merah Beku': 'kakap_merah_beku.webp',
-            'Ikan Tenggiri': 'tenggiri.webp',
-            'Ikan Tuna': 'tuna.webp',
-            'Ikan Nila Segar': 'nila.webp',
-            'Ikan Nila': 'nila.webp',
-            'Ikan Lele Segar': 'lele.webp',
-            'Ikan Lele': 'lele.webp',
-            'Udang Windu': 'udang_windu.webp',
-            'Cumi-cumi Segar': 'cumi.webp',
-            'Cumi': 'cumi.webp'
-        };
-
         function productModal() {
             return {
                 showModal: false,
@@ -817,124 +799,20 @@ $baseUrl = '/peace_seafood';
 
                 init() {
                     productModalInstance = this;
-                    console.log('[Product Modal] Initialized');
-                },
-
-                // Normalize product name to a candidate key
-                normalizeName(name) {
-                    if (!name) return '';
-                    let s = name.toLowerCase().trim();
-                    // remove common descriptors
-                    s = s.replace(/\bikan\b/g, '');
-                    s = s.replace(/\bsegar\b/g, '');
-                    s = s.replace(/\bbeku\b/g, '');
-                    s = s.replace(/cumi-cumi/g, 'cumi');
-                    // replace non-alphanumeric with underscore
-                    s = s.replace(/[^a-z0-9]+/g, '_');
-                    // collapse underscores
-                    s = s.replace(/_+/g, '_');
-                    s = s.replace(/^_+|_+$/g, '');
-                    return s;
-                },
-
-                getProductImageName(productName) {
-                    if (!productName) return '';
-                    
-                    console.log('[Product Modal] Looking for image for:', productName);
-                    
-                    // explicit exact match
-                    if (productImageMap[productName]) {
-                        console.log('[Product Modal] Found exact match:', productImageMap[productName]);
-                        return productImageMap[productName];
-                    }
-
-                    const lower = productName.toLowerCase();
-                    const normalized = this.normalizeName(productName);
-                    
-                    console.log('[Product Modal] Normalized name:', normalized);
-
-                    // keyword-based fallbacks for names that vary in prefix/suffix
-                    if (normalized.includes('kakap') && normalized.includes('merah') && normalized.includes('beku')) {
-                        return availableProductImages.includes('kakap_merah_beku.webp') ? 'kakap_merah_beku.webp' : '';
-                    }
-                    if (normalized.includes('kakap') && normalized.includes('merah')) {
-                        return availableProductImages.includes('kakap_merah.webp') ? 'kakap_merah.webp' : '';
-                    }
-                    if (normalized.includes('tenggiri')) {
-                        return availableProductImages.includes('tenggiri.webp') ? 'tenggiri.webp' : '';
-                    }
-                    if (normalized.includes('tuna')) {
-                        return availableProductImages.includes('tuna.webp') ? 'tuna.webp' : '';
-                    }
-                    if (normalized.includes('nila')) {
-                        return availableProductImages.includes('nila.webp') ? 'nila.webp' : '';
-                    }
-                    if (normalized.includes('lele')) {
-                        console.log('[Product Modal] Found lele match');
-                        return availableProductImages.includes('lele.webp') ? 'lele.webp' : '';
-                    }
-                    if (normalized.includes('udang') && normalized.includes('windu')) {
-                        return availableProductImages.includes('udang_windu.webp') ? 'udang_windu.webp' : '';
-                    }
-                    if (normalized.includes('cumi')) {
-                        return availableProductImages.includes('cumi.webp') ? 'cumi.webp' : '';
-                    }
-
-                    // try simple variants
-                    const candidates = [];
-                    candidates.push(lower + '.webp');
-                    if (normalized) candidates.push(normalized + '.webp');
-
-                    // try word-based keywords (longer words first)
-                    const words = productName.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
-                        .filter(Boolean).sort((a, b) => b.length - a.length);
-                    for (const w of words) {
-                        candidates.push(w + '.webp');
-                        candidates.push(w.replace(/[^a-z0-9]/g, '_') + '.webp');
-                    }
-
-                    console.log('[Product Modal] Checking candidates:', candidates);
-
-                    // check candidates against available files
-                    for (const c of candidates) {
-                        if (availableProductImages.includes(c)) {
-                            console.log('[Product Modal] Found candidate match:', c);
-                            return c;
-                        }
-                    }
-
-                    // last resort: find any available filename that contains a keyword
-                    for (const w of words) {
-                        const found = availableProductImages.find(f => f.includes(w));
-                        if (found) {
-                            console.log('[Product Modal] Found keyword match:', found);
-                            return found;
-                        }
-                    }
-
-                    console.log('[Product Modal] No image match found');
-                    return '';
                 },
 
                 openModal(product) {
-                    console.log('[Product Modal] Opening modal for product:', product);
                     this.product = product;
-                    this.productImage = ''; // Reset first
-                    
-                    const imageName = this.getProductImageName(product.nama || product.name || '');
-                    console.log('[Product Modal] Image name resolved:', imageName);
-                    
-                    if (imageName) {
-                        const basePath = '<?= $baseUrl ?>';
-                        this.productImage = basePath + '/assets/images/products/' + imageName;
-                        console.log('[Product Modal] Full image path:', this.productImage);
-                    } else {
-                        console.log('[Product Modal] No image found for:', product.nama);
+                    this.productImage = '';
+
+                    // Gunakan field gambar dari database
+                    const gambar = product.gambar || '';
+                    if (gambar) {
+                        // Images stored in /public/assets/images/ (not products subfolder)
+                        this.productImage = '<?= $baseUrl ?>/assets/images/' + gambar;
                     }
-                    
+
                     this.showModal = true;
-                    
-                    // Re-init lucide icons after modal opens
                     this.$nextTick(() => {
                         if (window.lucide) lucide.createIcons();
                     });

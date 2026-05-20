@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `produk` (
   `id_gudang`     INT            NOT NULL,
   `nama`          VARCHAR(100)   NOT NULL,
   `deskripsi`     TEXT           NULL,
+  `gambar`        VARCHAR(100)   NULL DEFAULT NULL,
   `harga_beli`    BIGINT         NOT NULL DEFAULT 0,
   `harga_jual`    BIGINT         NOT NULL DEFAULT 0,
   `stok_qty`      DECIMAL(10,2)  NOT NULL DEFAULT 0,

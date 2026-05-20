@@ -1,6 +1,6 @@
 <?php ?>
 <div x-data="laporanPage()" x-init="init()">
-    
+
     <div class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">Laporan & Export</h2>
@@ -39,24 +39,20 @@
 
     <!-- Tabs -->
     <div class="keu-tab-group mb-4">
-        <button @click="activeTab = 'stok'"
-                class="keu-tab"
-                :class="activeTab === 'stok' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
+        <button @click="activeTab = 'stok'" class="keu-tab"
+            :class="activeTab === 'stok' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
             Stok
         </button>
-        <button @click="activeTab = 'penjualan'"
-                class="keu-tab"
-                :class="activeTab === 'penjualan' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
+        <button @click="activeTab = 'penjualan'" class="keu-tab"
+            :class="activeTab === 'penjualan' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
             Penjualan
         </button>
-        <button @click="activeTab = 'keuangan'"
-                class="keu-tab"
-                :class="activeTab === 'keuangan' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
+        <button @click="activeTab = 'keuangan'" class="keu-tab"
+            :class="activeTab === 'keuangan' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
             Keuangan
         </button>
-        <button @click="activeTab = 'aging'"
-                class="keu-tab"
-                :class="activeTab === 'aging' ? 'keu-tab--active keu-tab--hutang' : 'keu-tab--idle'">
+        <button @click="activeTab = 'aging'" class="keu-tab"
+            :class="activeTab === 'aging' ? 'keu-tab--active keu-tab--hutang' : 'keu-tab--idle'">
             Hutang Aging
         </button>
     </div>
@@ -65,10 +61,24 @@
     <div x-show="activeTab === 'stok'" class="card">
         <div class="overflow-x-auto">
             <table class="table">
-                <thead><tr><th>Tanggal</th><th>Supplier</th><th>Produk</th><th>Qty Teoritis</th><th>Qty Actual</th><th>Harga Beli</th><th>Total</th><th>Status</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Supplier</th>
+                        <th>Produk</th>
+                        <th>Qty Teoritis</th>
+                        <th>Qty Actual</th>
+                        <th>Harga Beli</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <template x-if="stokData.length === 0">
-                        <tr><td colspan="8" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="row in stokData" :key="row.id">
                         <tr>
@@ -77,9 +87,12 @@
                             <td class="text-sm font-medium" x-text="row.nama_produk"></td>
                             <td class="text-sm" x-text="parseFloat(row.qty) + ' kg'"></td>
                             <td class="text-sm" x-text="row.qty_actual ? parseFloat(row.qty_actual) + ' kg' : '-'"></td>
-                            <td class="text-sm" x-text="'Rp ' + parseFloat(row.harga_beli||0).toLocaleString('id-ID')"></td>
-                            <td class="text-sm font-medium" x-text="'Rp ' + parseFloat(row.total||0).toLocaleString('id-ID')"></td>
-                            <td><span class="badge" :class="row.status==='confirmed'?'badge-success':'badge-warning'" x-text="row.status?.toUpperCase()"></span></td>
+                            <td class="text-sm" x-text="'Rp ' + parseFloat(row.harga_beli||0).toLocaleString('id-ID')">
+                            </td>
+                            <td class="text-sm font-medium"
+                                x-text="'Rp ' + parseFloat(row.total||0).toLocaleString('id-ID')"></td>
+                            <td><span class="badge" :class="row.status==='confirmed'?'badge-success':'badge-warning'"
+                                    x-text="row.status?.toUpperCase()"></span></td>
                         </tr>
                     </template>
                 </tbody>
@@ -91,22 +104,46 @@
     <div x-show="activeTab === 'penjualan'" class="card">
         <div class="overflow-x-auto">
             <table class="table">
-                <thead><tr><th>No Nota</th><th>Tanggal</th><th>Pembeli</th><th>Subtotal</th><th>Diskon</th><th>Total</th><th>Pembayaran</th><th>Status</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>No Nota</th>
+                        <th>Tanggal</th>
+                        <th>Pembeli</th>
+                        <th>Subtotal</th>
+                        <th>Diskon</th>
+                        <th>Total</th>
+                        <th>Pembayaran</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <template x-if="penjualanData.length === 0">
-                        <tr><td colspan="8" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="row in penjualanData" :key="row.id">
                         <tr>
-                            <td class="font-mono text-sm" x-text="row.no_nota"></td>
+                            <td>
+                                <a href="#" class="font-mono text-sm"
+                                    @click.prevent="window.showNotaDetail ? window.showNotaDetail(row.id) : (window.location.href='/peace_seafood/penjualan')"
+                                    x-text="row.no_nota"></a>
+                            </td>
                             <td class="text-sm" x-text="new Date(row.tanggal_nota).toLocaleDateString('id-ID')"></td>
                             <td class="text-sm" x-text="row.nama_pembeli || 'Umum'"></td>
-                            <td class="text-sm" x-text="'Rp ' + parseFloat(row.subtotal||0).toLocaleString('id-ID')"></td>
-                            <td class="text-sm text-red-500" x-show="row.diskon > 0" x-text="'- Rp ' + parseFloat(row.diskon).toLocaleString('id-ID')"></td>
+                            <td class="text-sm" x-text="'Rp ' + parseFloat(row.subtotal||0).toLocaleString('id-ID')">
+                            </td>
+                            <td class="text-sm text-red-500" x-show="row.diskon > 0"
+                                x-text="'- Rp ' + parseFloat(row.diskon).toLocaleString('id-ID')"></td>
                             <td class="text-sm" x-show="row.diskon <= 0">-</td>
-                            <td class="text-sm font-bold" style="color:var(--color-success)" x-text="'Rp ' + parseFloat(row.total||0).toLocaleString('id-ID')"></td>
-                            <td><span class="badge" :class="row.jenis_pembayaran==='cash'?'badge-success':'badge-warning'" x-text="row.jenis_pembayaran?.toUpperCase()"></span></td>
-                            <td><span class="badge" :class="row.status==='final'?'badge-success':'badge-gray'" x-text="row.status?.toUpperCase()"></span></td>
+                            <td class="text-sm font-bold" style="color:var(--color-success)"
+                                x-text="'Rp ' + parseFloat(row.total||0).toLocaleString('id-ID')"></td>
+                            <td><span class="badge"
+                                    :class="row.jenis_pembayaran==='cash'?'badge-success':'badge-warning'"
+                                    x-text="row.jenis_pembayaran?.toUpperCase()"></span></td>
+                            <td><span class="badge" :class="row.status==='final'?'badge-success':'badge-gray'"
+                                    x-text="row.status?.toUpperCase()"></span></td>
                         </tr>
                     </template>
                 </tbody>
@@ -114,7 +151,8 @@
                     <tr style="background: var(--color-primary-light)">
                         <td colspan="5" class="font-bold text-sm text-right pr-4">TOTAL PENJUALAN FINAL:</td>
                         <td class="font-bold text-sm" style="color:var(--color-primary)"
-                            x-text="'Rp ' + penjualanData.filter(n=>n.status==='final').reduce((s,n)=>s+parseFloat(n.total||0),0).toLocaleString('id-ID')"></td>
+                            x-text="'Rp ' + penjualanData.filter(n=>n.status==='final').reduce((s,n)=>s+parseFloat(n.total||0),0).toLocaleString('id-ID')">
+                        </td>
                         <td colspan="2"></td>
                     </tr>
                 </tfoot>
@@ -126,22 +164,39 @@
     <div x-show="activeTab === 'aging'" class="card">
         <div class="overflow-x-auto">
             <table class="table">
-                <thead><tr><th>Jenis</th><th>Pihak</th><th>Nominal</th><th>Sisa</th><th>Jatuh Tempo</th><th>Status Aging</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Jenis</th>
+                        <th>Pihak</th>
+                        <th>Nominal</th>
+                        <th>Sisa</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Status Aging</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <template x-if="agingData.length === 0">
-                        <tr><td colspan="6" class="text-center py-8" style="color:var(--color-success)">✓ Semua tagihan aman</td></tr>
+                        <tr>
+                            <td colspan="6" class="text-center py-8" style="color:var(--color-success)">✓ Semua tagihan
+                                aman</td>
+                        </tr>
                     </template>
                     <template x-for="row in agingData" :key="row.id">
                         <tr>
-                            <td><span class="badge" :class="row.jenis==='hutang'?'badge-danger':'badge-success'" x-text="row.jenis?.toUpperCase()"></span></td>
+                            <td><span class="badge" :class="row.jenis==='hutang'?'badge-danger':'badge-success'"
+                                    x-text="row.jenis?.toUpperCase()"></span></td>
                             <td class="text-sm font-medium" x-text="row.nama_supplier || row.nama_pembeli || '-'"></td>
-                            <td class="text-sm" x-text="'Rp ' + parseFloat(row.nominal||0).toLocaleString('id-ID')"></td>
-                            <td class="text-sm font-bold text-red-500" x-text="'Rp ' + parseFloat(row.sisa_hutang||0).toLocaleString('id-ID')"></td>
-                            <td class="text-sm" x-text="row.jatuh_tempo ? new Date(row.jatuh_tempo).toLocaleDateString('id-ID') : '-'"></td>
+                            <td class="text-sm" x-text="'Rp ' + parseFloat(row.nominal||0).toLocaleString('id-ID')">
+                            </td>
+                            <td class="text-sm font-bold text-red-500"
+                                x-text="'Rp ' + parseFloat(row.sisa_hutang||0).toLocaleString('id-ID')"></td>
+                            <td class="text-sm"
+                                x-text="row.jatuh_tempo ? new Date(row.jatuh_tempo).toLocaleDateString('id-ID') : '-'">
+                            </td>
                             <td>
-                                <span class="badge" 
-                                      :class="{'badge-danger':row.aging_status==='overdue','badge-warning':row.aging_status==='soon','badge-success':row.aging_status==='ok','badge-gray':row.aging_status==='no_due'}"
-                                      x-text="row.aging_status === 'overdue' ? 'JATUH TEMPO' : row.aging_status === 'soon' ? 'SEGERA' : row.aging_status === 'ok' ? 'AMAN' : 'NO DUE'">
+                                <span class="badge"
+                                    :class="{'badge-danger':row.aging_status==='overdue','badge-warning':row.aging_status==='soon','badge-success':row.aging_status==='ok','badge-gray':row.aging_status==='no_due'}"
+                                    x-text="row.aging_status === 'overdue' ? 'JATUH TEMPO' : row.aging_status === 'soon' ? 'SEGERA' : row.aging_status === 'ok' ? 'AMAN' : 'NO DUE'">
                                 </span>
                             </td>
                         </tr>

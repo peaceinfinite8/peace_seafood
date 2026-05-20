@@ -1,4 +1,6 @@
 Options -Indexes
 RewriteEngine On
-RewriteRule ^$ public/ [L]
-RewriteRule (.*) public/$1 [L]
+
+# DocumentRoot sudah di-set ke /public oleh Apache (httpd.conf)
+# File ini tidak digunakan — semua request langsung masuk ke public/
+# dan ditangani oleh public/.htaccess

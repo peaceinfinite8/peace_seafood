@@ -7,7 +7,17 @@
     <title>Login — Peace Seafood</title>
     <meta name="description" content="Login ke sistem manajemen gudang Peace Seafood">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CRITICAL: Initialize theme BEFORE Alpine.js to prevent errors -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.documentElement.style.setProperty('--current-theme', savedTheme);
+        })();
+    </script>
+
+    <!-- Tailwind CSS - Suppressing warning for development -->
+    <script data-tailwind-config="true" src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/izitoast.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/izitoast.min.css">

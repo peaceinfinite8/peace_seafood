@@ -64,18 +64,18 @@ INSERT INTO `pembeli` (`id_gudang`, `nama`, `telpon`, `alamat`, `kota`, `tipe`, 
 -- ============================================================
 -- STEP 7: Produk
 -- ============================================================
-INSERT INTO `produk` (`id_jenis_ikan`, `id_gudang`, `nama`, `deskripsi`, `harga_beli`, `harga_jual`, `stok_qty`, `nilai_stok`, `stok_minimum`, `is_active`) VALUES
-(1, 1, 'Ikan Kakap Merah',  'Ikan kakap merah segar berkualitas',  55000, 70000,  0, 0, 50,  1),
-(1, 1, 'Ikan Kerapu',       'Ikan kerapu segar pilihan',           75000, 95000,  0, 0, 30,  1),
-(1, 1, 'Ikan Tenggiri',     'Ikan tenggiri segar premium',         60000, 78000,  0, 0, 40,  1),
-(1, 1, 'Ikan Tuna',         'Ikan tuna segar grade A',             65000, 85000,  0, 0, 30,  1),
-(2, 1, 'Ikan Nila Segar',   'Ikan nila dari kolam budidaya',       30000, 42000,  0, 0, 100, 1),
-(2, 1, 'Ikan Lele Segar',   'Ikan lele segar dari kolam',          25000, 35000,  0, 0, 100, 1),
-(3, 1, 'Ikan Kakap Beku',   'Ikan kakap beku -18°C',               48000, 62000,  0, 0, 50,  1),
-(5, 1, 'Udang Windu',       'Udang windu segar ukuran besar',      120000, 150000, 0, 0, 25,  1),
-(5, 1, 'Cumi-cumi Segar',   'Cumi-cumi segar dari laut',           55000, 72000,  0, 0, 30,  1),
-(1, 2, 'Ikan Kakap Merah',  'Ikan kakap merah segar',              55000, 70000,  0, 0, 50,  1),
-(2, 2, 'Ikan Nila Segar',   'Ikan nila segar',                     30000, 42000,  0, 0, 100, 1);
+INSERT INTO `produk` (`id_jenis_ikan`, `id_gudang`, `nama`, `deskripsi`, `gambar`, `harga_beli`, `harga_jual`, `stok_qty`, `nilai_stok`, `stok_minimum`, `is_active`) VALUES
+(1, 1, 'Ikan Kakap Merah',  'Ikan kakap merah segar berkualitas',  'kakap_merah.webp',      55000, 70000,  0, 0, 50,  1),
+(1, 1, 'Ikan Kerapu',       'Ikan kerapu segar pilihan',           NULL,                    75000, 95000,  0, 0, 30,  1),
+(1, 1, 'Ikan Tenggiri',     'Ikan tenggiri segar premium',         'tenggiri.webp',         60000, 78000,  0, 0, 40,  1),
+(1, 1, 'Ikan Tuna',         'Ikan tuna segar grade A',             'tuna.webp',             65000, 85000,  0, 0, 30,  1),
+(2, 1, 'Ikan Nila Segar',   'Ikan nila dari kolam budidaya',       'nila.webp',             30000, 42000,  0, 0, 100, 1),
+(2, 1, 'Ikan Lele Segar',   'Ikan lele segar dari kolam',          'lele.webp',             25000, 35000,  0, 0, 100, 1),
+(3, 1, 'Ikan Kakap Beku',   'Ikan kakap beku -18°C',               'kakap_merah_beku.webp', 48000, 62000,  0, 0, 50,  1),
+(5, 1, 'Udang Windu',       'Udang windu segar ukuran besar',      'udang_windu.webp',      120000, 150000, 0, 0, 25,  1),
+(5, 1, 'Cumi-cumi Segar',   'Cumi-cumi segar dari laut',           'cumi.webp',             55000, 72000,  0, 0, 30,  1),
+(1, 2, 'Ikan Kakap Merah',  'Ikan kakap merah segar',              'kakap_merah.webp',      55000, 70000,  0, 0, 50,  1),
+(2, 2, 'Ikan Nila Segar',   'Ikan nila segar',                     'nila.webp',             30000, 42000,  0, 0, 100, 1);
 
 -- ============================================================
 -- STEP 8: Settings (Default per gudang)

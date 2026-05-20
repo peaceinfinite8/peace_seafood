@@ -219,7 +219,10 @@
                         <div class="flex items-center justify-between py-2 border-b"
                             style="border-color: var(--border-color)">
                             <div>
-                                <p class="text-sm font-medium" style="color: var(--text-primary)" x-text="nota.no_nota">
+                                <p class="text-sm font-medium" style="color: var(--text-primary)">
+                                    <a href="#"
+                                        @click.prevent="window.showNotaDetail ? window.showNotaDetail(nota.id) : (window.location.href='/peace_seafood/penjualan')"
+                                        x-text="nota.no_nota"></a>
                                 </p>
                                 <p class="text-xs" style="color: var(--text-secondary)"
                                     x-text="nota.nama_pembeli || 'Umum'"></p>

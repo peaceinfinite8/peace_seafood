@@ -1,6 +1,7 @@
 /**
  * Peace Seafood - Chart Configuration
  * Chart.js configurations for dashboard and reports
+ * FIXED: Properly destroy previous charts before reusing canvas
  */
 
 const ChartConfig = (() => {
@@ -8,6 +9,12 @@ const ChartConfig = (() => {
     '#2563eb', '#16a34a', '#d97706', '#dc2626',
     '#0891b2', '#7c3aed', '#db2777', '#ea580c',
   ];
+
+  // Store chart instances to prevent canvas reuse errors
+  const chartInstances = {
+    'chart-penjualan': null,
+    'chart-stok': null,
+  };
 
   /**
    * Default chart options
@@ -26,13 +33,26 @@ const ChartConfig = (() => {
   };
 
   /**
+   * Destroy chart if it exists to prevent canvas reuse errors
+   */
+  function destroyChart(canvasId) {
+    if (chartInstances[canvasId]) {
+      chartInstances[canvasId].destroy();
+      chartInstances[canvasId] = null;
+    }
+  }
+
+  /**
    * Initialize sales chart
    */
   function initSalesChart(canvasId, labels, data) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
 
-    return new Chart(ctx, {
+    // Destroy previous chart instance before creating new one
+    destroyChart(canvasId);
+
+    chartInstances[canvasId] = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
@@ -47,6 +67,8 @@ const ChartConfig = (() => {
       },
       options: defaultOptions,
     });
+
+    return chartInstances[canvasId];
   }
 
   /**
@@ -56,7 +78,10 @@ const ChartConfig = (() => {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
 
-    return new Chart(ctx, {
+    // Destroy previous chart instance before creating new one
+    destroyChart(canvasId);
+
+    chartInstances[canvasId] = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
@@ -67,6 +92,17 @@ const ChartConfig = (() => {
         }],
       },
       options: defaultOptions,
+    });
+
+    return chartInstances[canvasId];
+  }
+
+  /**
+   * Destroy all dashboard charts (cleanup)
+   */
+  function destroyAll() {
+    Object.keys(chartInstances).forEach(key => {
+      destroyChart(key);
     });
   }
 
@@ -83,5 +119,11 @@ const ChartConfig = (() => {
     }
   }
 
-  return { initSalesChart, initStockChart, initDashboardCharts };
+  return {
+    initSalesChart,
+    initStockChart,
+    initDashboardCharts,
+    destroyAll,
+    destroyChart,
+  };
 })();

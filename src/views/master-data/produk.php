@@ -1,6 +1,6 @@
 <?php
 $initialProduk = \App\Utils\Database::fetchAll(
-    "SELECT p.*, j.nama AS nama_jenis
+    "SELECT p.*, p.gambar, j.nama AS nama_jenis
      FROM produk p
      JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
      WHERE p.is_active = 1
@@ -142,6 +142,11 @@ $initialProduk = \App\Utils\Database::fetchAll(
                         </select>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Nama File Gambar</label>
+                    <input type="text" x-model="form.gambar" class="form-input" placeholder="contoh: lele.webp">
+                    <p class="text-xs mt-1" style="color:var(--text-secondary)">File gambar tersedia: cumi.webp, kakap_merah.webp, kakap_merah_beku.webp, lele.webp, nila.webp, tenggiri.webp, tuna.webp, udang_windu.webp</p>
+                </div>
                 <div class="flex gap-3 mt-4">
                     <button type="submit" class="btn btn-primary" :disabled="saving"
                         x-text="saving ? 'Menyimpan...' : (editId ? 'Update' : 'Simpan')"></button>
@@ -157,7 +162,7 @@ function produkPage() {
     return {
         user: JSON.parse(localStorage.getItem('user') || '{}'),
         items: <?= json_encode($initialProduk, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>, jenisIkan: [], search: '', showModal: false, editId: null, saving: false,
-        form: { nama: '', id_jenis_ikan: '', harga_beli: 0, harga_jual: 0, stok_minimum: 0, satuan: 'kg' },
+        form: { nama: '', id_jenis_ikan: '', harga_beli: 0, harga_jual: 0, stok_minimum: 0, satuan: 'kg', gambar: '' },
         get filtered() { const q = this.search.toLowerCase(); return this.items.filter(p => !q || p.nama?.toLowerCase().includes(q) || p.nama_jenis?.toLowerCase().includes(q)); },
         async init() {
             try {
@@ -171,8 +176,8 @@ function produkPage() {
             } catch(e) {}
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
-        openAdd() { this.editId = null; this.form = { nama: '', id_jenis_ikan: '', harga_beli: 0, harga_jual: 0, stok_minimum: 0, satuan: 'kg' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
-        openEdit(p) { this.editId = p.id; this.form = { nama: p.nama, id_jenis_ikan: p.id_jenis_ikan, harga_beli: p.harga_beli, harga_jual: p.harga_jual, stok_minimum: p.stok_minimum||0, satuan: p.satuan||'kg' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
+        openAdd() { this.editId = null; this.form = { nama: '', id_jenis_ikan: '', harga_beli: 0, harga_jual: 0, stok_minimum: 0, satuan: 'kg', gambar: '' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
+        openEdit(p) { this.editId = p.id; this.form = { nama: p.nama, id_jenis_ikan: p.id_jenis_ikan, harga_beli: p.harga_beli, harga_jual: p.harga_jual, stok_minimum: p.stok_minimum||0, satuan: p.satuan||'kg', gambar: p.gambar||'' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
         async save() {
             if (!this.form.nama || !this.form.id_jenis_ikan) return; this.saving = true;
             try {

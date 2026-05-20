@@ -100,7 +100,69 @@ const Utils = (() => {
     document.documentElement.setAttribute('data-theme', saved);
   }
 
-  return { formatCurrency, formatNumber, formatDate, formatDateTime, showToast, confirm, debounce, toggleDarkMode, applySavedTheme };
+  /**
+   * Show nota detail in a simple modal. Falls back to penjualan page if fetch fails.
+   */
+  async function showNotaDetail(id) {
+    if (!id) return;
+    // prefer existing penjualan page instance
+    if (window.penjualanPageInstance && typeof window.penjualanPageInstance.showDetail === 'function') {
+      return window.penjualanPageInstance.showDetail(id);
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/peace_seafood/api/penjualan/' + id, { headers: { Authorization: 'Bearer ' + token } });
+      const detail = res.data?.data;
+      if (!detail) throw new Error('No data');
+
+      // build modal
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+      const box = document.createElement('div');
+      box.className = 'modal-box';
+      box.style = 'background:var(--bg-light);color:var(--text-primary);max-width:800px;padding:1rem;border-radius:0.5rem;max-height:80vh;overflow:auto';
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <h3 style="margin:0">Nota: ${detail.no_nota || ''}</h3>
+          <button aria-label="close" style="background:transparent;border:0;font-size:1.2rem;cursor:pointer">×</button>
+        </div>
+        <div style="display:flex;gap:1rem;margin-bottom:0.75rem">
+          <div style="flex:1">
+            <div><small style="color:var(--text-secondary)">Pembeli</small><div>${detail.nama_pembeli || 'Umum'}</div></div>
+            <div><small style="color:var(--text-secondary)">Tanggal</small><div>${new Date(detail.tanggal_nota || '').toLocaleDateString('id-ID') || '-'}</div></div>
+          </div>
+          <div style="text-align:right">
+            <div><small style="color:var(--text-secondary)">Total</small><div style="color:var(--color-primary)">${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(detail.total || 0)}</div></div>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border-color)">Produk</th><th style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">Qty</th><th style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">Harga</th></tr></thead>
+            <tbody>
+              ${(detail.items || []).map(it => `<tr><td style="padding:6px;border-bottom:1px solid var(--border-color)">${it.nama_produk}</td><td style="padding:6px;border-bottom:1px solid var(--border-color);text-align:right">${parseFloat(it.qty)} ${it.satuan || 'kg'}</td><td style="padding:6px;border-bottom:1px solid var(--border-color);text-align:right">${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(it.harga_jual || 0)}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      // close handlers
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+      box.querySelector('button[aria-label="close"]').addEventListener('click', () => overlay.remove());
+      if (window.lucide) window.lucide.createIcons();
+    } catch (e) {
+      // fallback: navigate to penjualan list
+      window.location.href = '/peace_seafood/penjualan';
+    }
+  }
+
+  return { formatCurrency, formatNumber, formatDate, formatDateTime, showToast, confirm, debounce, toggleDarkMode, applySavedTheme, showNotaDetail };
 })();
 
 document.addEventListener('DOMContentLoaded', () => Utils.applySavedTheme());
+
+// expose globally
+window.showNotaDetail = Utils.showNotaDetail;

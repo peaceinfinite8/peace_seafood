@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\Supplier;
+use App\models\Supplier;
 use App\Models\Pembeli;
 use App\Models\JenisIkan;
-use App\Models\Produk;
+use App\models\Produk;
 use App\Models\HargaHistory;
-use App\Middleware\RoleMiddleware;
-use App\Utils\Helper;
-use App\Utils\Response;
-use App\Utils\Validator;
+use App\middleware\RoleMiddleware;
+use App\utils\Helper;
+use App\utils\Response;
+use App\utils\Validator;
 
 class MasterDataController
 {
@@ -30,7 +30,8 @@ class MasterDataController
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, ['nama' => 'required|string']);
-        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+        if ($validator->hasErrors())
+            Response::validationError($validator->getErrors());
 
         $id = (new Supplier())->insert($body);
         Response::created(['id' => $id], 'Supplier berhasil ditambahkan');
@@ -65,7 +66,8 @@ class MasterDataController
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, ['nama' => 'required|string']);
-        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+        if ($validator->hasErrors())
+            Response::validationError($validator->getErrors());
 
         $id = (new Pembeli())->insert($body);
         Response::created(['id' => $id], 'Pembeli berhasil ditambahkan');
@@ -100,7 +102,8 @@ class MasterDataController
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, ['nama' => 'required|string']);
-        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+        if ($validator->hasErrors())
+            Response::validationError($validator->getErrors());
 
         $id = (new JenisIkan())->insert($body);
         Response::created(['id' => $id], 'Jenis ikan berhasil ditambahkan');
@@ -128,12 +131,17 @@ class MasterDataController
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, [
-            'jenis_ikan_id' => 'required|integer',
-            'nama'          => 'required|string',
+            'id_jenis_ikan' => 'required|integer',
+            'nama' => 'required|string',
         ]);
-        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+        if ($validator->hasErrors())
+            Response::validationError($validator->getErrors());
 
-        $id = (new Produk())->insert($body);
+        // Hanya izinkan field yang valid, termasuk gambar
+        $allowed = ['id_jenis_ikan', 'nama', 'deskripsi', 'gambar', 'harga_beli', 'harga_jual', 'stok_minimum', 'satuan'];
+        $data = array_intersect_key($body, array_flip($allowed));
+
+        $id = (new Produk())->insert($data);
         Response::created(['id' => $id], 'Produk berhasil ditambahkan');
     }
 
@@ -141,7 +149,12 @@ class MasterDataController
     {
         RoleMiddleware::require(['superadmin', 'admin']);
         $body = Helper::getRequestBody();
-        (new Produk())->update((int) $id, $body);
+
+        // Hanya izinkan field yang valid, termasuk gambar
+        $allowed = ['id_jenis_ikan', 'nama', 'deskripsi', 'gambar', 'harga_beli', 'harga_jual', 'stok_minimum', 'satuan'];
+        $data = array_intersect_key($body, array_flip($allowed));
+
+        (new Produk())->update((int) $id, $data);
         Response::success(null, 'Produk berhasil diperbarui');
     }
 
@@ -150,7 +163,7 @@ class MasterDataController
     public function hargaIndex(): void
     {
         $produkId = (int) ($_GET['produk_id'] ?? 0);
-        $data     = (new HargaHistory())->findByProduk($produkId);
+        $data = (new HargaHistory())->findByProduk($produkId);
         Response::success($data);
     }
 
@@ -162,20 +175,22 @@ class MasterDataController
         $validator = Validator::make($body, [
             'produk_id' => 'required|integer',
             'harga_baru' => 'required|numeric|min:0',
-            'tipe'       => 'required|in:beli,jual',
+            'tipe' => 'required|in:beli,jual',
         ]);
-        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+        if ($validator->hasErrors())
+            Response::validationError($validator->getErrors());
 
         $produk = (new Produk())->findById((int) $body['produk_id']);
-        if (!$produk) Response::notFound('Produk tidak ditemukan');
+        if (!$produk)
+            Response::notFound('Produk tidak ditemukan');
 
         $hargaLama = $body['tipe'] === 'beli' ? $produk['harga_beli'] : $produk['harga_jual'];
 
         (new HargaHistory())->insert([
-            'produk_id'  => $body['produk_id'],
+            'produk_id' => $body['produk_id'],
             'harga_lama' => $hargaLama,
             'harga_baru' => $body['harga_baru'],
-            'tipe'       => $body['tipe'],
+            'tipe' => $body['tipe'],
         ]);
 
         $field = $body['tipe'] === 'beli' ? 'harga_beli' : 'harga_jual';

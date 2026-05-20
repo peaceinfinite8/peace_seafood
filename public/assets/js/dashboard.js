@@ -50,7 +50,7 @@ const Dashboard = (() => {
 
     tbody.innerHTML = transactions.map(t => `
       <tr>
-        <td>${t.nomor_nota}</td>
+        <td><a href="#" class="font-mono" onclick="(window.showNotaDetail ? window.showNotaDetail(${t.id}) : (window.location.href='/peace_seafood/penjualan')) ; return false;">${t.nomor_nota}</a></td>
         <td>${t.pembeli_nama}</td>
         <td>${Utils.formatCurrency(t.total)}</td>
         <td><span class="badge badge-status bg-${t.status_color}">${t.status_label}</span></td>

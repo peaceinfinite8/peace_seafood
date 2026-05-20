@@ -13,7 +13,7 @@ class Produk extends Model
     public function findWithJenis(): array
     {
         return Database::fetchAll(
-            "SELECT p.*, j.nama AS nama_jenis
+            "SELECT p.*, p.gambar, j.nama AS nama_jenis
              FROM produk p
              JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
              WHERE p.is_active = 1
@@ -25,7 +25,7 @@ class Produk extends Model
     {
         $where = $activeOnly ? "AND p.is_active = 1" : "";
         return Database::fetchAll(
-            "SELECT p.*, j.nama as jenis_ikan_nama
+            "SELECT p.*, p.gambar, j.nama as jenis_ikan_nama
              FROM produk p
              JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
              WHERE p.id_gudang = ? {$where}
@@ -37,7 +37,7 @@ class Produk extends Model
     public static function getWithStokStatus(int $idGudang): array
     {
         return Database::fetchAll(
-            "SELECT p.*, j.nama as jenis_ikan_nama,
+            "SELECT p.*, p.gambar, j.nama as jenis_ikan_nama,
                     CASE
                         WHEN p.stok_qty <= 0 THEN 'habis'
                         WHEN p.stok_qty < p.stok_minimum THEN 'critical'
@@ -55,7 +55,7 @@ class Produk extends Model
     public static function getBelowMinimum(int $idGudang): array
     {
         return Database::fetchAll(
-            "SELECT p.*, j.nama as jenis_ikan_nama
+            "SELECT p.*, p.gambar, j.nama as jenis_ikan_nama
              FROM produk p
              JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
              WHERE p.id_gudang = ? AND p.is_active = 1

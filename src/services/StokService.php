@@ -17,7 +17,7 @@ class StokService
     {
         if ($allGudang && $idGudang === 0) {
             return Database::fetchAll(
-                "SELECT p.*, p.nilai_stok AS stok_value, ji.nama as nama_jenis, g.nama as nama_gudang, 'kg' as satuan,
+                "SELECT p.*, p.gambar, p.nilai_stok AS stok_value, ji.nama as nama_jenis, g.nama as nama_gudang, 'kg' as satuan,
                         CASE WHEN p.stok_qty < p.stok_minimum THEN 1 ELSE 0 END as is_low_stock
                  FROM produk p
                  JOIN jenis_ikan ji ON p.id_jenis_ikan = ji.id
@@ -28,7 +28,7 @@ class StokService
         }
 
         return Database::fetchAll(
-            "SELECT p.*, p.nilai_stok AS stok_value, ji.nama as nama_jenis, 'kg' as satuan,
+            "SELECT p.*, p.gambar, p.nilai_stok AS stok_value, ji.nama as nama_jenis, 'kg' as satuan,
                     CASE WHEN p.stok_qty < p.stok_minimum THEN 1 ELSE 0 END as is_low_stock
              FROM produk p
              JOIN jenis_ikan ji ON p.id_jenis_ikan = ji.id
