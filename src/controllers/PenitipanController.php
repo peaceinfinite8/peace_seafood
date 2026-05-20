@@ -50,11 +50,6 @@ class PenitipanController
         Response::created($result, 'Titipan berhasil diterima');
     }
 
-    public function terima(): void
-    {
-        $this->create();
-    }
-
     public function show(string $id): void
     {
         $gudangId = WarehouseMiddleware::getGudangId();
@@ -87,15 +82,10 @@ class PenitipanController
         Response::success($result, 'Penjualan titipan berhasil dicatat');
     }
 
-    public function selesai(string $id): void
+    public function settlement(string $id): void
     {
         $gudangId = WarehouseMiddleware::getGudangId();
         $result = $this->penitipanService->settlement((int) $id, $gudangId);
         Response::success($result, 'Settlement berhasil');
-    }
-
-    public function settlement(string $id): void
-    {
-        $this->selesai($id);
     }
 }

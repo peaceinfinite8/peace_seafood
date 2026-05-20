@@ -12,7 +12,7 @@ class PenitipanService
     /**
      * Terima titipan masuk
      */
-    public function createTitipan(array $data, int $idUser, int $idGudang): int
+    public function terima(int $idGudang, int $idUser, array $data): int
     {
         $noTitipan = Helper::generateTitipanNumber($idGudang);
         $qty = (float) ($data['jumlah'] ?? 0);
@@ -37,11 +37,6 @@ class PenitipanService
         ]);
     }
 
-    public function terima(int $idGudang, int $idUser, array $data): int
-    {
-        return $this->createTitipan($data, $idUser, $idGudang);
-    }
-
     /**
      * Catat penjualan titipan
      * 
@@ -64,8 +59,10 @@ class PenitipanService
      * - Jika potong langsung: Rp 1.200.000 - Rp 50.000 = Rp 1.150.000
      * - Jika bayar terpisah: Rp 1.200.000 (full), komisi jadi piutang
      */
-    public function jualTitipan(int $idTitipan, int $idUser, array $data, int $idGudang): bool
+    public function jual(array $data, int $idUser, int $idGudang): bool
     {
+        $idTitipan = (int) $data['titipan_id'];
+        
         $sql = "SELECT * FROM titipan WHERE id = ?";
         $params = [$idTitipan];
         if ($idGudang > 0) {
@@ -154,15 +151,10 @@ class PenitipanService
         return true;
     }
 
-    public function jual(array $data, int $idUser, int $idGudang): bool
-    {
-        return $this->jualTitipan((int) $data['titipan_id'], $idUser, $data, $idGudang);
-    }
-
     /**
      * Selesaikan titipan
      */
-    public function selesaikanTitipan(int $idTitipan, int $idGudang): bool
+    public function settlement(int $idTitipan, int $idGudang): bool
     {
         $condition = 'id = ?';
         $params = [$idTitipan];
@@ -178,11 +170,6 @@ class PenitipanService
             $condition,
             $params
         );
-    }
-
-    public function settlement(int $idTitipan, int $idGudang): bool
-    {
-        return $this->selesaikanTitipan($idTitipan, $idGudang);
     }
 
     /**

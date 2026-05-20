@@ -1,48 +1,23 @@
 <?php
-
 declare(strict_types=1);
 
+// Base path
 define('BASE_PATH', dirname(__DIR__));
 
-// Autoload
-require_once BASE_PATH . '/vendor/autoload.php';
-
-// Load .env
-$dotenv = Dotenv\Dotenv::createImmutable(BASE_PATH);
-$dotenv->safeLoad();
-
-// Set timezone
-date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'Asia/Jakarta');
-
-// Security headers
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: SAMEORIGIN');
-header('X-XSS-Protection: 1; mode=block');
-
-// Get URI
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-// Strip base path
-// Root .htaccess rewrites /peace_seafood/... -> public/...
-// tapi REQUEST_URI tetap /peace_seafood/...
-$basePath = '/peace_seafood';
-$uri = preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri);
-// Juga strip /public jika request lewat langsung ke public/
-$uri = preg_replace('#^/public#', '', $uri);
-$uri = rtrim($uri, '/') ?: '/';
-
-// ============================================================
-// API Routes — JSON responses
-// ============================================================
-if (str_starts_with($uri, '/api')) {
-    // CORS
-    App\Middleware\CorsMiddleware::handle();
-    // Route to API
-    require_once BASE_PATH . '/routes/api.php';
-    exit;
+// Composer autoload if exists
+if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
+    require_once BASE_PATH . '/vendor/autoload.php';
 }
 
-// ============================================================
-// Frontend Routes — HTML pages
-// ============================================================
-require_once BASE_PATH . '/routes/web.php';
+// Basic URI parsing — remove project base if present
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$uri = preg_replace('#^/peace_seafood#', '', $uri);
+$uri = rtrim($uri, '/') ?: '/';
+
+// Route to API or Web router
+if (strpos($uri, '/api') === 0) {
+    require BASE_PATH . '/routes/api.php';
+} else {
+    require BASE_PATH . '/routes/web.php';
+}
+

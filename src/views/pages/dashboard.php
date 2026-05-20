@@ -84,7 +84,8 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
             <!-- Stok Value -->
-            <div class="stat-card stat-card--blue">
+            <a href="/peace_seafood/stok"
+                class="stat-card stat-card--blue cursor-pointer hover:scale-105 transition-transform">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-secondary)">Total
                         Stok</p>
@@ -97,10 +98,12 @@
                     x-text="formatRupiah(stats.total_stok_value)"></p>
                 <p class="text-xs mt-1" style="color: var(--text-secondary)"><span x-text="stats.total_produk"></span>
                     jenis produk</p>
-            </div>
+            </a>
 
             <!-- Penjualan Hari Ini -->
-            <div class="stat-card stat-card--green" x-show="user.role !== 'checker'">
+            <a href="/peace_seafood/penjualan"
+                class="stat-card stat-card--green cursor-pointer hover:scale-105 transition-transform"
+                x-show="user.role !== 'checker'">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-secondary)">
                         Penjualan Hari Ini</p>
@@ -113,10 +116,12 @@
                     x-text="formatRupiah(stats.penjualan_hari_ini)"></p>
                 <p class="text-xs mt-1" style="color: var(--text-secondary)"><span x-text="stats.nota_hari_ini"></span>
                     nota</p>
-            </div>
+            </a>
 
             <!-- Total Piutang -->
-            <div class="stat-card stat-card--amber" x-show="['bos','admin'].includes(user.role)">
+            <a href="/peace_seafood/keuangan"
+                class="stat-card stat-card--amber cursor-pointer hover:scale-105 transition-transform"
+                x-show="['bos','admin'].includes(user.role)">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-secondary)">Total
                         Piutang</p>
@@ -130,10 +135,11 @@
                 <p class="text-xs mt-1" style="color: var(--color-warning)" x-show="stats.overdue_count > 0">
                     <span x-text="stats.overdue_count"></span> jatuh tempo!
                 </p>
-            </div>
+            </a>
 
             <!-- Stok Low Alert -->
-            <div class="stat-card stat-card--red">
+            <a href="/peace_seafood/stok"
+                class="stat-card stat-card--red cursor-pointer hover:scale-105 transition-transform">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-secondary)">Stok
                         Menipis</p>
@@ -144,7 +150,7 @@
                 </div>
                 <p class="text-2xl font-bold" style="color: var(--color-danger)" x-text="stats.low_stock_count"></p>
                 <p class="text-xs mt-1" style="color: var(--text-secondary)">produk di bawah minimum</p>
-            </div>
+            </a>
         </div>
 
         <!-- Quick Actions -->
@@ -243,7 +249,7 @@
                     <template x-for="item in lowStockItems" :key="item.id">
                         <div class="flex items-center justify-between py-2 border-b"
                             style="border-color: var(--border-color)">
-                            <div>
+                            <div class="flex-1 cursor-pointer hover:opacity-80" @click="showProductDetail(item)">
                                 <p class="text-sm font-medium" style="color: var(--text-primary)" x-text="item.nama">
                                 </p>
                                 <p class="text-xs" style="color: var(--text-secondary)" x-text="item.nama_jenis"></p>
@@ -370,6 +376,12 @@ function dashboardPage() {
 
         formatRupiah(n) {
             return 'Rp ' + (parseFloat(n) || 0).toLocaleString('id-ID', { minimumFractionDigits: 0 });
+        },
+
+        showProductDetail(product) {
+            if (window.showProductDetail) {
+                window.showProductDetail(product);
+            }
         }
     };
 }

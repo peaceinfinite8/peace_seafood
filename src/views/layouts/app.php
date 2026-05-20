@@ -416,7 +416,9 @@ $baseUrl = '/peace_seafood';
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-64 lg:translate-x-0'">
 
         <!-- Logo -->
-        <div class="flex items-center gap-3 px-6 py-5 border-b" style="border-color: var(--border-color)">
+        <a href="/peace_seafood/dashboard"
+            class="flex items-center gap-3 px-6 py-5 border-b cursor-pointer hover:opacity-80 transition-opacity"
+            style="border-color: var(--border-color)">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                 style="background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%)">
                 <i data-lucide="fish" class="w-5 h-5 text-white"></i>
@@ -426,7 +428,7 @@ $baseUrl = '/peace_seafood';
                 <p class="text-xs" style="color: var(--text-secondary)"
                     x-text="currentUser.nama_gudang || 'All Gudang'"></p>
             </div>
-        </div>
+        </a>
 
         <!-- Navigation -->
         <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
@@ -687,9 +689,211 @@ $baseUrl = '/peace_seafood';
         }
     </script>
 
+    <!-- Product Detail Modal -->
+    <div id="productModal" x-data="productModal()" x-init="init()" x-show="showModal" @click.self="closeModal()"
+        @keydown.escape="closeModal()"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" x-transition.opacity
+        style="display: none;">
+        <div class="bg-white dark:bg-slate-800 rounded-lg max-w-3xl w-full max-h-[85vh] overflow-y-auto" @click.stop
+            x-transition>
+            <!-- Close button -->
+            <div class="sticky top-0 flex justify-end p-4 border-b" style="border-color: var(--border-color);">
+                <button @click="closeModal()"
+                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content: Image (1/3) + Details (2/3) -->
+            <div class="flex flex-col md:flex-row gap-6 p-6">
+                <!-- Product Image (1/3) -->
+                <div class="w-full md:w-1/3 flex-shrink-0">
+                    <div
+                        class="w-full aspect-square bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img :src="productImage" :alt="product.nama" class="w-full h-full object-cover"
+                            x-show="productImage">
+                        <div x-show="!productImage" class="text-center py-8">
+                            <i data-lucide="image-off" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
+                            <p class="text-sm text-gray-400">Gambar tidak tersedia</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Details (2/3) -->
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold mb-1" style="color: var(--text-primary);" x-text="product.nama"></h2>
+                    <p class="text-sm mb-4" style="color: var(--text-secondary);" x-text="product.nama_jenis"></p>
+
+                    <!-- Details Grid -->
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 rounded-lg" style="background: var(--bg-secondary);">
+                                <p class="text-xs font-semibold mb-1" style="color: var(--text-secondary);">Harga Beli
+                                </p>
+                                <p class="font-bold text-lg" style="color: var(--color-primary);"
+                                    x-text="formatRupiah(product.harga_beli)"></p>
+                            </div>
+                            <div class="p-3 rounded-lg" style="background: var(--bg-secondary);">
+                                <p class="text-xs font-semibold mb-1" style="color: var(--text-secondary);">Harga Jual
+                                </p>
+                                <p class="font-bold text-lg" style="color: var(--color-success);"
+                                    x-text="formatRupiah(product.harga_jual)"></p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 rounded-lg" style="background: var(--bg-secondary);">
+                                <p class="text-xs font-semibold mb-1" style="color: var(--text-secondary);">Stok</p>
+                                <p class="font-bold text-lg" style="color: var(--text-primary);"
+                                    x-text="product.stok_qty + ' ' + (product.satuan || 'kg')"></p>
+                            </div>
+                            <div class="p-3 rounded-lg" style="background: var(--bg-secondary);">
+                                <p class="text-xs font-semibold mb-1" style="color: var(--text-secondary);">Min. Stok
+                                </p>
+                                <p class="font-bold text-lg" style="color: var(--text-primary);"
+                                    x-text="product.stok_minimum + ' ' + (product.satuan || 'kg')"></p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-lg" style="background: var(--bg-secondary);">
+                            <p class="text-xs font-semibold mb-1" style="color: var(--text-secondary);">Nilai Stok</p>
+                            <p class="font-bold text-lg" style="color: var(--color-warning);"
+                                x-text="formatRupiah(product.nilai_stok)"></p>
+                        </div>
+
+                        <div x-show="product.deskripsi" class="p-3 rounded-lg" style="background: var(--bg-secondary);">
+                            <p class="text-xs font-semibold mb-2" style="color: var(--text-secondary);">Deskripsi</p>
+                            <p class="text-sm" style="color: var(--text-primary);" x-text="product.deskripsi"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?= $scripts ?? '' ?>
 
     <script>
+        // Global Product Modal Handler
+        let productModalInstance = null;
+
+        // Available product image files (populated from public/assets/images/products)
+        const availableProductImages = [
+            'cumi.webp',
+            'kakap_merah.webp',
+            'kakap_merah_beku.webp',
+            'lele.webp',
+            'nila.webp',
+            'tenggiri.webp',
+            'tuna.webp',
+            'udang_windu.webp'
+        ];
+
+        // Optional explicit mapping for common long names
+        const productImageMap = {
+            'Ikan Kakap Merah': 'kakap_merah.webp',
+            'Ikan Kakap Beku': 'kakap_merah_beku.webp',
+            'Ikan Tenggiri': 'tenggiri.webp',
+            'Ikan Tuna': 'tuna.webp',
+            'Ikan Nila Segar': 'nila.webp',
+            'Ikan Lele Segar': 'lele.webp',
+            'Udang Windu': 'udang_windu.webp',
+            'Cumi-cumi Segar': 'cumi.webp'
+        };
+
+        function productModal() {
+            return {
+                showModal: false,
+                product: {},
+                productImage: '',
+
+                init() {
+                    productModalInstance = this;
+                },
+
+                // Normalize product name to a candidate key
+                normalizeName(name) {
+                    if (!name) return '';
+                    let s = name.toLowerCase().trim();
+                    // remove common descriptors
+                    s = s.replace(/\bikan\b/g, '');
+                    s = s.replace(/\bsegar\b/g, '');
+                    s = s.replace(/\bbeku\b/g, '');
+                    s = s.replace(/cumi-cumi/g, 'cumi');
+                    // replace non-alphanumeric with underscore
+                    s = s.replace(/[^a-z0-9]+/g, '_');
+                    // collapse underscores
+                    s = s.replace(/_+/g, '_');
+                    s = s.replace(/^_+|_+$/g, '');
+                    return s;
+                },
+
+                getProductImageName(productName) {
+                    if (!productName) return '';
+                    // explicit exact match
+                    if (productImageMap[productName]) return productImageMap[productName];
+
+                    const lower = productName.toLowerCase();
+                    // try simple variants
+                    const candidates = [];
+                    candidates.push(lower + '.webp');
+                    const norm = this.normalizeName(productName);
+                    if (norm) candidates.push(norm + '.webp');
+
+                    // try word-based keywords (longer words first)
+                    const words = productName.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
+                        .filter(Boolean).sort((a, b) => b.length - a.length);
+                    for (const w of words) {
+                        candidates.push(w + '.webp');
+                        candidates.push(w.replace(/[^a-z0-9]/g, '_') + '.webp');
+                    }
+
+                    // check candidates against available files
+                    for (const c of candidates) {
+                        if (availableProductImages.includes(c)) return c;
+                    }
+
+                    // last resort: find any available filename that contains a keyword
+                    for (const w of words) {
+                        const found = availableProductImages.find(f => f.includes(w));
+                        if (found) return found;
+                    }
+
+                    return '';
+                },
+
+                openModal(product) {
+                    this.product = product;
+                    const imageName = this.getProductImageName(product.nama || product.name || '');
+                    if (imageName) {
+                        this.productImage = `/peace_seafood/assets/images/products/${imageName}`;
+                    } else {
+                        this.productImage = '';
+                    }
+                    this.showModal = true;
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    this.product = {};
+                    this.productImage = '';
+                },
+
+                formatRupiah(n) {
+                    return 'Rp ' + (parseFloat(n) || 0).toLocaleString('id-ID', { minimumFractionDigits: 0 });
+                }
+            };
+        }
+
+        // Global helper to show product detail
+        window.showProductDetail = function (product) {
+            if (productModalInstance) {
+                productModalInstance.openModal(product);
+            } else {
+                console.warn('Product modal not initialized yet');
+            }
+        };
+
         // Re-init lucide icons after Alpine renders
         document.addEventListener('alpine:initialized', () => {
             if (window.lucide) lucide.createIcons();

@@ -54,11 +54,6 @@ class ReturController
         Response::created($result, 'Retur berhasil dibuat');
     }
 
-    public function store(): void
-    {
-        $this->create();
-    }
-
     public function show(string $id): void
     {
         $gudangId = WarehouseMiddleware::getGudangId();

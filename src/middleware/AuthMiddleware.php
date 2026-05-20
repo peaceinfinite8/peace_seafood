@@ -7,18 +7,27 @@ namespace App\middleware;
 use App\utils\JWT;
 use App\utils\Response;
 use App\utils\Database;
+use App\Utils\Session;
 
 /**
- * JWT Authentication Middleware
+ * JWT Authentication Middleware with Session Support
  */
 class AuthMiddleware
 {
     /**
-     * Verify JWT and attach user to request context.
+     * Verify JWT and Session, attach user to request context.
      * Returns decoded user payload or calls Response::unauthorized().
      */
     public static function handle(): array
     {
+        // Initialize session
+        Session::init();
+
+        // Check if session is valid
+        if (!Session::isValid()) {
+            Response::unauthorized('Session expired. Silakan login ulang.');
+        }
+
         $token = JWT::getFromRequest();
 
         if (!$token) {
@@ -28,6 +37,9 @@ class AuthMiddleware
         $payload = JWT::verify($token);
 
         if (!$payload) {
+            // Token expired or invalid - destroy session
+            Session::destroy();
+            JWT::clearCookie();
             Response::unauthorized('Token tidak valid atau sudah expired. Silakan login ulang.');
         }
 
@@ -38,7 +50,27 @@ class AuthMiddleware
         );
 
         if (!$user || !$user['is_active']) {
+            Session::destroy();
+            JWT::clearCookie();
             Response::unauthorized('Akun tidak aktif atau tidak ditemukan.');
+        }
+
+        // Verify session user matches token user
+        $sessionUserId = Session::get('user_id');
+        if ($sessionUserId && $sessionUserId != $user['id']) {
+            Session::destroy();
+            JWT::clearCookie();
+            Response::unauthorized('Session mismatch. Silakan login ulang.');
+        }
+
+        // Update session data if needed
+        if (!$sessionUserId) {
+            Session::set('user_id', $user['id']);
+            Session::set('user_email', $user['email']);
+            Session::set('user_role', $user['role']);
+            Session::set('user_name', $user['name']);
+            Session::set('id_gudang', $user['id_gudang']);
+            Session::set('authenticated', true);
         }
 
         // Attach to global context

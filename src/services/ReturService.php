@@ -11,7 +11,7 @@ class ReturService
     /**
      * Buat retur baru (status PENDING)
      */
-    public function createRetur(array $data, int $idUser, int $idGudang): int
+    public function create(int $idGudang, int $idUser, array $data): int
     {
         return Database::insert('retur', [
             'id_gudang' => $idGudang,
@@ -30,18 +30,13 @@ class ReturService
         ]);
     }
 
-    public function create(int $idGudang, int $idUser, array $data): int
-    {
-        return $this->createRetur($data, $idUser, $idGudang);
-    }
-
     /**
      * Approve retur - proses sesuai tipe
      * 
      * RETUR STOK: Menambah kembali stok ke inventory (barang dikembalikan)
      * RETUR PIUTANG: Mengurangi hutang/piutang (adjustment finansial)
      */
-    public function approveRetur(int $idRetur, int $idGudang, int $idUser = 0): bool
+    public function approve(int $idRetur, int $idGudang, int $idUser = 0): bool
     {
         $sql = "SELECT * FROM retur WHERE id = ?";
         $params = [$idRetur];
@@ -169,15 +164,10 @@ class ReturService
         return true;
     }
 
-    public function approve(int $idRetur, int $idGudang, int $idUser = 0): bool
-    {
-        return $this->approveRetur($idRetur, $idGudang, $idUser);
-    }
-
     /**
      * Reject retur
      */
-    public function rejectRetur(int $idRetur, int $idGudang, string $alasan = ''): bool
+    public function reject(int $idRetur, int $idGudang, string $alasan = ''): bool
     {
         $condition = "id = ?";
         $params = [$idRetur];
@@ -196,11 +186,6 @@ class ReturService
             $condition,
             $params
         );
-    }
-
-    public function reject(int $idRetur, int $idGudang, string $alasan = ''): bool
-    {
-        return $this->rejectRetur($idRetur, $idGudang, $alasan);
     }
 
     /**
