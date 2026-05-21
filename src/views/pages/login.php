@@ -24,6 +24,10 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 fill=%27%23ffffff%27 rx=%2720%27/%3E%3Cellipse cx=%2750%27 cy=%2750%27 rx=%2728%27 ry=%2720%27 fill=%27%232563eb%27/%3E%3Ccircle cx=%2765%27 cy=%2750%27 r=%2715%27 fill=%27%232563eb%27/%3E%3Cpath d=%27M 22 50 Q 15 40 8 35 Q 10 50 8 65 Q 15 60 22 50 Z%27 fill=%27%230891b2%27 opacity=%270.9%27/%3E%3Ccircle cx=%2770%27 cy=%2748%27 r=%273%27 fill=%27%23ffffff%27/%3E%3Cpath d=%27M 45 28 Q 48 18 50 12 Q 52 18 55 28 Z%27 fill=%27%230891b2%27 opacity=%270.8%27/%3E%3C/svg%3E">
+
     <style>
         * {
             box-sizing: border-box;
