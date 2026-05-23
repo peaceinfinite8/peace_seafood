@@ -96,7 +96,7 @@ Peace Seafood adalah web application berbasis PHP untuk manajemen gudang dan ope
 7. Pastikan Apache dan MySQL di XAMPP sudah berjalan.
 8. Buka aplikasi di browser:
 
-	`http://localhost/peace_seafood/`
+	`http://localhost:8080/peace_seafood/`
 
    Jika ingin mengelola database, buka phpMyAdmin di:
 
@@ -137,17 +137,17 @@ CORS_ORIGIN=http://localhost
 
 | Halaman | URL |
 |---|---|
-| Login | http://localhost/peace_seafood/ |
-| Dashboard | http://localhost/peace_seafood/dashboard |
-| Stok | http://localhost/peace_seafood/stok |
-| Penjualan | http://localhost/peace_seafood/penjualan |
-| Penitipan | http://localhost/peace_seafood/penitipan |
-| Retur | http://localhost/peace_seafood/retur |
-| Keuangan | http://localhost/peace_seafood/keuangan |
-| Laporan | http://localhost/peace_seafood/laporan |
-| Master Data | http://localhost/peace_seafood/master-data |
-| Settings | http://localhost/peace_seafood/settings |
-| API Base | http://localhost/peace_seafood/api/ |
+| Login | http://localhost:8080/peace_seafood/ |
+| Dashboard | http://localhost:8080/peace_seafood/dashboard |
+| Stok | http://localhost:8080/peace_seafood/stok |
+| Penjualan | http://localhost:8080/peace_seafood/penjualan |
+| Penitipan | http://localhost:8080/peace_seafood/penitipan |
+| Retur | http://localhost:8080/peace_seafood/retur |
+| Keuangan | http://localhost:8080/peace_seafood/keuangan |
+| Laporan | http://localhost:8080/peace_seafood/laporan |
+| Master Data | http://localhost:8080/peace_seafood/master-data |
+| Settings | http://localhost:8080/peace_seafood/settings |
+| API Base | http://localhost:8080/peace_seafood/api/ |
 
 ## Akun Demo Lokal
 

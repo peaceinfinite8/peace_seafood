@@ -185,7 +185,7 @@ CREATE DATABASE peace_seafood CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 php cli/seeder.php
 
 # 5. Start development server
-php -S localhost:8000 -t public
+php -S localhost:8080 -t public
 ```
 
 ---
@@ -206,7 +206,7 @@ DB_PASSWORD=
 JWT_SECRET=your_secret_key_here
 
 SESSION_TIMEOUT_MINUTES=30
-CORS_ORIGIN=http://localhost:8000
+CORS_ORIGIN=http://localhost:8080
 ```
 
 ---

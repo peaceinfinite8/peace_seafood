@@ -61,11 +61,12 @@ class PenitipanController
         Response::success($data);
     }
 
-    public function jual(string $id): void
+    public function jual(): void
     {
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, [
+            'titipan_id' => 'required|integer',
             'jumlah_terjual' => 'required|numeric|min:0.01',
             'harga_jual' => 'required|numeric|min:0',
             'tanggal' => 'required|string',
@@ -75,16 +76,13 @@ class PenitipanController
             Response::validationError($validator->getErrors());
         }
 
-        // Add titipan_id from URL parameter to body
-        $body['titipan_id'] = (int) $id;
-
         $user = AuthMiddleware::getAuthUser();
         $gudangId = WarehouseMiddleware::getGudangId();
         $result = $this->penitipanService->jual($body, (int) $user['id'], $gudangId);
         Response::success($result, 'Penjualan titipan berhasil dicatat');
     }
 
-    public function selesai(string $id): void
+    public function settlement(string $id): void
     {
         $gudangId = WarehouseMiddleware::getGudangId();
         $result = $this->penitipanService->settlement((int) $id, $gudangId);
