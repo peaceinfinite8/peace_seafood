@@ -84,6 +84,7 @@ try {
 
     // 3. Hapus semua data transaksi dan master (KECUALI users)
     $tablesToTruncate = [
+        'activity_log',
         'notifikasi',
         'hutang_piutang_history',
         'hutang_piutang',
