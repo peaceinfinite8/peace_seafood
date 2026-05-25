@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\middleware;
+namespace App\Middleware;
 
-use App\utils\Response;
+use App\Utils\Response;
 
 /**
  * Warehouse Access Control Middleware

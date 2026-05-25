@@ -75,7 +75,7 @@ class StokController
     public function timbang(): void
     {
         $user     = AuthMiddleware::getAuthUser();
-        $idGudang = $this->resolveGudang($user);
+        $this->resolveGudang($user);
         $body     = Helper::getRequestBody();
 
         if (empty($body['id_stok_masuk']) || !isset($body['qty_actual'])) {

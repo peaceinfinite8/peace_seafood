@@ -19,7 +19,7 @@ class NotifikasiController
 
     public function index(): void
     {
-        $user      = AuthMiddleware::getAuthUser();
+        AuthMiddleware::getAuthUser();
         $idGudang  = AuthMiddleware::resolveGudang();
         $allGudang = AuthMiddleware::isAllGudang();
 
@@ -40,7 +40,7 @@ class NotifikasiController
 
     public function read(int $id): void
     {
-        $user     = AuthMiddleware::getAuthUser();
+        AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
 
         $ok = $this->notifService->markAsRead($id, $idGudang, AuthMiddleware::isAllGudang());

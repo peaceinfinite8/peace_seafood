@@ -19,12 +19,16 @@
     ]
   },
   "config": {
-    "optimize-autoloader": false,
+    "optimize-autoloader": true,
     "audit": {
       "ignore": [
         "PKSA-y2cr-5h3j-g3ys"
       ],
       "abandoned": "ignore"
     }
+  },
+  "require-dev": {
+    "phpstan/phpstan": "1.12",
+    "rector/rector": "1.2"
   }
 }

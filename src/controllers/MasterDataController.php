@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\models\Supplier;
+use App\Models\Supplier;
 use App\Models\Pembeli;
 use App\Models\JenisIkan;
-use App\models\Produk;
+use App\Models\Produk;
 use App\Models\HargaHistory;
-use App\middleware\RoleMiddleware;
-use App\utils\Helper;
-use App\utils\Response;
-use App\utils\Validator;
+use App\Middleware\RoleMiddleware;
+use App\Utils\Helper;
+use App\Utils\Response;
+use App\Utils\Validator;
 
 class MasterDataController
 {

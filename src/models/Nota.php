@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\models;
+namespace App\Models;
 
-use App\utils\Database;
+use App\Utils\Database;
 
 class Nota extends Model
 {

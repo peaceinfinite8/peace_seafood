@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use App\middleware\AuthMiddleware;
-use App\controllers\AuthController;
-use App\controllers\DashboardController;
-use App\controllers\StokController;
-use App\controllers\PenjualanController;
-use App\controllers\PenitipanController;
-use App\controllers\ReturController;
-use App\controllers\KeuanganController;
-use App\controllers\LaporanController;
-use App\controllers\MasterDataController;
-use App\controllers\SettingsController;
-use App\controllers\NotifikasiController;
-use App\utils\Response;
+use App\Middleware\AuthMiddleware;
+use App\Controllers\AuthController;
+use App\Controllers\DashboardController;
+use App\Controllers\StokController;
+use App\Controllers\PenjualanController;
+use App\Controllers\PenitipanController;
+use App\Controllers\ReturController;
+use App\Controllers\KeuanganController;
+use App\Controllers\LaporanController;
+use App\Controllers\MasterDataController;
+use App\Controllers\SettingsController;
+use App\Controllers\NotifikasiController;
+use App\Utils\Response;
 
 require_once BASE_PATH . '/config/constants.php';
 

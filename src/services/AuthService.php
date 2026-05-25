@@ -10,13 +10,6 @@ use App\Utils\Database;
 
 class AuthService
 {
-    private User $userModel;
-
-    public function __construct()
-    {
-        $this->userModel = new User();
-    }
-
     /**
      * Login user - return token + user data or null
      */

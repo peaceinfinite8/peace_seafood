@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\middleware;
+namespace App\Middleware;
 
-use App\utils\JWT;
-use App\utils\Response;
-use App\utils\Database;
+use App\Utils\JWT;
+use App\Utils\Response;
+use App\Utils\Database;
 use App\Utils\Session;
 
 /**

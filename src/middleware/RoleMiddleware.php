@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\middleware;
+namespace App\Middleware;
 
-use App\utils\Response;
+use App\Utils\Response;
 
 /**
  * Role-based Access Control Middleware
@@ -13,7 +13,6 @@ class RoleMiddleware
 {
     /**
      * Require one of the given roles.
-     * @param string|array $roles
      */
     public static function require(string|array $roles): void
     {

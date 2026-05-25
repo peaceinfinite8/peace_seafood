@@ -1,0 +1,14 @@
+parameters:
+  bootstrapFiles:
+    - phpstan-bootstrap.php
+  level: 5
+  paths:
+    - src
+    - routes
+    - cli
+  excludePaths:
+    - vendor
+    - storage
+    - public
+  reportUnmatchedIgnoredErrors: false
+

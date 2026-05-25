@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\utils;
+namespace App\Utils;
 
 /**
  * Standard JSON Response Helper

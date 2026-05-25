@@ -276,8 +276,6 @@ class ExportService
             $html .= "<p>Tidak ada data untuk periode ini.</p>";
         }
 
-        $html .= "</body></html>";
-
-        return $html;
+        return $html . "</body></html>";
     }
 }

@@ -78,6 +78,17 @@ Peace Seafood adalah web application berbasis PHP untuk manajemen gudang dan ope
 - XAMPP atau web server setara
 - Ekstensi PHP yang umum dibutuhkan untuk project PHP modern, seperti PDO MySQL, mbstring, openssl, fileinfo, dan zip
 
+## Dev Tools (Static Analysis)
+
+- PHPStan config: `phpstan.neon.dist` (bootstrap: `phpstan-bootstrap.php`)
+- Rector config: `rector.php`
+
+Jalankan (butuh PHP 8.2+ sesuai `composer.json`):
+
+`php vendor/bin/phpstan analyse -c phpstan.neon.dist`
+
+`php vendor/bin/rector process`
+
 ## Instalasi Lokal
 
 1. Clone atau salin project ke folder web server, misalnya `c:\xampp\htdocs\peace_seafood`.

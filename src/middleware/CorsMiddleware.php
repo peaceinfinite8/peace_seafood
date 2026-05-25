@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\middleware;
+namespace App\Middleware;
 
 /**
  * CORS Middleware

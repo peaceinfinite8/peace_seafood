@@ -68,7 +68,7 @@ class LaporanController
      */
     public function exportPdf(): void
     {
-        $user     = AuthMiddleware::getAuthUser();
+        AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
         $allGudang = AuthMiddleware::isAllGudang();
         $tipe     = $_GET['tipe'] ?? 'penjualan';
