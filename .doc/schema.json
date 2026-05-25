@@ -1,0 +1,277 @@
+{
+  "database": "peace_seafood",
+  "version": "1.0.0",
+  "tables": {
+    "users": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true, "comment": "UUID" },
+        "gudang_id": { "type": "CHAR(36)", "nullable": true, "foreign": "gudang.id" },
+        "nama": { "type": "VARCHAR(100)", "nullable": false },
+        "username": { "type": "VARCHAR(50)", "nullable": false, "unique": true },
+        "password": { "type": "VARCHAR(255)", "nullable": false, "comment": "bcrypt hash" },
+        "role": { "type": "ENUM('bos','admin','checker')", "nullable": false },
+        "no_hp": { "type": "VARCHAR(20)", "nullable": true },
+        "status": { "type": "ENUM('active','inactive')", "default": "active" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" },
+        "updated_at": { "type": "TIMESTAMP", "nullable": true }
+      }
+    },
+    "gudang": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "bos_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "nama_gudang": { "type": "VARCHAR(100)", "default": "Peace Seafood" },
+        "kode_gudang": { "type": "VARCHAR(10)", "default": "PSF" },
+        "alamat": { "type": "TEXT", "nullable": true },
+        "no_hp": { "type": "VARCHAR(20)", "nullable": true },
+        "no_rekening": { "type": "VARCHAR(100)", "nullable": true },
+        "nama_bank": { "type": "VARCHAR(50)", "nullable": true },
+        "atas_nama": { "type": "VARCHAR(100)", "nullable": true },
+        "logo": { "type": "VARCHAR(255)", "nullable": true },
+        "status": { "type": "ENUM('active','inactive')", "default": "active" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "supplier": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "nama": { "type": "VARCHAR(100)", "nullable": false },
+        "no_hp": { "type": "VARCHAR(20)", "nullable": true },
+        "alamat": { "type": "TEXT", "nullable": true },
+        "status": { "type": "ENUM('active','inactive')", "default": "active" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "pembeli": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "nama": { "type": "VARCHAR(100)", "nullable": false },
+        "no_hp": { "type": "VARCHAR(20)", "nullable": true },
+        "alamat": { "type": "TEXT", "nullable": true },
+        "tipe": { "type": "ENUM('eceran','grosir','tetap')", "default": "eceran" },
+        "status": { "type": "ENUM('active','inactive')", "default": "active" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "jenis_ikan": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "nama": { "type": "VARCHAR(100)", "nullable": false },
+        "status": { "type": "ENUM('active','inactive')", "default": "active" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "produk": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "jenis_ikan_id": { "type": "CHAR(36)", "foreign": "jenis_ikan.id" },
+        "grade": { "type": "ENUM('A','B','C')", "nullable": false },
+        "size": { "type": "VARCHAR(20)", "nullable": false, "comment": "contoh: 7/10, 12/15" },
+        "satuan": { "type": "ENUM('kg','ikat')", "default": "kg" },
+        "status": { "type": "ENUM('active','inactive')", "default": "active" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "stok_masuk": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "supplier_id": { "type": "CHAR(36)", "foreign": "supplier.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "tanggal": { "type": "DATE", "nullable": false },
+        "berat_kotor": { "type": "DECIMAL(10,2)", "nullable": false },
+        "jenis_kemasan": { "type": "ENUM('karung','kardus')", "nullable": false },
+        "status": { "type": "ENUM('pending_sortir','selesai')", "default": "pending_sortir" },
+        "catatan": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "sortir": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "stok_masuk_id": { "type": "CHAR(36)", "foreign": "stok_masuk.id" },
+        "produk_id": { "type": "CHAR(36)", "foreign": "produk.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "berat_kg": { "type": "DECIMAL(10,2)", "nullable": false },
+        "harga_beli": { "type": "DECIMAL(15,2)", "nullable": false },
+        "stok_tersisa": { "type": "DECIMAL(10,2)", "nullable": false },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "timbangan": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "stok_masuk_id": { "type": "CHAR(36)", "foreign": "stok_masuk.id" },
+        "sortir_id": { "type": "CHAR(36)", "nullable": true, "foreign": "sortir.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "target_berat": { "type": "DECIMAL(10,2)", "nullable": false },
+        "berat_aktual": { "type": "DECIMAL(10,2)", "nullable": false },
+        "berat_final": { "type": "DECIMAL(10,2)", "nullable": false },
+        "selisih": { "type": "DECIMAL(10,2)", "comment": "generated: berat_final - target_berat" },
+        "aksi": { "type": "ENUM('tambah','kurang','pas')", "nullable": false },
+        "catatan": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "nota": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "pembeli_id": { "type": "CHAR(36)", "foreign": "pembeli.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "no_nota": { "type": "VARCHAR(30)", "unique": true, "comment": "PSF-202605-0001" },
+        "tanggal": { "type": "DATE", "nullable": false },
+        "metode_bayar": { "type": "ENUM('cash','transfer')", "nullable": false },
+        "status_bayar": { "type": "ENUM('lunas','belum_lunas')", "default": "belum_lunas" },
+        "bukti_transfer": { "type": "VARCHAR(255)", "nullable": true },
+        "total": { "type": "DECIMAL(15,2)", "nullable": false },
+        "catatan": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "nota_detail": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "nota_id": { "type": "CHAR(36)", "foreign": "nota.id" },
+        "produk_id": { "type": "CHAR(36)", "foreign": "produk.id" },
+        "sortir_id": { "type": "CHAR(36)", "foreign": "sortir.id" },
+        "jumlah_kg": { "type": "DECIMAL(10,2)", "nullable": false },
+        "harga_jual": { "type": "DECIMAL(15,2)", "nullable": false },
+        "subtotal": { "type": "DECIMAL(15,2)", "nullable": false },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "harga_history": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "produk_id": { "type": "CHAR(36)", "foreign": "produk.id" },
+        "harga": { "type": "DECIMAL(15,2)", "nullable": false },
+        "tipe": { "type": "ENUM('beli','jual')", "nullable": false },
+        "tanggal": { "type": "DATE", "nullable": false },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "harga_nego": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "pembeli_id": { "type": "CHAR(36)", "foreign": "pembeli.id" },
+        "produk_id": { "type": "CHAR(36)", "foreign": "produk.id" },
+        "harga_nego": { "type": "DECIMAL(15,2)", "nullable": false },
+        "berlaku_dari": { "type": "DATE", "nullable": false },
+        "berlaku_sampai": { "type": "DATE", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "penitipan": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "supplier_id": { "type": "CHAR(36)", "foreign": "supplier.id" },
+        "produk_id": { "type": "CHAR(36)", "foreign": "produk.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "jumlah_kg": { "type": "DECIMAL(10,2)", "nullable": false },
+        "tanggal_masuk": { "type": "DATE", "nullable": false },
+        "tipe_komisi": { "type": "ENUM('jasa_angkat','scope_besar')", "nullable": false },
+        "nominal_komisi": { "type": "DECIMAL(15,2)", "nullable": false },
+        "status": { "type": "ENUM('aktif','selesai')", "default": "aktif" },
+        "catatan": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "penitipan_penjualan": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "penitipan_id": { "type": "CHAR(36)", "foreign": "penitipan.id" },
+        "nota_detail_id": { "type": "CHAR(36)", "foreign": "nota_detail.id" },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "hutang_piutang": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "nota_id": { "type": "CHAR(36)", "foreign": "nota.id" },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "pembeli_id": { "type": "CHAR(36)", "foreign": "pembeli.id" },
+        "jumlah": { "type": "DECIMAL(15,2)", "nullable": false },
+        "jatuh_tempo": { "type": "DATE", "nullable": true },
+        "status": { "type": "ENUM('belum_lunas','lunas')", "default": "belum_lunas" },
+        "tanggal_lunas": { "type": "DATE", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "susut": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "sortir_id": { "type": "CHAR(36)", "nullable": true, "foreign": "sortir.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "jumlah_kg": { "type": "DECIMAL(10,2)", "nullable": false },
+        "alasan": { "type": "ENUM('rusak','busuk','hilang','lainnya')", "nullable": false },
+        "catatan": { "type": "TEXT", "nullable": true },
+        "tanggal": { "type": "DATE", "nullable": false },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "biaya_operasional": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "nullable": true, "foreign": "gudang.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "kategori": { "type": "ENUM('es_batu','listrik','gaji','bensin','lainnya')", "nullable": false },
+        "jumlah": { "type": "DECIMAL(15,2)", "nullable": false },
+        "ditanggung_oleh": { "type": "ENUM('gudang','bos','bersama')", "nullable": false },
+        "tanggal": { "type": "DATE", "nullable": false },
+        "catatan": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "retur": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "nota_id": { "type": "CHAR(36)", "foreign": "nota.id" },
+        "produk_id": { "type": "CHAR(36)", "foreign": "produk.id" },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "jumlah_kg": { "type": "DECIMAL(10,2)", "nullable": false },
+        "alasan": { "type": "TEXT", "nullable": false },
+        "status": { "type": "ENUM('pending','diproses','selesai')", "default": "pending" },
+        "tanggal": { "type": "DATE", "nullable": false },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "audit_log": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "user_id": { "type": "CHAR(36)", "foreign": "users.id" },
+        "gudang_id": { "type": "CHAR(36)", "nullable": true, "foreign": "gudang.id" },
+        "aksi": { "type": "VARCHAR(100)", "nullable": false, "comment": "create_nota, edit_stok, dll" },
+        "tabel": { "type": "VARCHAR(50)", "nullable": false },
+        "data_lama": { "type": "JSON", "nullable": true },
+        "data_baru": { "type": "JSON", "nullable": true },
+        "ip_address": { "type": "VARCHAR(45)", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "setting": {
+      "columns": {
+        "id": { "type": "CHAR(36)", "primary": true },
+        "gudang_id": { "type": "CHAR(36)", "foreign": "gudang.id" },
+        "key": { "type": "VARCHAR(100)", "nullable": false },
+        "value": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" },
+        "updated_at": { "type": "TIMESTAMP", "nullable": true }
+      },
+      "default_keys": {
+        "default_target_berat": "70",
+        "toleransi_berat": "0.5",
+        "pengeluaran_mode": "per_gudang",
+        "dark_mode_default": "light",
+        "format_nomor_nota": "[PREFIX]-[YYYYMM]-[XXXX]",
+        "timbangan_input_by": "keduanya",
+        "komisi_mode": "jasa_angkat"
+      }
+    }
+  }
+}

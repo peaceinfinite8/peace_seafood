@@ -1,0 +1,738 @@
+[
+  {
+    "page": "Login",
+    "route": "/login",
+    "functions": [
+      {
+        "name": "AuthController::login",
+        "type": "POST",
+        "description": "Menerima kredensial, memvalidasi, mengembalikan token JWT dan data user (POST /api/auth/login)"
+      },
+      {
+        "name": "doLogin()",
+        "type": "event",
+        "description": "Event JS pada form: kirim request login, simpan token/user di localStorage dan redirect ke /dashboard"
+      }
+    ],
+    "ui_components": [
+      "login form",
+      "input (email,password)",
+      "button",
+      "background decorations",
+      "toast"
+    ]
+  },
+  {
+    "page": "Dashboard",
+    "route": "/dashboard",
+    "functions": [
+      {
+        "name": "DashboardController::index",
+        "type": "GET",
+        "description": "Ambil ringkasan dashboard: stok, penjualan hari ini, pending timbangan, ringkasan keuangan (GET /api/dashboard)"
+      },
+      {
+        "name": "PenjualanController::index",
+        "type": "GET",
+        "description": "Ambil list nota singkat untuk recentNota (GET /api/penjualan?per_page=... digunakan oleh dashboard)"
+      },
+      {
+        "name": "StokController::index",
+        "type": "GET",
+        "description": "Ambil inventory untuk widget low stock dan nilai stok (GET /api/stok)"
+      },
+      {
+        "name": "dashboardPage.init()/loadDashboard()",
+        "type": "event",
+        "description": "Inisialisasi JS: panggil API dashboard, penjualan, stok; set state dan render chart"
+      },
+      {
+        "name": "renderCharts()",
+        "type": "event",
+        "description": "Render Chart.js untuk sales & stok berdasarkan data yang diambil"
+      }
+    ],
+    "ui_components": [
+      "navbar",
+      "stat cards",
+      "buttons (quick actions)",
+      "charts (Chart.js)",
+      "table/list (recent nota)",
+      "badges",
+      "modal (notifikasi in layout)"
+    ]
+  },
+  {
+    "page": "Stok & Inventory",
+    "route": "/stok",
+    "functions": [
+      {
+        "name": "StokController::index",
+        "type": "GET",
+        "description": "Ambil data inventory (GET /api/stok)"
+      },
+      {
+        "name": "StokController::pendingTimbang",
+        "type": "GET",
+        "description": "Ambil jumlah/daftar pending timbangan (GET /api/stok/pending-timbang)"
+      },
+      {
+        "name": "MasterDataController::jenisIkanIndex",
+        "type": "GET",
+        "description": "Ambil daftar jenis ikan untuk filter (GET /api/master/jenis-ikan)"
+      },
+      {
+        "name": "stokPage.loadData()",
+        "type": "event",
+        "description": "Event JS untuk memanggil API stok, pending-timbang, dan jenis-ikan; mengisi tabel & filter"
+      },
+      {
+        "name": "search/filter inputs",
+        "type": "event",
+        "description": "Filter/search client-side pada `items`"
+      }
+    ],
+    "ui_components": [
+      "search input",
+      "select filters",
+      "table",
+      "badges/status",
+      "buttons (timbangan, input stok)",
+      "summary area"
+    ]
+  },
+  {
+    "page": "Input Stok Masuk",
+    "route": "/stok/masuk",
+    "functions": [
+      {
+        "name": "StokController::masuk",
+        "type": "POST",
+        "description": "Mencatat stok masuk sebagai pending (POST /api/stok/masuk)"
+      },
+      {
+        "name": "MasterDataController::supplierIndex",
+        "type": "GET",
+        "description": "Ambil daftar supplier untuk select (GET /api/master/supplier)"
+      },
+      {
+        "name": "MasterDataController::produkIndex",
+        "type": "GET",
+        "description": "Ambil daftar produk untuk select (GET /api/master/produk)"
+      },
+      {
+        "name": "stokMasukPage.submit()",
+        "type": "event",
+        "description": "Validasi form di client, POST ke /api/stok/masuk dan redirect ke /stok"
+      },
+      {
+        "name": "setProdukInfo()/calcTotal()",
+        "type": "event",
+        "description": "Helper JS untuk set harga default dan hitung total"
+      }
+    ],
+    "ui_components": [
+      "form",
+      "select (supplier,produk)",
+      "number inputs (qty,harga)",
+      "auto-calculated total",
+      "buttons",
+      "toast"
+    ]
+  },
+  {
+    "page": "Timbangan & Susut",
+    "route": "/stok/timbangan",
+    "functions": [
+      {
+        "name": "StokController::pendingTimbang",
+        "type": "GET",
+        "description": "Ambil list stok masuk yang pending timbangan (GET /api/stok/pending-timbang)"
+      },
+      {
+        "name": "StokController::timbang",
+        "type": "POST",
+        "description": "Konfirmasi timbangan dan update stok (POST /api/stok/timbang)"
+      },
+      {
+        "name": "timbanganPage.selectItem()",
+        "type": "event",
+        "description": "Pilih item pending untuk ditimbang; isi form dengan nilai default"
+      },
+      {
+        "name": "timbanganPage.submitTimbangan()",
+        "type": "event",
+        "description": "Kirim data timbangan ke endpoint /api/stok/timbang dan refresh list"
+      }
+    ],
+    "ui_components": [
+      "list/panel pending",
+      "detail card",
+      "timbangan form",
+      "susut indicator",
+      "buttons",
+      "badges"
+    ]
+  },
+  {
+    "page": "History Stok",
+    "route": "/stok/history",
+    "functions": [
+      {
+        "name": "StokController::history",
+        "type": "GET",
+        "description": "Ambil history stok (GET /api/stok/history) dengan filter tanggal/produk"
+      },
+      {
+        "name": "stokHistory.loadData()",
+        "type": "event",
+        "description": "JS memanggil endpoint history dan menampilkan tabel dengan pagination lokal"
+      },
+      {
+        "name": "openDetail(item)",
+        "type": "event",
+        "description": "Tampilkan modal detail untuk baris history yang dipilih"
+      }
+    ],
+    "ui_components": [
+      "filter inputs (date,search,status)",
+      "table",
+      "modal detail",
+      "stat cards",
+      "pagination info"
+    ]
+  },
+  {
+    "page": "Penjualan (List)",
+    "route": "/penjualan",
+    "functions": [
+      {
+        "name": "PenjualanController::index",
+        "type": "GET",
+        "description": "Ambil daftar nota (GET /api/penjualan)"
+      },
+      {
+        "name": "PenjualanController::show",
+        "type": "GET",
+        "description": "Ambil detail nota (GET /api/penjualan/{id}) digunakan saat membuka modal detail"
+      },
+      {
+        "name": "PenjualanController::finalize",
+        "type": "POST",
+        "description": "Finalize nota: kurangi stok dan ubah status (POST /api/penjualan/{id}/finalize)"
+      },
+      {
+        "name": "PenjualanController::cancel",
+        "type": "POST",
+        "description": "Batalkan nota (POST /api/penjualan/{id}/cancel)"
+      },
+      {
+        "name": "penjualanPage.showDetail()/finalizeNota()/cancelNota()",
+        "type": "event",
+        "description": "JS untuk menampilkan detail nota, finalize, dan cancel melalui API"
+      }
+    ],
+    "ui_components": [
+      "filter (date,status,search)",
+      "table",
+      "modal detail",
+      "buttons (finalize,cancel)",
+      "toasts",
+      "datepickers"
+    ]
+  },
+  {
+    "page": "Buat Nota Penjualan",
+    "route": "/penjualan/create",
+    "functions": [
+      {
+        "name": "PenjualanController::create",
+        "type": "POST",
+        "description": "Buat nota penjualan (POST /api/penjualan)"
+      },
+      {
+        "name": "PenjualanController::finalize",
+        "type": "POST",
+        "description": "(Opsi) finalize nota langsung setelah dibuat (POST /api/penjualan/{id}/finalize)"
+      },
+      {
+        "name": "MasterDataController::produkIndex",
+        "type": "GET",
+        "description": "Ambil produk untuk memilih item (GET /api/master/produk)"
+      },
+      {
+        "name": "MasterDataController::pembeliIndex",
+        "type": "GET",
+        "description": "Ambil daftar pembeli (GET /api/master/pembeli)"
+      },
+      {
+        "name": "createNotaPage.submitNota(mode)",
+        "type": "event",
+        "description": "JS buat nota: kirim form ke /api/penjualan, opsi finalize; menghitung subtotal/total client-side"
+      },
+      {
+        "name": "addItem()/removeItem()/calcItem()",
+        "type": "event",
+        "description": "Fungsi UI untuk menambah/menghapus item dan kalkulasi subtotal"
+      }
+    ],
+    "ui_components": [
+      "form (multi-item)",
+      "select produk/pembeli",
+      "inputs (qty,harga)",
+      "summary panel",
+      "buttons (simpan draft, finalize)",
+      "toasts"
+    ]
+  },
+  {
+    "page": "Penitipan (List)",
+    "route": "/penitipan",
+    "functions": [
+      {
+        "name": "PenitipanController::index",
+        "type": "GET",
+        "description": "Ambil list penitipan/konsinyasi (GET /api/penitipan)"
+      },
+      {
+        "name": "PenitipanController::jual",
+        "type": "POST",
+        "description": "Catat penjualan titipan (POST /api/penitipan/{id}/jual)"
+      },
+      {
+        "name": "PenitipanController::settlement",
+        "type": "POST",
+        "description": "Tandai titipan selesai/settlement (POST /api/penitipan/{id}/selesai)"
+      },
+      {
+        "name": "penitipanPage.openDetail()/openJual()/submitJual()/doSettlement()",
+        "type": "event",
+        "description": "JS buka detail, buka modal jual, kirim penjualan titipan, dan settlement melalui API"
+      }
+    ],
+    "ui_components": [
+      "table",
+      "filters",
+      "modal detail",
+      "modal catat penjualan",
+      "buttons",
+      "stat cards"
+    ]
+  },
+  {
+    "page": "Terima Titipan (Buat)",
+    "route": "/penitipan/create",
+    "functions": [
+      {
+        "name": "PenitipanController::terima",
+        "type": "POST",
+        "description": "Terima titipan baru (POST /api/penitipan)"
+      },
+      {
+        "name": "MasterDataController::supplierIndex",
+        "type": "GET",
+        "description": "Ambil supplier untuk select (GET /api/master/supplier)"
+      },
+      {
+        "name": "MasterDataController::produkIndex",
+        "type": "GET",
+        "description": "Ambil produk untuk select (GET /api/master/produk)"
+      },
+      {
+        "name": "penitipanCreate.submit()",
+        "type": "event",
+        "description": "JS validasi form, POST ke /api/penitipan lalu redirect ke daftar penitipan"
+      }
+    ],
+    "ui_components": [
+      "form",
+      "select supplier/produk",
+      "inputs (jumlah,harga,tanggal)",
+      "preview estimasi",
+      "buttons",
+      "toasts"
+    ]
+  },
+  {
+    "page": "Retur (List)",
+    "route": "/retur",
+    "functions": [
+      {
+        "name": "ReturController::index",
+        "type": "GET",
+        "description": "Ambil daftar retur (GET /api/retur)"
+      },
+      {
+        "name": "ReturController::show",
+        "type": "GET",
+        "description": "Ambil detail retur (GET /api/retur/{id})"
+      },
+      {
+        "name": "ReturController::store",
+        "type": "POST",
+        "description": "Buat retur (POST /api/retur)"
+      },
+      {
+        "name": "ReturController::update",
+        "type": "PUT",
+        "description": "Update retur (PUT /api/retur/{id}), dipakai di backend untuk mengubah status/isi"
+      },
+      {
+        "name": "returPage.openDetail()/approve()/reject()",
+        "type": "event",
+        "description": "JS buka detail retur, panggil POST /api/retur/{id}/approve atau /reject melalui API (approve/reject endpoints ada di routes API mapping)"
+      }
+    ],
+    "ui_components": [
+      "table",
+      "filters",
+      "modal detail",
+      "action buttons (approve,reject)",
+      "stat cards",
+      "toasts"
+    ]
+  },
+  {
+    "page": "Buat Retur",
+    "route": "/retur/create",
+    "functions": [
+      {
+        "name": "ReturController::store",
+        "type": "POST",
+        "description": "Submit form retur ke backend (POST /api/retur)"
+      },
+      {
+        "name": "MasterDataController::produkIndex",
+        "type": "GET",
+        "description": "Ambil produk untuk retur stok (GET /api/master/produk)"
+      },
+      {
+        "name": "MasterDataController::supplierIndex",
+        "type": "GET",
+        "description": "Ambil supplier (GET /api/master/supplier) — untuk retur piutang/supplier"
+      },
+      {
+        "name": "returCreate.submit()",
+        "type": "event",
+        "description": "JS validasi dan submit payload retur sesuai tipe (stok atau piutang) ke API"
+      }
+    ],
+    "ui_components": [
+      "form (tipe stok / piutang)",
+      "radio tiles",
+      "file input (foto)",
+      "selects",
+      "buttons",
+      "toasts"
+    ]
+  },
+  {
+    "page": "Keuangan",
+    "route": "/keuangan",
+    "functions": [
+      {
+        "name": "KeuanganController::index",
+        "type": "GET",
+        "description": "Ambil list hutang/piutang dan biaya (GET /api/keuangan/hutang-piutang dan GET /api/keuangan/biaya)"
+      },
+      {
+        "name": "KeuanganController::create",
+        "type": "POST",
+        "description": "Buat entri hutang/piutang manual (POST /api/keuangan/hutang-piutang)"
+      },
+      {
+        "name": "KeuanganController::bayar",
+        "type": "POST",
+        "description": "Proses pembayaran terhadap hutang/piutang (POST /api/keuangan/bayar)"
+      },
+      {
+        "name": "keuanganPage.openBayar()/submitBayar()",
+        "type": "event",
+        "description": "JS buka modal input pembayaran dan POST ke /api/keuangan/bayar"
+      },
+      {
+        "name": "LaporanController::keuangan",
+        "type": "GET",
+        "description": "Dipanggil untuk ringkasan/aging (GET /api/laporan/keuangan)"
+      }
+    ],
+    "ui_components": [
+      "tabs",
+      "table",
+      "summary cards",
+      "modal bayar",
+      "buttons",
+      "form inputs"
+    ]
+  },
+  {
+    "page": "Master Data (Index)",
+    "route": "/master-data",
+    "functions": [
+      {
+        "name": "MasterDataController::supplierIndex",
+        "type": "GET",
+        "description": "Ambil count/daftar supplier (GET /api/master/supplier) digunakan untuk dashboard links"
+      },
+      {
+        "name": "MasterDataController::pembeliIndex",
+        "type": "GET",
+        "description": "Ambil pembeli (GET /api/master/pembeli)"
+      },
+      {
+        "name": "MasterDataController::jenisIkanIndex",
+        "type": "GET",
+        "description": "Ambil jenis ikan (GET /api/master/jenis-ikan)"
+      },
+      {
+        "name": "MasterDataController::produkIndex",
+        "type": "GET",
+        "description": "Ambil produk (GET /api/master/produk)"
+      }
+    ],
+    "ui_components": ["cards/quick-links", "counts", "icons"]
+  },
+  {
+    "page": "Data Supplier",
+    "route": "/master-data/supplier",
+    "functions": [
+      {
+        "name": "MasterDataController::supplierIndex",
+        "type": "GET",
+        "description": "Ambil daftar supplier (GET /api/master/supplier)"
+      },
+      {
+        "name": "MasterDataController::supplierStore",
+        "type": "POST",
+        "description": "Tambahkan supplier baru (POST /api/master/supplier)"
+      },
+      {
+        "name": "MasterDataController::supplierUpdate",
+        "type": "PUT",
+        "description": "Update supplier (PUT /api/master/supplier/{id})"
+      },
+      {
+        "name": "MasterDataController::supplierDestroy",
+        "type": "DELETE",
+        "description": "Nonaktifkan supplier (DELETE /api/master/supplier/{id})"
+      },
+      {
+        "name": "supplierPage.save()/deleteItem()",
+        "type": "event",
+        "description": "JS untuk tambah/edit/hapus supplier via API"
+      }
+    ],
+    "ui_components": [
+      "search",
+      "table",
+      "modal form",
+      "buttons (add,edit,delete)",
+      "toasts"
+    ]
+  },
+  {
+    "page": "Data Pembeli",
+    "route": "/master-data/pembeli",
+    "functions": [
+      {
+        "name": "MasterDataController::pembeliIndex",
+        "type": "GET",
+        "description": "Ambil daftar pembeli (GET /api/master/pembeli)"
+      },
+      {
+        "name": "MasterDataController::pembeliStore",
+        "type": "POST",
+        "description": "Tambahkan pembeli (POST /api/master/pembeli)"
+      },
+      {
+        "name": "MasterDataController::pembeliUpdate",
+        "type": "PUT",
+        "description": "Update pembeli (PUT /api/master/pembeli/{id})"
+      },
+      {
+        "name": "MasterDataController::pembeliDestroy",
+        "type": "DELETE",
+        "description": "Nonaktifkan pembeli (DELETE /api/master/pembeli/{id})"
+      },
+      {
+        "name": "pembeliPage.save()/deleteItem()",
+        "type": "event",
+        "description": "JS CRUD pembeli via API (create/update/delete)"
+      }
+    ],
+    "ui_components": ["table", "search", "modal form", "buttons"]
+  },
+  {
+    "page": "Jenis Ikan",
+    "route": "/master-data/jenis-ikan",
+    "functions": [
+      {
+        "name": "MasterDataController::jenisIkanIndex",
+        "type": "GET",
+        "description": "Ambil daftar jenis ikan (GET /api/master/jenis-ikan)"
+      },
+      {
+        "name": "MasterDataController::jenisIkanStore",
+        "type": "POST",
+        "description": "Tambah jenis ikan (POST /api/master/jenis-ikan)"
+      },
+      {
+        "name": "MasterDataController::jenisIkanUpdate",
+        "type": "PUT",
+        "description": "Update jenis ikan (PUT /api/master/jenis-ikan/{id})"
+      },
+      {
+        "name": "jenisIkanPage.save()/delete?",
+        "type": "event",
+        "description": "JS untuk kelola jenis ikan (view menggunakan master-data templates)"
+      }
+    ],
+    "ui_components": ["table", "form/modal", "buttons"]
+  },
+  {
+    "page": "Data Produk",
+    "route": "/master-data/produk",
+    "functions": [
+      {
+        "name": "MasterDataController::produkIndex",
+        "type": "GET",
+        "description": "Ambil daftar produk (GET /api/master/produk)"
+      },
+      {
+        "name": "MasterDataController::produkStore",
+        "type": "POST",
+        "description": "Tambah produk (POST /api/master/produk)"
+      },
+      {
+        "name": "MasterDataController::produkUpdate",
+        "type": "PUT",
+        "description": "Update produk (PUT /api/master/produk/{id})"
+      },
+      {
+        "name": "MasterDataController::hargaIndex",
+        "type": "GET",
+        "description": "Lihat riwayat harga produk (GET /api/master/harga)"
+      },
+      {
+        "name": "MasterDataController::hargaStore",
+        "type": "POST",
+        "description": "Simpan perubahan harga & history (POST /api/master/harga)"
+      },
+      {
+        "name": "produkPage.save()",
+        "type": "event",
+        "description": "JS create/update produk via API; update harga default saat select produk"
+      }
+    ],
+    "ui_components": [
+      "table",
+      "modal form",
+      "select jenis ikan",
+      "buttons",
+      "badges"
+    ]
+  },
+  {
+    "page": "Laporan & Export",
+    "route": "/laporan",
+    "functions": [
+      {
+        "name": "LaporanController::stok",
+        "type": "GET",
+        "description": "Ambil laporan stok (GET /api/laporan/stok)"
+      },
+      {
+        "name": "LaporanController::penjualan",
+        "type": "GET",
+        "description": "Ambil laporan penjualan (GET /api/laporan/penjualan)"
+      },
+      {
+        "name": "LaporanController::keuangan",
+        "type": "GET",
+        "description": "Ambil ringkasan/aging keuangan (GET /api/laporan/keuangan dan GET /api/laporan/hutang-aging)"
+      },
+      {
+        "name": "LaporanController::exportPdf",
+        "type": "POST",
+        "description": "Generate PDF (POST /api/laporan/export/pdf?tipe=...)"
+      },
+      {
+        "name": "LaporanController::exportExcel",
+        "type": "POST",
+        "description": "Generate/unduh CSV/XLS (POST /api/laporan/export/excel?tipe=...)"
+      },
+      {
+        "name": "laporanPage.exportCsv()/exportPdf()",
+        "type": "event",
+        "description": "JS membuka URL export (window.open) dengan parameter token & periode"
+      }
+    ],
+    "ui_components": [
+      "datepickers",
+      "tabs",
+      "tables",
+      "export buttons",
+      "filters"
+    ]
+  },
+  {
+    "page": "Settings",
+    "route": "/settings",
+    "functions": [
+      {
+        "name": "SettingsController::index",
+        "type": "GET",
+        "description": "Ambil pengaturan aplikasi (GET /api/settings)"
+      },
+      {
+        "name": "SettingsController::update",
+        "type": "PUT",
+        "description": "Update setting per kunci (PUT /api/settings/{kunci})"
+      },
+      {
+        "name": "SettingsController::users",
+        "type": "GET",
+        "description": "Ambil daftar users (GET /api/settings/users)"
+      },
+      {
+        "name": "SettingsController::storeUser",
+        "type": "POST",
+        "description": "Buat user baru (POST /api/settings/users)"
+      },
+      {
+        "name": "SettingsController::updateUser",
+        "type": "PUT",
+        "description": "Update user (PUT /api/settings/users/{id})"
+      },
+      {
+        "name": "SettingsController::deleteUser",
+        "type": "DELETE",
+        "description": "Nonaktifkan user (DELETE /api/settings/users/{id})"
+      },
+      {
+        "name": "SettingsController::gudang",
+        "type": "GET",
+        "description": "Ambil daftar gudang (GET /api/settings/gudang)"
+      },
+      {
+        "name": "SettingsController::storeGudang",
+        "type": "POST",
+        "description": "Buat gudang (POST /api/settings/gudang)"
+      },
+      {
+        "name": "settingsPage.saveSetting()/saveUser()/deleteUser()",
+        "type": "event",
+        "description": "JS untuk simpan perubahan setting, CRUD user, dan panggil API terkait"
+      }
+    ],
+    "ui_components": [
+      "tabs",
+      "toggles/selects/inputs for settings",
+      "table users",
+      "modal user form",
+      "cards gudang",
+      "buttons",
+      "toasts"
+    ]
+  }
+]
