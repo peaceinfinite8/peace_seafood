@@ -756,4 +756,4 @@ Cookie: auth_token=<JWT_TOKEN>
 
 ---
 
-**Next**: Baca `13-seeder.md` untuk initial data →
+**Next**: Baca `13-seeding-and-initial-data.md` untuk initial data →

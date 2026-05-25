@@ -221,4 +221,4 @@ CORS_ORIGIN=http://localhost:8080
 
 ---
 
-**Next**: Read `PRD/00-index.md` untuk memahami struktur dokumentasi lengkap →
+**Next**: Read `.docs/PRD/00-index.md` untuk memahami struktur dokumentasi lengkap →

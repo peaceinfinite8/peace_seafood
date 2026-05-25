@@ -1,0 +1,13 @@
+{
+  "name": "peace-seafood-assets",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:assets": "node scripts/build-assets.mjs",
+    "watch:assets": "node scripts/build-assets.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}
+

@@ -425,5 +425,5 @@ touch .htaccess
 
 ---
 
-**Next**: Baca `05-database.md` untuk schema design →
+**Next**: Baca `05-database-schema.md` untuk schema design →
 

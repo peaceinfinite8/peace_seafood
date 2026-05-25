@@ -34,32 +34,32 @@ Baca dalam urutan ini agar tidak ada asumsi yang salah:
 
 ### **STEP 2: Teknis & Database**
 4. `PRD/02-tech-stack.md` — Stack lengkap + versi
-5. `PRD/05-database.md` — Schema & relasi
-6. `PRD/03-struktur-folder.md` — Struktur project
+5. `PRD/05-database-schema.md` — Schema & relasi
+6. `PRD/03-folder-structure.md` — Struktur project
 
 ### **STEP 3: Bisnis Logic**
-7. `PRD/06-alur-modul.md` — Alur setiap modul detail
+7. `PRD/06-module-flows.md` — Alur setiap modul detail
 8. `PRD/09-business-rules.md` — Rules & kalkulasi
 9. `PRD/08-settings.md` — Opsi di Settings Bos
 
 ### **STEP 4: UI & Output**
 10. `PRD/10-ui-guidelines.md` — Design system & style
 11. `PRD/07-dashboard.md` — Dashboard tiap role
-12. `PRD/11-export-output.md` — Format PDF & Excel
+12. `PRD/11-exports-and-output.md` — Format PDF & Excel
 
 ### **STEP 5: API & Implementation**
 13. `PRD/12-api-endpoints.md` — Endpoint lengkap
-14. `PRD/13-seeder.md` — Data initial & seeder
+14. `PRD/13-seeding-and-initial-data.md` — Data initial & seeder
 
 ### **STEP 6: Security, Error, Notifikasi**
 15. `PRD/15-security.md` — Keamanan wajib
 16. `PRD/14-error-handling.md` — Handling error & validasi
-17. `PRD/16-notifikasi.md` — Notifikasi system
-18. `PRD/17-retur.md` — Alur retur
+17. `PRD/16-notifications.md` — Notifikasi system
+18. `PRD/17-returns.md` — Alur retur
 
 ### **STEP 7: Schema & Stack**
 19. `schema/` — JSON schema files (baca sambil implement)
-20. `stack.md` — Dokumentasi dependency
+20. `tech-stack-notes.md` — Dokumentasi dependency
 
 ---
 
@@ -122,11 +122,11 @@ Baca dalam urutan ini agar tidak ada asumsi yang salah:
 
 ## 📋 Hal yang TIDAK boleh Diasumsikan
 
-❌ **Jangan asumsikan** structure folder, baca `03-struktur-folder.md`
+❌ **Jangan asumsikan** structure folder, baca `03-folder-structure.md`
 ❌ **Jangan asumsikan** permission per role, baca `04-user-roles.md`
-❌ **Jangan asumsikan** harga itu static, baca `06-alur-modul.md`
+❌ **Jangan asumsikan** harga itu static, baca `06-module-flows.md`
 ❌ **Jangan asumsikan** semua bos punya 1 gudang, baca `08-settings.md`
-❌ **Jangan asumsikan** format notifikasi, baca `16-notifikasi.md`
+❌ **Jangan asumsikan** format notifikasi, baca `16-notifications.md`
 ❌ **Jangan asumsikan** UI component, referensi `10-ui-guidelines.md`
 
 ---
@@ -140,7 +140,7 @@ Baca dalam urutan ini agar tidak ada asumsi yang salah:
 ├── schema/04-penitipan.json   (Tables: titipan, titipan_penjualan)
 ├── schema/05-keuangan.json    (Tables: hutang_piutang, biaya_operasional)
 ├── schema/06-harga-history.json (Tables: harga_history)
-└── stack.md                   (Dependency & library detail)
+└── tech-stack-notes.md                   (Dependency & library detail)
 ```
 
 ---

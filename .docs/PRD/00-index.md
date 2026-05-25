@@ -18,14 +18,14 @@ Panduan lengkap implementasi aplikasi Peace Seafood. Baca file ini untuk underst
 | No | File | Deskripsi | Durasi Baca |
 |---|---|---|---|
 | 3 | `02-tech-stack.md` | Stack lengkap (PHP, MySQL, Frontend libs) | 12 menit |
-| 4 | `05-database.md` | Schema lengkap & relasi antar tabel | 20 menit |
-| 5 | `03-struktur-folder.md` | Struktur project & file organization | 8 menit |
+| 4 | `05-database-schema.md` | Schema lengkap & relasi antar tabel | 20 menit |
+| 5 | `03-folder-structure.md` | Struktur project & file organization | 8 menit |
 
 ### **Phase 3: Business Logic**
 
 | No | File | Deskripsi | Durasi Baca |
 |---|---|---|---|
-| 6 | `06-alur-modul.md` | Alur detail: stok, penjualan, penitipan, retur, keuangan | 30 menit |
+| 6 | `06-module-flows.md` | Alur detail: stok, penjualan, penitipan, retur, keuangan | 30 menit |
 | 7 | `09-business-rules.md` | Aturan bisnis, kalkulasi, validasi | 15 menit |
 | 8 | `08-settings.md` | Konfigurasi di Admin Panel (multi gudang, alert, notif) | 10 menit |
 
@@ -35,14 +35,14 @@ Panduan lengkap implementasi aplikasi Peace Seafood. Baca file ini untuk underst
 |---|---|---|---|
 | 9 | `10-ui-guidelines.md` | Design system, warna, typography, component | 15 menit |
 | 10 | `07-dashboard.md` | Layout dashboard per role, widget, chart | 12 menit |
-| 11 | `11-export-output.md` | Format PDF, Excel, laporan | 10 menit |
+| 11 | `11-exports-and-output.md` | Format PDF, Excel, laporan | 10 menit |
 
 ### **Phase 5: Implementation**
 
 | No | File | Deskripsi | Durasi Baca |
 |---|---|---|---|
 | 12 | `12-api-endpoints.md` | Endpoint lengkap (method, path, request, response) | 25 menit |
-| 13 | `13-seeder.md` | Initial data & seeder SQL | 10 menit |
+| 13 | `13-seeding-and-initial-data.md` | Initial data & seeder SQL | 10 menit |
 
 ### **Phase 6: Security & Maintenance**
 
@@ -50,15 +50,15 @@ Panduan lengkap implementasi aplikasi Peace Seafood. Baca file ini untuk underst
 |---|---|---|---|
 | 14 | `15-security.md` | Keamanan (JWT, CORS, input sanitasi, file upload) | 12 menit |
 | 15 | `14-error-handling.md` | Error handling, validasi, error response format | 10 menit |
-| 16 | `16-notifikasi.md` | Notifikasi in-app (hutang, stok, error) | 8 menit |
-| 17 | `17-retur.md` | Alur retur stok & retur piutang | 12 menit |
+| 16 | `16-notifications.md` | Notifikasi in-app (hutang, stok, error) | 8 menit |
+| 17 | `17-returns.md` | Alur retur stok & retur piutang | 12 menit |
 
 ### **Schema & Reference**
 
 | No | File | Deskripsi |
 |---|---|---|
 | 18 | `../schema/` | JSON schema files (6 file) |
-| 19 | `../stack.md` | Dependency & library documentation |
+| 19 | `../tech-stack-notes.md` | Dependency & library documentation |
 
 ---
 
@@ -74,15 +74,15 @@ Panduan lengkap implementasi aplikasi Peace Seafood. Baca file ini untuk underst
 
 ### **Jika Mau Cepat Langsung Coding**
 1. Baca: `01-overview.md` + `04-user-roles.md`
-2. Baca: `05-database.md` + `03-struktur-folder.md`
-3. Baca: `06-alur-modul.md` (fokus ke modul yang mau dikerjakan)
+2. Baca: `05-database-schema.md` + `03-folder-structure.md`
+3. Baca: `06-module-flows.md` (fokus ke modul yang mau dikerjakan)
 4. Mulai coding sambil referensi file lain
 
 ### **Jika Mau Paham Semua**
 Baca semua file dalam urutan di atas (Phase 1-6)
 
 ### **Jika Mau Deploy**
-Pastikan sudah implementasi `14-error-handling.md`, `15-security.md`, `16-notifikasi.md`, dan test semua endpoint di `12-api-endpoints.md`
+Pastikan sudah implementasi `14-error-handling.md`, `15-security.md`, `16-notifications.md`, dan test semua endpoint di `12-api-endpoints.md`
 
 ---
 
@@ -91,11 +91,11 @@ Pastikan sudah implementasi `14-error-handling.md`, `15-security.md`, `16-notifi
 | Konsep | File |
 |---|---|
 | **Multi Gudang** | 01-overview.md, 04-user-roles.md, 08-settings.md |
-| **Harga Dinamis** | 06-alur-modul.md, 05-database.md, 09-business-rules.md |
-| **Penitipan** | 06-alur-modul.md, 09-business-rules.md, 17-retur.md |
-| **Retur** | 17-retur.md, 06-alur-modul.md, 05-database.md |
+| **Harga Dinamis** | 06-module-flows.md, 05-database-schema.md, 09-business-rules.md |
+| **Penitipan** | 06-module-flows.md, 09-business-rules.md, 17-returns.md |
+| **Retur** | 17-returns.md, 06-module-flows.md, 05-database-schema.md |
 | **Dark Mode** | 10-ui-guidelines.md, 07-dashboard.md |
-| **Alert & Notif** | 16-notifikasi.md, 08-settings.md |
+| **Alert & Notif** | 16-notifications.md, 08-settings.md |
 | **Security** | 15-security.md, 12-api-endpoints.md |
 
 ---

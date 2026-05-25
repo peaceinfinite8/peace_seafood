@@ -48,10 +48,19 @@ $baseUrl = '/peace_seafood';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= $baseUrl ?>/css/variables.css">
-    <link rel="stylesheet" href="<?= $baseUrl ?>/css/dark-mode.css">
-    <link rel="stylesheet" href="<?= $baseUrl ?>/css/custom.css">
+    <!-- Custom CSS (bundled when available) -->
+    <?php
+    $bundledCssFs = BASE_PATH . '/public/build/app.min.css';
+    $bundledCssUrl = $baseUrl . '/build/app.min.css';
+    $bundledCssV = file_exists($bundledCssFs) ? (string) filemtime($bundledCssFs) : null;
+    ?>
+    <?php if ($bundledCssV): ?>
+        <link rel="stylesheet" href="<?= $bundledCssUrl ?>?v=<?= $bundledCssV ?>">
+    <?php else: ?>
+        <link rel="stylesheet" href="<?= $baseUrl ?>/css/variables.css">
+        <link rel="stylesheet" href="<?= $baseUrl ?>/css/dark-mode.css">
+        <link rel="stylesheet" href="<?= $baseUrl ?>/css/custom.css">
+    <?php endif; ?>
 
     <!-- PWA -->
     <link rel="manifest" href="<?= $baseUrl ?>/manifest.json">
@@ -616,10 +625,19 @@ $baseUrl = '/peace_seafood';
         </footer>
     </div>
 
-    <!-- Custom JS -->
-    <script src="<?= $baseUrl ?>/js/api-client.js"></script>
-    <script src="<?= $baseUrl ?>/js/utils.js"></script>
-    <script src="<?= $baseUrl ?>/js/auth.js"></script>
+    <!-- Custom JS (bundled when available) -->
+    <?php
+    $bundledJsFs = BASE_PATH . '/public/build/app.min.js';
+    $bundledJsUrl = $baseUrl . '/build/app.min.js';
+    $bundledJsV = file_exists($bundledJsFs) ? (string) filemtime($bundledJsFs) : null;
+    ?>
+    <?php if ($bundledJsV): ?>
+        <script src="<?= $bundledJsUrl ?>?v=<?= $bundledJsV ?>"></script>
+    <?php else: ?>
+        <script src="<?= $baseUrl ?>/js/api-client.js"></script>
+        <script src="<?= $baseUrl ?>/js/utils.js"></script>
+        <script src="<?= $baseUrl ?>/js/auth.js"></script>
+    <?php endif; ?>
 
     <script>
         function appLayout() {

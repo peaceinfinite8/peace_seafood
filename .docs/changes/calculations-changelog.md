@@ -335,13 +335,13 @@ testFullPenitipanFlow() // Terima → Jual → Settlement
 
 ### **File Baru yang Dibuat:**
 
-1. **`.doc/PERHITUNGAN-MATEMATIKA.md`**
+1. **`.docs/changes/calculations-math.md`**
    - Dokumentasi lengkap semua formula
    - Sample perhitungan detail
    - Validasi checklist
    - Troubleshooting guide
 
-2. **`.doc/CHANGELOG-PERBAIKAN.md`** (file ini)
+2. **`.docs/changes/calculations-changelog.md`** (file ini)
    - Log semua perbaikan
    - Before/after comparison
    - Testing recommendations
@@ -406,7 +406,7 @@ testFullPenitipanFlow() // Terima → Jual → Settlement
 ## 📞 SUPPORT
 
 Jika menemukan bug baru atau ada pertanyaan:
-1. Cek dokumentasi di `.doc/PERHITUNGAN-MATEMATIKA.md`
+1. Cek dokumentasi di `.docs/changes/calculations-math.md`
 2. Review changelog ini
 3. Contact development team
 

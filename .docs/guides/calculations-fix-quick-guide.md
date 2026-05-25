@@ -57,7 +57,7 @@ Telah dilakukan perbaikan **7 critical bugs** pada perhitungan matematika di sis
 
 ## 📚 DOKUMENTASI BARU
 
-### **📊 PERHITUNGAN-MATEMATIKA.md**
+### **📊 calculations-math.md**
 Dokumentasi lengkap semua formula dengan sample perhitungan detail.
 
 **Isi:**
@@ -69,7 +69,7 @@ Dokumentasi lengkap semua formula dengan sample perhitungan detail.
 - Sample perhitungan lengkap
 - Validation checklist
 
-### **📝 CHANGELOG-PERBAIKAN.md**
+### **📝 calculations-changelog.md**
 Log detail semua perubahan dengan before/after comparison.
 
 **Isi:**
@@ -79,7 +79,7 @@ Log detail semua perubahan dengan before/after comparison.
 - Breaking changes warning
 - Migration guide
 
-### **🧪 TESTING-GUIDE.md**
+### **🧪 calculations-testing-guide.md**
 Panduan lengkap untuk testing manual dan automated.
 
 **Isi:**
@@ -89,7 +89,7 @@ Panduan lengkap untuk testing manual dan automated.
 - Performance testing guide
 - Regression test checklist
 
-### **📊 SUMMARY-PERBAIKAN.md**
+### **📊 calculations-summary.md**
 Quick reference untuk semua perbaikan.
 
 **Isi:**
@@ -99,7 +99,7 @@ Quick reference untuk semua perbaikan.
 - Verification checklist
 - Next actions
 
-### **🧮 FORMULA-QUICK-REF.md**
+### **🧮 formulas-quick-reference.md**
 Cheat sheet formula (print & tempel!).
 
 **Isi:**
@@ -177,32 +177,32 @@ Sisa = Nominal - Total Bayar
 
 ### **Quick Start:**
 ```
-1. README-PERBAIKAN.md (file ini) ← START HERE!
-2. .doc/SUMMARY-PERBAIKAN.md
-3. .doc/FORMULA-QUICK-REF.md
+1. calculations-fix-quick-guide.md (file ini) ← START HERE!
+2. `.docs/changes/calculations-summary.md`
+3. `.docs/changes/formulas-quick-reference.md`
 ```
 
 ### **Detailed Review:**
 ```
-1. .doc/SUMMARY-PERBAIKAN.md
-2. .doc/CHANGELOG-PERBAIKAN.md
-3. .doc/PERHITUNGAN-MATEMATIKA.md
-4. .doc/TESTING-GUIDE.md
+1. `.docs/changes/calculations-summary.md`
+2. `.docs/changes/calculations-changelog.md`
+3. `.docs/changes/calculations-math.md`
+4. `.docs/changes/calculations-testing-guide.md`
 ```
 
 ### **For Developers:**
 ```
-1. .doc/CHANGELOG-PERBAIKAN.md
-2. .doc/PERHITUNGAN-MATEMATIKA.md
+1. `.docs/changes/calculations-changelog.md`
+2. `.docs/changes/calculations-math.md`
 3. Review modified files
 4. Run tests
 ```
 
 ### **For QA:**
 ```
-1. .doc/TESTING-GUIDE.md
-2. .doc/PERHITUNGAN-MATEMATIKA.md
-3. .doc/FORMULA-QUICK-REF.md
+1. `.docs/changes/calculations-testing-guide.md`
+2. `.docs/changes/calculations-math.md`
+3. `.docs/changes/formulas-quick-reference.md`
 4. Execute test scenarios
 ```
 
@@ -282,10 +282,10 @@ Rp 1M × 5% = Rp 50k ✅
 ## 📞 SUPPORT
 
 **Questions?**
-- Formula: `.doc/PERHITUNGAN-MATEMATIKA.md`
-- Changes: `.doc/CHANGELOG-PERBAIKAN.md`
-- Testing: `.doc/TESTING-GUIDE.md`
-- Quick Ref: `.doc/FORMULA-QUICK-REF.md`
+- Formula: `.docs/changes/calculations-math.md`
+- Changes: `.docs/changes/calculations-changelog.md`
+- Testing: `.docs/changes/calculations-testing-guide.md`
+- Quick Ref: `.docs/changes/formulas-quick-reference.md`
 
 ---
 
@@ -308,12 +308,12 @@ Rp 1M × 5% = Rp 50k ✅
 ## 📂 FILE STRUCTURE
 
 ```
-.doc/
-├── PERHITUNGAN-MATEMATIKA.md    ← Formula lengkap
-├── CHANGELOG-PERBAIKAN.md       ← Detail changes
-├── TESTING-GUIDE.md             ← Testing guide
-├── SUMMARY-PERBAIKAN.md         ← Quick summary
-└── FORMULA-QUICK-REF.md         ← Cheat sheet
+.docs/changes/
+├── calculations-math.md    ← Formula lengkap
+├── calculations-changelog.md       ← Detail changes
+├── calculations-testing-guide.md             ← Testing guide
+├── calculations-summary.md         ← Quick summary
+└── formulas-quick-reference.md         ← Cheat sheet
 
 database/migrations/
 └── fix_calculation_errors.sql   ← Migration script
@@ -327,7 +327,7 @@ src/services/
 src/models/
 └── Produk.php                   ← Fixed
 
-README-PERBAIKAN.md              ← This file
+calculations-fix-quick-guide.md              ← This file
 ```
 
 ---

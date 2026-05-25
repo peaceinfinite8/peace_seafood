@@ -177,8 +177,8 @@ Check console logs:
 - `public/js/session-manager.js` - Session handler
 
 ### **Documentation:**
-- `.doc/18-session-cookies.md` - Full documentation
-- `README-SESSION.md` - This file
+- `.docs/PRD/18-sessions-and-cookies.md` - Full documentation
+- `session-quick-guide.md` - This file
 
 ---
 
@@ -198,7 +198,7 @@ Check console logs:
 
 ## 📚 FULL DOCUMENTATION
 
-Lihat dokumentasi lengkap di: `.doc/18-session-cookies.md`
+Lihat dokumentasi lengkap di: `.docs/PRD/18-sessions-and-cookies.md`
 
 ---
 

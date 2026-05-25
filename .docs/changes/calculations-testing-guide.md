@@ -23,8 +23,8 @@
 - [ ] Database backup dibuat
 - [ ] Development environment ready
 - [ ] Test data prepared
-- [ ] Dokumentasi perhitungan dibaca (`.doc/PERHITUNGAN-MATEMATIKA.md`)
-- [ ] Changelog dipahami (`.doc/CHANGELOG-PERBAIKAN.md`)
+- [ ] Dokumentasi perhitungan dibaca (`.docs/changes/calculations-math.md`)
+- [ ] Changelog dipahami (`.docs/changes/calculations-changelog.md`)
 
 ### **Test Data Requirements:**
 
@@ -682,7 +682,7 @@ After every code change, run these tests:
 
 ### **For QA Team:**
 
-1. Read `.doc/PERHITUNGAN-MATEMATIKA.md` thoroughly
+1. Read `.docs/changes/calculations-math.md` thoroughly
 2. Understand weighted average concept
 3. Practice manual calculations
 4. Run all scenarios at least once
@@ -690,7 +690,7 @@ After every code change, run these tests:
 
 ### **For Developers:**
 
-1. Review `.doc/CHANGELOG-PERBAIKAN.md`
+1. Review `.docs/changes/calculations-changelog.md`
 2. Understand the fixes made
 3. Write unit tests for new features
 4. Run regression tests before commit

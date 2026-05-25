@@ -410,4 +410,4 @@ User bisa customize di profile settings (future feature)
 
 ---
 
-**Next**: Baca `17-retur.md` untuk alur retur detail →
+**Next**: Baca `17-returns.md` untuk alur retur detail →

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-05-25T21:29:46.846Z",
+  "js": {
+    "file": "/build/app.min.js",
+    "sha256": "f3781d228d7af2d2da4ff8448342d6b983b9c6456e0471276a95e2f7686880ab",
+    "inputs": [
+      "public/js/api-client.js",
+      "public/js/utils.js",
+      "public/js/auth.js"
+    ]
+  },
+  "css": {
+    "file": "/build/app.min.css",
+    "sha256": "58305525a51bd92aa8b782f3e25980cb8775e9984ff4a086aaaf08c9f985aa6c",
+    "inputs": [
+      "public/css/variables.css",
+      "public/css/dark-mode.css",
+      "public/css/custom.css"
+    ]
+  }
+}

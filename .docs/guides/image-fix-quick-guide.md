@@ -58,8 +58,8 @@ console.log('[Product Modal] Image path:', this.productImage);
 - `src/views/layouts/app.php` (3 changes)
 
 **Documentation:**
-- `.doc/19-product-image-fix.md` (full guide)
-- `README-IMAGE-FIX.md` (this file)
+- `.docs/PRD/19-product-image-fix.md` (full guide)
+- `image-fix-quick-guide.md` (this file)
 
 ---
 
@@ -196,7 +196,7 @@ Refresh → Open detail → Check image
 
 ## 📚 FULL DOCUMENTATION
 
-Lihat dokumentasi lengkap: `.doc/19-product-image-fix.md`
+Lihat dokumentasi lengkap: `.docs/PRD/19-product-image-fix.md`
 
 ---
 

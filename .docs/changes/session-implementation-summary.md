@@ -265,9 +265,9 @@ SESSION_COOKIE_SAMESITE=Strict
 ### **New Files (3):**
 1. ✅ `src/utils/Session.php` - Session manager utility
 2. ✅ `public/js/session-manager.js` - Frontend session handler
-3. ✅ `.doc/18-session-cookies.md` - Full documentation
-4. ✅ `.doc/SESSION-IMPLEMENTATION-SUMMARY.md` - This file
-5. ✅ `README-SESSION.md` - Quick guide
+3. ✅ `.docs/PRD/18-sessions-and-cookies.md` - Full documentation
+4. ✅ `.docs/changes/session-implementation-summary.md` - This file
+5. ✅ `session-quick-guide.md` - Quick guide
 
 ### **Modified Files (5):**
 1. ✅ `config/app.php` - Added session configuration
@@ -455,13 +455,13 @@ JWT_SECRET=your-very-strong-random-secret-key-here
 ## 📚 DOCUMENTATION
 
 ### **Quick Start:**
-1. `README-SESSION.md` - Quick guide
+1. `session-quick-guide.md` - Quick guide
 
 ### **Full Documentation:**
-2. `.doc/18-session-cookies.md` - Complete guide
+2. `.docs/PRD/18-sessions-and-cookies.md` - Complete guide
 
 ### **Implementation:**
-3. `.doc/SESSION-IMPLEMENTATION-SUMMARY.md` - This file
+3. `.docs/changes/session-implementation-summary.md` - This file
 
 ### **Code Examples:**
 - See documentation files for examples

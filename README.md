@@ -89,6 +89,23 @@ Jalankan (butuh PHP 8.2+ sesuai `composer.json`):
 
 `php vendor/bin/rector process`
 
+## Asset Bundling (CSS/JS)
+
+Bundling & minifying file CSS/JS lokal ke:
+
+- `public/build/app.min.css`
+- `public/build/app.min.js`
+
+Perintah:
+
+`npm.cmd install`
+
+`npm.cmd run build:assets`
+
+Mode watch:
+
+`npm.cmd run watch:assets`
+
 ## Instalasi Lokal
 
 1. Clone atau salin project ke folder web server, misalnya `c:\xampp\htdocs\peace_seafood`.

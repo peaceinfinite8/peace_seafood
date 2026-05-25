@@ -89,13 +89,13 @@ Audit dan perbaikan 7 critical bugs pada perhitungan matematika di seluruh siste
 - `src/models/Produk.php`
 
 ### **Documentation Created:**
-- `.doc/PERHITUNGAN-MATEMATIKA.md` - Complete formulas
-- `.doc/CHANGELOG-PERBAIKAN.md` - Detailed changes
-- `.doc/TESTING-GUIDE.md` - Testing scenarios
-- `.doc/SUMMARY-PERBAIKAN.md` - Quick reference
-- `.doc/FORMULA-QUICK-REF.md` - Cheat sheet
+- `.docs/changes/calculations-math.md` - Complete formulas
+- `.docs/changes/calculations-changelog.md` - Detailed changes
+- `.docs/changes/calculations-testing-guide.md` - Testing scenarios
+- `.docs/changes/calculations-summary.md` - Quick reference
+- `.docs/changes/formulas-quick-reference.md` - Cheat sheet
 - `database/migrations/fix_calculation_errors.sql` - Migration
-- `README-PERBAIKAN.md` - Root summary
+- `.docs/calculations-fix-quick-guide.md` - Summary
 
 ### **Impact:**
 - ✅ Financial accuracy improved
@@ -153,7 +153,7 @@ Menghapus semua duplicate code dan dead code untuk meningkatkan maintainability.
 - `src/controllers/PenitipanController.php`
 
 ### **Documentation Created:**
-- `.doc/OPTIMIZATION-SUMMARY.md` - Complete report
+- `.docs/changes/optimization-summary.md` - Complete report
 
 ### **Impact:**
 - ✅ Code maintainability improved
@@ -215,9 +215,9 @@ SESSION_COOKIE_SAMESITE=Strict         # CSRF protection
 ### **Files Created:**
 - `src/utils/Session.php` - Session manager utility
 - `public/js/session-manager.js` - Frontend handler
-- `.doc/18-session-cookies.md` - Full documentation
-- `.doc/SESSION-IMPLEMENTATION-SUMMARY.md` - Implementation guide
-- `README-SESSION.md` - Quick guide
+- `.docs/PRD/18-sessions-and-cookies.md` - Full documentation
+- `.docs/changes/session-implementation-summary.md` - Implementation guide
+- `.docs/session-quick-guide.md` - Quick guide
 
 ### **Files Modified:**
 - `config/app.php` - Session configuration
@@ -281,8 +281,8 @@ console.log('[Product Modal] Image path:', this.productImage);
 - `src/views/layouts/app.php` (3 changes)
 
 ### **Documentation Created:**
-- `.doc/19-product-image-fix.md` - Full guide
-- `README-IMAGE-FIX.md` - Quick summary
+- `.docs/PRD/19-product-image-fix.md` - Full guide
+- `.docs/image-fix-quick-guide.md` - Quick summary
 
 ### **Impact:**
 - ✅ Images display correctly
@@ -310,30 +310,30 @@ console.log('[Product Modal] Image path:', this.productImage);
 ### **Files Created (15):**
 
 **Task 1 - Math Fixes:**
-1. `.doc/PERHITUNGAN-MATEMATIKA.md`
-2. `.doc/CHANGELOG-PERBAIKAN.md`
-3. `.doc/TESTING-GUIDE.md`
-4. `.doc/SUMMARY-PERBAIKAN.md`
-5. `.doc/FORMULA-QUICK-REF.md`
+1. `.docs/changes/calculations-math.md`
+2. `.docs/changes/calculations-changelog.md`
+3. `.docs/changes/calculations-testing-guide.md`
+4. `.docs/changes/calculations-summary.md`
+5. `.docs/changes/formulas-quick-reference.md`
 6. `database/migrations/fix_calculation_errors.sql`
-7. `README-PERBAIKAN.md`
+7. `.docs/calculations-fix-quick-guide.md`
 
 **Task 2 - Optimization:**
-8. `.doc/OPTIMIZATION-SUMMARY.md`
+8. `.docs/changes/optimization-summary.md`
 
 **Task 3 - Session:**
 9. `src/utils/Session.php`
 10. `public/js/session-manager.js`
-11. `.doc/18-session-cookies.md`
-12. `.doc/SESSION-IMPLEMENTATION-SUMMARY.md`
-13. `README-SESSION.md`
+11. `.docs/PRD/18-sessions-and-cookies.md`
+12. `.docs/changes/session-implementation-summary.md`
+13. `.docs/session-quick-guide.md`
 
 **Task 4 - Image Fix:**
-14. `.doc/19-product-image-fix.md`
-15. `README-IMAGE-FIX.md`
+14. `.docs/PRD/19-product-image-fix.md`
+15. `.docs/image-fix-quick-guide.md`
 
 **Master Documentation:**
-16. `.doc/00-MASTER-CHANGELOG.md` (this file)
+16. `.docs/changes/00-master-changelog.md` (this file)
 
 ### **Files Modified (14):**
 
@@ -440,27 +440,27 @@ console.log('[Product Modal] Image path:', this.productImage);
 ## 📚 DOCUMENTATION INDEX
 
 ### **Quick Start Guides:**
-1. `README-PERBAIKAN.md` - Math fixes summary
-2. `README-SESSION.md` - Session quick guide
-3. `README-IMAGE-FIX.md` - Image fix summary
+1. `.docs/guides/calculations-fix-quick-guide.md` - Math fixes summary
+2. `.docs/guides/session-quick-guide.md` - Session quick guide
+3. `.docs/guides/image-fix-quick-guide.md` - Image fix summary
 
 ### **Full Documentation:**
-4. `.doc/PERHITUNGAN-MATEMATIKA.md` - Complete formulas
-5. `.doc/18-session-cookies.md` - Session complete guide
-6. `.doc/19-product-image-fix.md` - Image fix guide
+4. `.docs/changes/calculations-math.md` - Complete formulas
+5. `.docs/PRD/18-sessions-and-cookies.md` - Session complete guide
+6. `.docs/PRD/19-product-image-fix.md` - Image fix guide
 
 ### **Implementation Guides:**
-7. `.doc/CHANGELOG-PERBAIKAN.md` - Detailed changes
-8. `.doc/OPTIMIZATION-SUMMARY.md` - Optimization report
-9. `.doc/SESSION-IMPLEMENTATION-SUMMARY.md` - Session implementation
+7. `.docs/changes/calculations-changelog.md` - Detailed changes
+8. `.docs/changes/optimization-summary.md` - Optimization report
+9. `.docs/changes/session-implementation-summary.md` - Session implementation
 
 ### **Testing & Reference:**
-10. `.doc/TESTING-GUIDE.md` - Testing scenarios
-11. `.doc/FORMULA-QUICK-REF.md` - Formula cheat sheet
-12. `.doc/SUMMARY-PERBAIKAN.md` - Quick reference
+10. `.docs/changes/calculations-testing-guide.md` - Testing scenarios
+11. `.docs/changes/formulas-quick-reference.md` - Formula cheat sheet
+12. `.docs/changes/calculations-summary.md` - Quick reference
 
 ### **Master Documentation:**
-13. `.doc/00-MASTER-CHANGELOG.md` - This file (complete history)
+13. `.docs/changes/00-master-changelog.md` - This file (complete history)
 
 ---
 
@@ -500,22 +500,22 @@ console.log('[Product Modal] Image path:', this.productImage);
 ### **For Questions About:**
 
 **Mathematical Calculations:**
-- Read: `.doc/PERHITUNGAN-MATEMATIKA.md`
-- Quick Ref: `.doc/FORMULA-QUICK-REF.md`
+- Read: `.docs/changes/calculations-math.md`
+- Quick Ref: `.docs/changes/formulas-quick-reference.md`
 
 **Code Optimization:**
-- Read: `.doc/OPTIMIZATION-SUMMARY.md`
+- Read: `.docs/changes/optimization-summary.md`
 
 **Session & Cookies:**
-- Quick Start: `README-SESSION.md`
-- Full Guide: `.doc/18-session-cookies.md`
+- Quick Start: `.docs/session-quick-guide.md`
+- Full Guide: `.docs/PRD/18-sessions-and-cookies.md`
 
 **Product Images:**
-- Quick Fix: `README-IMAGE-FIX.md`
-- Full Guide: `.doc/19-product-image-fix.md`
+- Quick Fix: `.docs/image-fix-quick-guide.md`
+- Full Guide: `.docs/PRD/19-product-image-fix.md`
 
 **Complete History:**
-- Read: `.doc/00-MASTER-CHANGELOG.md` (this file)
+- Read: `.docs/changes/00-master-changelog.md` (this file)
 
 ---
 

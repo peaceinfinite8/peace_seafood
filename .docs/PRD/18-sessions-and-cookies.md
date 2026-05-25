@@ -667,7 +667,7 @@ if ($elapsed > $threshold) {
 ### **New Files:**
 - `src/utils/Session.php` - Session manager utility
 - `public/js/session-manager.js` - Frontend session handler
-- `.doc/18-session-cookies.md` - This documentation
+- `.docs/PRD/18-sessions-and-cookies.md` - This documentation
 
 ### **Modified Files:**
 - `config/app.php` - Added session configuration

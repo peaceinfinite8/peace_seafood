@@ -518,5 +518,5 @@ All important columns indexed for performance:
 
 ---
 
-**Next**: Baca `06-alur-modul.md` untuk business flow →
+**Next**: Baca `06-module-flows.md` untuk business flow →
 

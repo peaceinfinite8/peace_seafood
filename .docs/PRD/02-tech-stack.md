@@ -418,5 +418,5 @@ php cli/seeder.php
 
 ---
 
-**Next**: Baca `03-struktur-folder.md` untuk file organization →
+**Next**: Baca `03-folder-structure.md` untuk file organization →
 

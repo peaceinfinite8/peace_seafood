@@ -110,19 +110,19 @@ Komisi = Total Kesepakatan × Komisi Persen / 100
 
 ## 📁 FILES CREATED
 
-### **1. PERHITUNGAN-MATEMATIKA.md**
+### **1. calculations-math.md**
 - Dokumentasi lengkap semua formula
 - Sample perhitungan detail untuk setiap modul
 - Validasi checklist
 - Troubleshooting guide
 
-### **2. CHANGELOG-PERBAIKAN.md**
+### **2. calculations-changelog.md**
 - Log semua perbaikan dengan before/after
 - Testing recommendations
 - Breaking changes warning
 - Migration guide
 
-### **3. TESTING-GUIDE.md**
+### **3. calculations-testing-guide.md**
 - Manual testing scenarios (6 scenarios)
 - Automated testing examples
 - Data validation queries
@@ -246,11 +246,11 @@ SESUDAH (BENAR):
 ## 📚 DOCUMENTATION STRUCTURE
 
 ```
-.doc/
-├── PERHITUNGAN-MATEMATIKA.md    ← Formula & samples
-├── CHANGELOG-PERBAIKAN.md       ← Detailed changes
-├── TESTING-GUIDE.md             ← Testing scenarios
-└── SUMMARY-PERBAIKAN.md         ← This file (quick ref)
+.docs/changes/
+├── calculations-math.md    ← Formula & samples
+├── calculations-changelog.md       ← Detailed changes
+├── calculations-testing-guide.md             ← Testing scenarios
+└── calculations-summary.md         ← This file (quick ref)
 
 database/migrations/
 └── fix_calculation_errors.sql   ← Migration script
@@ -299,9 +299,9 @@ src/models/
 
 **For Questions About:**
 
-- **Formula & Calculations:** Read `PERHITUNGAN-MATEMATIKA.md`
-- **What Changed:** Read `CHANGELOG-PERBAIKAN.md`
-- **How to Test:** Read `TESTING-GUIDE.md`
+- **Formula & Calculations:** Read `calculations-math.md`
+- **What Changed:** Read `calculations-changelog.md`
+- **How to Test:** Read `calculations-testing-guide.md`
 - **Quick Reference:** Read this file
 
 **Contact:**
