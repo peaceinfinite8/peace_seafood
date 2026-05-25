@@ -149,19 +149,10 @@ if (isset($routes[$uri])) {
             }
 
             if (!in_array($userRole, $pageRoles[$uri], true)) {
-                // Role tidak diizinkan → 403 page
                 http_response_code(403);
-                echo '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8">';
-                echo '<title>403 — Akses Ditolak</title>';
-                echo '<style>body{font-family:sans-serif;text-align:center;padding:4rem;background:#f8fafc;color:#1e293b}';
-                echo 'h1{font-size:4rem;margin:0;color:#ef4444}.box{max-width:480px;margin:0 auto;padding:2rem;';
-                echo 'background:#fff;border-radius:1rem;box-shadow:0 4px 24px rgba(0,0,0,.08)}';
-                echo 'a{color:#2563eb;text-decoration:none;font-weight:600}</style></head><body>';
-                echo '<div class="box"><h1>403</h1>';
-                echo '<h2>Akses Ditolak</h2>';
-                echo '<p>Role <strong>' . htmlspecialchars(strtoupper($userRole)) . '</strong> tidak memiliki izin untuk mengakses halaman ini.</p>';
-                echo '<p><a href="/peace_seafood/dashboard">← Kembali ke Dashboard</a></p>';
-                echo '</div></body></html>';
+                $roleSafe = htmlspecialchars(strtoupper($userRole ?? ''));
+                $uriSafe  = htmlspecialchars($uri);
+                include BASE_PATH . '/src/views/errors/403.php';
                 exit;
             }
         }
@@ -172,8 +163,5 @@ if (isset($routes[$uri])) {
 } else {
     // 404
     http_response_code(404);
-    echo '<!DOCTYPE html><html><body style="font-family:sans-serif;text-align:center;padding:3rem">';
-    echo '<h1>404</h1><p>Halaman tidak ditemukan</p>';
-    echo '<a href="/peace_seafood/dashboard" style="color:#2563eb">Kembali ke Dashboard</a>';
-    echo '</body></html>';
+    include BASE_PATH . '/src/views/errors/404.php';
 }
