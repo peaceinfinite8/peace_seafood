@@ -32,6 +32,7 @@ return [
         'keuangan.view',
         'laporan.view',
         'laporan.export',
+        'settings.view',
         'notifikasi.*',
     ],
     'admin' => [

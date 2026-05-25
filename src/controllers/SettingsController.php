@@ -24,6 +24,10 @@ class SettingsController
      */
     public function index(): void
     {
+        // Hanya super_admin yang boleh akses halaman settings penuh
+        // bos boleh baca settings gudangnya sendiri (read-only)
+        \App\Middleware\RoleMiddleware::requirePermission('settings.view');
+
         $user = AuthMiddleware::getAuthUser();
 
         // Bos sees all; admin/checker sees their warehouse settings

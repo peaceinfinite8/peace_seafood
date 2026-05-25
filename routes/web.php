@@ -80,6 +80,53 @@ $routes = [
     '/settings'            => ['settings/index', 'Pengaturan', 'settings'],
 ];
 
+// ── Halaman yang memerlukan role tertentu (server-side guard) ──────────────
+// Key = URI, Value = array role yang diizinkan
+$pageRoles = [
+    '/settings'      => ['super_admin'],
+    '/activity-log'  => ['super_admin', 'bos'],
+    '/laporan'       => ['super_admin', 'bos', 'admin'],
+    '/migrasi'       => ['super_admin', 'admin'],
+    '/master-data'           => ['super_admin', 'bos', 'admin'],
+    '/master-data/supplier'  => ['super_admin', 'bos', 'admin'],
+    '/master-data/pembeli'   => ['super_admin', 'bos', 'admin'],
+    '/master-data/jenis-ikan'=> ['super_admin', 'bos', 'admin'],
+    '/master-data/produk'    => ['super_admin', 'bos', 'admin'],
+    '/keuangan'              => ['super_admin', 'bos', 'admin'],
+    '/penjualan'             => ['super_admin', 'bos', 'admin'],
+    '/penjualan/create'      => ['super_admin', 'admin'],
+    '/penitipan'             => ['super_admin', 'bos', 'admin'],
+    '/penitipan/create'      => ['super_admin', 'admin'],
+    '/retur'                 => ['super_admin', 'bos', 'admin'],
+    '/retur/create'          => ['super_admin', 'admin'],
+];
+
+/**
+ * Cek role user dari JWT cookie untuk server-side page guard.
+ * Mengembalikan role string atau null jika token tidak ada/invalid.
+ */
+function getWebUserRole(): ?string
+{
+    $token = $_COOKIE['auth_token'] ?? null;
+    if (!$token) return null;
+
+    try {
+        $payload = \App\Utils\JWT::verify($token);
+        if (!$payload) return null;
+
+        // Verifikasi user masih aktif di database
+        $user = \App\Utils\Database::fetchOne(
+            "SELECT role, is_active FROM users WHERE id = ?",
+            [$payload['id'] ?? $payload['user_id'] ?? 0]
+        );
+        if (!$user || !$user['is_active']) return null;
+
+        return $user['role'];
+    } catch (\Throwable $e) {
+        return null;
+    }
+}
+
 // Match route
 if (isset($routes[$uri])) {
     $route      = $routes[$uri];
@@ -87,10 +134,39 @@ if (isset($routes[$uri])) {
     $pageTitle  = $route[1];
     $activeMenu = $route[2] ?? '';
 
-    // Login & root = no layout
+    // Login & root = no layout, tidak perlu auth check
     if (in_array($uri, ['/', '/login'])) {
         include BASE_PATH . '/src/views/' . $viewFile . '.php';
     } else {
+        // ── Server-side role guard ──────────────────────────────────────────
+        if (isset($pageRoles[$uri])) {
+            $userRole = getWebUserRole();
+
+            if ($userRole === null) {
+                // Tidak ada token atau token invalid → redirect ke login
+                header('Location: /peace_seafood/login');
+                exit;
+            }
+
+            if (!in_array($userRole, $pageRoles[$uri], true)) {
+                // Role tidak diizinkan → 403 page
+                http_response_code(403);
+                echo '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8">';
+                echo '<title>403 — Akses Ditolak</title>';
+                echo '<style>body{font-family:sans-serif;text-align:center;padding:4rem;background:#f8fafc;color:#1e293b}';
+                echo 'h1{font-size:4rem;margin:0;color:#ef4444}.box{max-width:480px;margin:0 auto;padding:2rem;';
+                echo 'background:#fff;border-radius:1rem;box-shadow:0 4px 24px rgba(0,0,0,.08)}';
+                echo 'a{color:#2563eb;text-decoration:none;font-weight:600}</style></head><body>';
+                echo '<div class="box"><h1>403</h1>';
+                echo '<h2>Akses Ditolak</h2>';
+                echo '<p>Role <strong>' . htmlspecialchars(strtoupper($userRole)) . '</strong> tidak memiliki izin untuk mengakses halaman ini.</p>';
+                echo '<p><a href="/peace_seafood/dashboard">← Kembali ke Dashboard</a></p>';
+                echo '</div></body></html>';
+                exit;
+            }
+        }
+        // ── Akhir role guard ────────────────────────────────────────────────
+
         renderView($viewFile, compact('pageTitle', 'activeMenu'));
     }
 } else {
