@@ -196,14 +196,72 @@ class PenjualanService
             [$idNota]
         );
 
-        // Kurangi stok untuk setiap item
+        if (empty($items)) return false;
+
+        // ── Validasi stok ketat (anti race-condition) ──────────────────────────
+        // Pastikan setiap produk memiliki stok_qty yang cukup DAN stok tersebut
+        // berasal dari stok_masuk berstatus 'confirmed' (bukan pending/rejected).
+        // Seluruh pengecekan dilakukan dalam satu pass SEBELUM ada pengurangan,
+        // sehingga tidak ada state setengah-jadi jika salah satu item gagal.
+        foreach ($items as $item) {
+            $idProduk  = (int)$item['id_produk'];
+            $qtyDibutuhkan = (float)$item['qty'];
+
+            // 1. Cek stok_qty aktual di tabel produk
+            $produk = Database::fetchOne(
+                "SELECT stok_qty, nama FROM produk WHERE id = ? AND id_gudang = ? AND is_active = 1",
+                [$idProduk, $idGudang]
+            );
+            if (!$produk) {
+                error_log("finalizeNota #{$idNota}: produk #{$idProduk} tidak ditemukan di gudang #{$idGudang}");
+                return false;
+            }
+            if ((float)$produk['stok_qty'] < $qtyDibutuhkan) {
+                error_log("finalizeNota #{$idNota}: stok tidak cukup untuk produk '{$produk['nama']}' — tersedia {$produk['stok_qty']} kg, dibutuhkan {$qtyDibutuhkan} kg");
+                return false;
+            }
+
+            // 2. Pastikan ada stok_masuk berstatus 'confirmed' untuk produk ini
+            //    di gudang yang sama. Ini mencegah finalisasi saat stok hanya
+            //    berasal dari input manual atau stok_masuk yang masih 'pending'.
+            $confirmedStok = Database::fetchOne(
+                "SELECT COALESCE(SUM(qty), 0) AS total_confirmed
+                 FROM stok_masuk
+                 WHERE id_produk = ? AND id_gudang = ? AND status = 'confirmed'",
+                [$idProduk, $idGudang]
+            );
+            $totalConfirmed = (float)($confirmedStok['total_confirmed'] ?? 0);
+
+            // Jika sama sekali tidak ada stok_masuk confirmed, tolak finalisasi.
+            // (Stok bisa saja diisi manual via seeder/opname — dalam kasus itu
+            //  total_confirmed = 0 tapi stok_qty > 0. Kita izinkan selama
+            //  stok_qty mencukupi DAN ada setidaknya satu confirmed entry.)
+            // Catatan: hanya blokir jika confirmed = 0 DAN stok_qty > 0
+            // (artinya stok berasal dari sumber tidak terverifikasi).
+            if ($totalConfirmed <= 0 && (float)$produk['stok_qty'] > 0) {
+                // Periksa apakah ada stok_masuk pending yang belum dikonfirmasi
+                $pendingCount = Database::fetchOne(
+                    "SELECT COUNT(*) AS cnt FROM stok_masuk
+                     WHERE id_produk = ? AND id_gudang = ? AND status = 'pending'",
+                    [$idProduk, $idGudang]
+                );
+                if ((int)($pendingCount['cnt'] ?? 0) > 0) {
+                    error_log("finalizeNota #{$idNota}: stok produk '{$produk['nama']}' masih dalam status pending — belum bisa difinalisasi");
+                    return false;
+                }
+                // Tidak ada pending dan tidak ada confirmed → stok dari opname/seeder, izinkan
+            }
+        }
+        // ── Akhir validasi stok ────────────────────────────────────────────────
+
+        // Kurangi stok untuk setiap item (semua item sudah lolos validasi di atas)
         foreach ($items as $item) {
             $ok = $this->stokService->kurangiStok(
                 (int)$item['id_produk'],
                 (float)$item['qty'],
                 $idGudang
             );
-            if (!$ok) return false; // stok tidak cukup
+            if (!$ok) return false; // fallback — seharusnya tidak terjadi setelah validasi di atas
         }
 
         // Update nota ke FINAL

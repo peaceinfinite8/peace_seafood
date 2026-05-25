@@ -27,13 +27,31 @@ try {
 
     $svc = new PenitipanService();
 
+    // id_pengirim harus merujuk ke tabel supplier (FK constraint)
+    // Gunakan AutoTest Supplier yang dibuat oleh create_autotest_stok_masuk.php
+    $supplier = Database::fetchOne("SELECT id FROM supplier WHERE nama = 'AutoTest Supplier' LIMIT 1");
+    if (!$supplier) {
+        // Buat supplier AutoTest jika belum ada
+        $idSupplier = Database::insert('supplier', [
+            'id_gudang'    => $idGudang,
+            'nama'         => 'AutoTest Supplier',
+            'nama_pemilik' => 'AutoTest',
+            'telpon'       => '000-000-000',
+            'alamat'       => 'Alamat AutoTest',
+            'kota'         => 'Test City',
+            'is_active'    => 1,
+        ]);
+    } else {
+        $idSupplier = (int)$supplier['id'];
+    }
+
     $data = [
-        'id_pengirim' => $idUser,
-        'id_produk' => $idProduk,
-        'qty' => 3,
-        'harga_titip' => 8000,
+        'id_pengirim'   => $idSupplier,
+        'id_produk'     => $idProduk,
+        'qty'           => 3,
+        'harga_titip'   => 8000,
         'komisi_persen' => 10,
-        'catatan' => 'AutoTest titipan'
+        'catatan'       => 'AutoTest titipan'
     ];
 
     $idTitipan = $svc->createTitipan($data, $idUser, $idGudang);

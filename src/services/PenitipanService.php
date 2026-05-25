@@ -77,7 +77,7 @@ class PenitipanService
         )['total'] ?? 0;
 
         // Update status titipan
-        $newStatus = ((float)$totalQtyTerjual >= (float)$titipan['qty'])
+        $newStatus = ((float)$totalQtyTerjual >= (float)$titipan['qty_total'])
             ? 'dijual_semua'
             : 'dijual_sebagian';
 
