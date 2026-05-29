@@ -33,84 +33,84 @@ function renderView(string $view, array $vars = []): void
 
 // Route table
 $routes = [
-    '/'          => ['pages/login', 'Login'],
-    '/login'     => ['pages/login', 'Login'],
+    '/' => ['pages/login', 'Login'],
+    '/login' => ['pages/login', 'Login'],
     '/reset-password' => ['pages/login', 'Reset Password'],
     '/dashboard' => ['pages/dashboard', 'Dashboard', 'dashboard'],
 
     // Stok
-    '/stok'                => ['stok/index', 'Stok & Inventory', 'stok'],
-    '/stok/masuk'          => ['stok/masuk', 'Input Stok Masuk', 'stok'],
-    '/stok/timbangan'      => ['stok/timbangan', 'Timbangan & Susut', 'stok'],
-    '/stok/history'        => ['stok/history', 'History Stok', 'stok'],
+    '/stok' => ['stok/index', 'Stok & Inventory', 'stok'],
+    '/stok/masuk' => ['stok/masuk', 'Input Stok Masuk', 'stok'],
+    '/stok/timbangan' => ['stok/timbangan.view', 'Timbangan & Susut', 'stok'],
+    '/stok/history' => ['stok/history', 'History Stok', 'stok'],
 
     // Penjualan
-    '/penjualan'           => ['penjualan/index', 'Penjualan', 'penjualan'],
-    '/penjualan/create'    => ['penjualan/create', 'Buat Nota Penjualan', 'penjualan'],
+    '/penjualan' => ['penjualan/index', 'Penjualan', 'penjualan'],
+    '/penjualan/create' => ['penjualan/create', 'Buat Nota Penjualan', 'penjualan'],
 
     // Penitipan
-    '/penitipan'           => ['penitipan/index', 'Penitipan', 'penitipan'],
-    '/penitipan/create'    => ['penitipan/create', 'Terima Titipan', 'penitipan'],
+    '/penitipan' => ['penitipan/index', 'Penitipan', 'penitipan'],
+    '/penitipan/create' => ['penitipan/create', 'Terima Titipan', 'penitipan'],
 
     // Retur
-    '/retur'               => ['retur/index', 'Retur', 'retur'],
-    '/retur/create'        => ['retur/create', 'Buat Retur', 'retur'],
+    '/retur' => ['retur/index', 'Retur', 'retur'],
+    '/retur/create' => ['retur/create', 'Buat Retur', 'retur'],
 
     // Keuangan
-    '/keuangan'            => ['keuangan/index', 'Keuangan', 'keuangan'],
+    '/keuangan' => ['keuangan/index', 'Keuangan', 'keuangan'],
 
     // Master Data
-    '/master-data'         => ['master-data/index', 'Master Data', 'master-data'],
-    '/master-data/supplier'    => ['master-data/supplier', 'Data Supplier', 'master-data'],
-    '/master-data/pembeli'     => ['master-data/pembeli.view', 'Data Pembeli', 'master-data'],
-    '/master-data/jenis-ikan'  => ['master-data/jenis-ikan', 'Jenis Ikan', 'master-data'],
-    '/master-data/produk'      => ['master-data/produk.view', 'Data Produk', 'master-data'],
-    '/migrasi'                 => ['master-data/migrasi', 'Pusat Migrasi Data Bahari', 'migrasi'],
+    '/master-data' => ['master-data/index', 'Master Data', 'master-data'],
+    '/master-data/supplier' => ['master-data/supplier.view', 'Data Supplier', 'master-data'],
+    '/master-data/pembeli' => ['master-data/pembeli.view', 'Data Pembeli', 'master-data'],
+    '/master-data/jenis-ikan' => ['master-data/jenis-ikan', 'Jenis Ikan', 'master-data'],
+    '/master-data/produk' => ['master-data/produk.view', 'Data Produk', 'master-data'],
+    '/migrasi' => ['master-data/migrasi', 'Pusat Migrasi Data Bahari', 'migrasi'],
 
     // Stok Lanjutan
-    '/stok-opname'             => ['stok/opname', 'Stok Opname', 'stok-opname'],
-    '/stok-transfer'           => ['stok/transfer', 'Stok Transfer', 'stok-transfer'],
+    '/stok-opname' => ['stok/opname', 'Stok Opname', 'stok-opname'],
+    '/stok-transfer' => ['stok/transfer', 'Stok Transfer', 'stok-transfer'],
 
     // Checker — Draft Penjualan
     '/checker/draft-penjualan' => ['checker/draft-penjualan', 'Buat Draft Nota', 'checker-draft'],
 
     // Audit Trail
-    '/activity-log'            => ['activity-log/index', 'Activity Log', 'activity-log'],
+    '/activity-log' => ['activity-log/index', 'Activity Log', 'activity-log'],
 
     // Laporan
-    '/laporan'             => ['laporan/index', 'Laporan & Export', 'laporan'],
+    '/laporan' => ['laporan/index', 'Laporan & Export', 'laporan'],
 
     // Settings
-    '/settings'            => ['settings/index', 'Pengaturan', 'settings'],
+    '/settings' => ['settings/index', 'Pengaturan', 'settings'],
 ];
 
 // ── Halaman yang memerlukan role tertentu (server-side guard) ──────────────
 // Key = URI, Value = array role yang diizinkan
 $pageRoles = [
-    '/settings'      => ['super_admin', 'saas_owner', 'bos'],
-    '/activity-log'  => ['super_admin', 'bos'],
-    '/laporan'       => ['super_admin', 'bos', 'admin'],
-    '/migrasi'       => ['super_admin', 'admin'],
-    '/master-data'           => ['super_admin', 'bos', 'admin'],
-    '/master-data/supplier'  => ['super_admin', 'bos', 'admin'],
-    '/master-data/pembeli'   => ['super_admin', 'bos', 'admin'],
-    '/master-data/jenis-ikan'=> ['super_admin', 'bos', 'admin'],
-    '/master-data/produk'    => ['super_admin', 'bos', 'admin'],
-    '/keuangan'              => ['super_admin', 'bos', 'admin'],
-    '/penjualan'             => ['super_admin', 'bos', 'admin'],
-    '/penjualan/create'      => ['super_admin', 'admin'],
-    '/penitipan'             => ['super_admin', 'bos', 'admin'],
-    '/penitipan/create'      => ['super_admin', 'admin'],
-    '/retur'                 => ['super_admin', 'bos', 'admin'],
-    '/retur/create'          => ['super_admin', 'admin'],
+    '/settings' => ['super_admin', 'saas_owner', 'bos'],
+    '/activity-log' => ['super_admin', 'bos'],
+    '/laporan' => ['super_admin', 'bos', 'admin'],
+    '/migrasi' => ['super_admin', 'admin'],
+    '/master-data' => ['super_admin', 'bos', 'admin'],
+    '/master-data/supplier' => ['super_admin', 'bos', 'admin'],
+    '/master-data/pembeli' => ['super_admin', 'bos', 'admin'],
+    '/master-data/jenis-ikan' => ['super_admin', 'bos', 'admin'],
+    '/master-data/produk' => ['super_admin', 'bos', 'admin'],
+    '/keuangan' => ['super_admin', 'bos', 'admin'],
+    '/penjualan' => ['super_admin', 'bos', 'admin'],
+    '/penjualan/create' => ['super_admin', 'admin'],
+    '/penitipan' => ['super_admin', 'bos', 'admin'],
+    '/penitipan/create' => ['super_admin', 'admin'],
+    '/retur' => ['super_admin', 'bos', 'admin'],
+    '/retur/create' => ['super_admin', 'admin'],
 
     // Stok & Inventory
-    '/stok'                  => ['super_admin', 'bos', 'admin', 'checker'],
-    '/stok/masuk'            => ['super_admin', 'admin'],
-    '/stok/timbangan'        => ['super_admin', 'admin', 'checker'],
-    '/stok/history'          => ['super_admin', 'bos', 'admin'],
-    '/stok-opname'           => ['super_admin', 'bos', 'admin', 'checker'],
-    '/stok-transfer'         => ['super_admin', 'bos', 'admin', 'checker'],
+    '/stok' => ['super_admin', 'bos', 'admin', 'checker'],
+    '/stok/masuk' => ['super_admin', 'admin'],
+    '/stok/timbangan' => ['super_admin', 'admin', 'checker'],
+    '/stok/history' => ['super_admin', 'bos', 'admin'],
+    '/stok-opname' => ['super_admin', 'bos', 'admin', 'checker'],
+    '/stok-transfer' => ['super_admin', 'bos', 'admin', 'checker'],
     '/checker/draft-penjualan' => ['checker'],
 ];
 
@@ -121,18 +121,21 @@ $pageRoles = [
 function getWebUserRole(): ?string
 {
     $token = $_COOKIE['auth_token'] ?? null;
-    if (!$token) return null;
+    if (!$token)
+        return null;
 
     try {
         $payload = \App\Utils\JWT::verify($token);
-        if (!$payload) return null;
+        if (!$payload)
+            return null;
 
         // Verifikasi user masih aktif di database
         $user = \App\Utils\Database::fetchOne(
             "SELECT role, is_active FROM users WHERE id = ?",
             [$payload['id'] ?? $payload['user_id'] ?? 0]
         );
-        if (!$user || !$user['is_active']) return null;
+        if (!$user || !$user['is_active'])
+            return null;
 
         return $user['role'];
     } catch (\Throwable $e) {
@@ -142,9 +145,9 @@ function getWebUserRole(): ?string
 
 // Match route
 if (isset($routes[$uri])) {
-    $route      = $routes[$uri];
-    $viewFile   = $route[0];
-    $pageTitle  = $route[1];
+    $route = $routes[$uri];
+    $viewFile = $route[0];
+    $pageTitle = $route[1];
     $activeMenu = $route[2] ?? '';
 
     // Login & root = no layout, tidak perlu auth check
@@ -167,7 +170,7 @@ if (isset($routes[$uri])) {
                 if (!in_array($userRole, $pageRoles[$uri], true)) {
                     http_response_code(403);
                     $roleSafe = htmlspecialchars(strtoupper($userRole ?? ''));
-                    $uriSafe  = htmlspecialchars($uri);
+                    $uriSafe = htmlspecialchars($uri);
                     include BASE_PATH . '/src/views/errors/403.php';
                     exit;
                 }
