@@ -145,3 +145,57 @@ Tambahkan ke checklist aksi di atas ke `.docs/restructure_plan.md` sebagai tugas
 2. Search for runtime references before deleting any remaining duplicate copy.
 3. Extract a shortlist of truly identical files from the report and process them one by one.
 4. Update `.docs/merge_prepare.md` after each cleanup pass.
+
+## Classification of Remaining Same-Name Groups
+
+Below are the same-name groups discovered in the duplicate scan, classified with a recommended action and rationale. Use these as the next refactor tickets.
+
+- `.htaccess` (root, `public/.htaccess`)
+  - Classification: keep `public/.htaccess` as authoritative; root `.htaccess` is informational.
+  - Action: leave `public/.htaccess` active; optionally move root `.htaccess` to `.docs/` if it's only documentation about DocumentRoot.
+  - Priority: low
+
+- `manifest.json` (root, `public/build/manifest.json`)
+  - Classification: canonical at repo root; `public/build/manifest.json` is generated.
+  - Action: keep root manifest; keep build manifest as generated; do not reintroduce tracked `public/manifest.json`.
+  - Priority: done/complete
+
+- `README.md` (root, `.docs/README.md`, `resources/ui/README.md`)
+  - Classification: distinct documents for different audiences (project, consolidated docs, UI resources).
+  - Action: keep separate; consider linking them from `.docs/README.md`.
+  - Priority: low
+
+- `app.php` (config/app.php, src/views/layouts/app.php)
+  - Classification: different roles (config vs layout template).
+  - Action: keep separate; rename view layout to `layout_app.php` only if naming collisions cause automation confusion.
+  - Priority: low
+
+- `database.php` (config/database.php, src/utils/Database.php)
+  - Classification: config vs DB helper class/file.
+  - Action: keep separate; no merge.
+  - Priority: low
+
+- `index.php` (public/index.php and many `src/views/*/index.php`)
+  - Classification: front controller vs view index templates.
+  - Action: ensure `public/index.php` remains the only executable front-controller; convert view `index.php` into template-only files if they contain executable PHP; consider renaming view index files to `index.tpl.php` or moving into feature folders under `views/`.
+  - Priority: medium
+
+- `.gitkeep` placeholders (multiple storage directories)
+  - Classification: intentional empty-file markers.
+  - Action: keep as-is; remove only when directory is removed or consolidated.
+  - Priority: low
+
+- `Pembeli.php`, `Produk.php`, `Supplier.php`, `Timbangan.php` (model vs view filenames)
+  - Classification: models vs views sharing names.
+  - Action: prefer distinct naming conventions: keep model classes under `src/models/` and move/rename view files (e.g., `pembeli_view.php`) to reduce confusion; low-risk refactor.
+  - Priority: medium
+
+- `create.php` across `src/views/*/create.php`
+  - Classification: feature-specific create pages (expected same filename across modules).
+  - Action: leave in place; if automation cares about filename collisions, rename to `create.form.php` or similar to indicate template role.
+  - Priority: low
+
+Notes:
+- Where the action says "rename" or "convert to template-only", do so in small commits and update references. Use `git mv` to preserve history where possible.
+- Medium-priority items are good candidates for a focused refactor sprint: `index.php` view templates and model/view name collisions. Low-priority items can be cleaned opportunistically.
+
