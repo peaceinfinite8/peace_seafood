@@ -95,6 +95,20 @@ async function buildOnce() {
     'utf8'
   );
 
+  // Copy canonical PWA manifest (repo root) to public/ for deployment convenience.
+  try {
+    const rootManifestPath = path.join(projectRoot, 'manifest.json');
+    const publicManifestPath = path.join(projectRoot, 'public', 'manifest.json');
+    const rootManifest = await fs.readFile(rootManifestPath, 'utf8');
+    await fs.writeFile(publicManifestPath, rootManifest, 'utf8');
+    // eslint-disable-next-line no-console
+    console.log('Copied manifest.json to public/manifest.json');
+  } catch (err) {
+    // If canonical manifest is missing, do not fail the whole build — just warn.
+    // eslint-disable-next-line no-console
+    console.warn('Warning: could not copy root manifest.json to public/:', err.message);
+  }
+
   // eslint-disable-next-line no-console
   console.log(`Built: ${outJs}, ${outCss}`);
 }
