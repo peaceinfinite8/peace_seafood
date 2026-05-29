@@ -8,10 +8,6 @@ Recent actions: removed tracked `public/manifest.json`; build script now copies 
 - C:\xampp\htdocs\peace_seafood\.htaccess
 - C:\xampp\htdocs\peace_seafood\public\.htaccess
 
-### check.php (count: 2)
-- C:\xampp\htdocs\peace_seafood\public\check.php
-- C:\xampp\htdocs\peace_seafood\src\views\pages\check.php
-
 ### manifest.json (count: 2)
 - C:\xampp\htdocs\peace_seafood\manifest.json
 - C:\xampp\htdocs\peace_seafood\public\build\manifest.json
@@ -71,10 +67,6 @@ Recent actions: removed tracked `public/manifest.json`; build script now copies 
 - C:\xampp\htdocs\peace_seafood\src\views\retur\create.php
 
 ## Duplicates by content (hash)
-### Hash: 695C557F8C2A04E59A025966755D10006435124F (count: 2)
-- C:\xampp\htdocs\peace_seafood\public\check.php
-- C:\xampp\htdocs\peace_seafood\src\views\pages\check.php
-
 ### Hash: DA39A3EE5E6B4B0D3255BFEF95601890AFD80709 (count: 6)
 - C:\xampp\htdocs\peace_seafood\public\assets\images\.gitkeep
 - C:\xampp\htdocs\peace_seafood\storage\cache\.gitkeep

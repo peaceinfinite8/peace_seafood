@@ -17,6 +17,7 @@ Reduce duplicate files and tighten the project structure without breaking runtim
 ### Recent actions
 
 - Removed redundant root `check.php` copy; `public/check.php` remains the web-root placeholder.
+- Removed unused duplicate `src/views/pages/check.php` copy.
 - Deleted tracked `public/manifest.json`; `scripts/build-assets.mjs` now copies the canonical root `manifest.json` into `public/manifest.json` during builds.
 - Updated `.docs/merge_prepare.md` to reflect current duplicates.
 
