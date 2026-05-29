@@ -47,7 +47,7 @@
 
     <!-- Loading -->
     <div x-show="loading" class="flex justify-center py-20">
-        <div class="animate-spin w-8 h-8 rounded-full border-4 border-blue-200" style="border-top-color: var(--color-primary)"></div>
+        <div class="animate-spin w-8 h-8 rounded-full border-4" style="border-color: var(--color-gray-200); border-top-color: var(--color-primary)"></div>
     </div>
 
     <!-- Inventory Table -->

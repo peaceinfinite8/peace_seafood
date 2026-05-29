@@ -17,17 +17,17 @@
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div class="stat-card">
             <p class="text-xs font-semibold uppercase" style="color: var(--text-secondary)">Total Hutang</p>
-            <p class="text-2xl font-bold text-red-500" x-text="'Rp ' + summary.total_hutang.toLocaleString('id-ID')"></p>
+            <p class="text-2xl font-bold" style="color: var(--color-danger)" x-text="'Rp ' + summary.total_hutang.toLocaleString('id-ID')"></p>
             <p class="text-xs mt-1" style="color: var(--text-secondary)">ke supplier</p>
         </div>
         <div class="stat-card">
             <p class="text-xs font-semibold uppercase" style="color: var(--text-secondary)">Total Piutang</p>
-            <p class="text-2xl font-bold text-green-500" x-text="'Rp ' + summary.total_piutang.toLocaleString('id-ID')"></p>
+            <p class="text-2xl font-bold" style="color: var(--color-success)" x-text="'Rp ' + summary.total_piutang.toLocaleString('id-ID')"></p>
             <p class="text-xs mt-1" style="color: var(--text-secondary)">dari pembeli</p>
         </div>
         <div class="stat-card col-span-2 lg:col-span-1">
             <p class="text-xs font-semibold uppercase" style="color: var(--text-secondary)">Jatuh Tempo</p>
-            <p class="text-2xl font-bold" :class="summary.overdue_count > 0 ? 'text-red-500' : 'text-green-500'"
+            <p class="text-2xl font-bold" :style="summary.overdue_count > 0 ? 'color: var(--color-danger)' : 'color: var(--color-success)'"
                 x-text="summary.overdue_count + ' tagihan'"></p>
             <p class="text-xs mt-1" style="color: var(--color-danger)" x-show="summary.overdue_count > 0">⚠ Perlu perhatian!</p>
         </div>
@@ -91,8 +91,7 @@
                                     x-text="'Rp ' + parseFloat(hp.sisa_hutang||0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
-                                <span class="text-sm"
-                                    :class="hp.hari_jatuh_tempo < 0 ? 'text-red-500 font-bold' : hp.hari_jatuh_tempo < 7 ? 'text-yellow-500' : ''"
+                                <span class="text-sm" :style="hp.hari_jatuh_tempo < 0 ? 'color: var(--color-danger); font-weight: bold;' : hp.hari_jatuh_tempo < 7 ? 'color: var(--color-warning)' : ''"
                                     x-text="hp.jatuh_tempo ? new Date(hp.jatuh_tempo).toLocaleDateString('id-ID') : '-'"></span>
                                 <span class="badge badge-danger ml-1" x-show="hp.hari_jatuh_tempo < 0">OVERDUE</span>
                             </td>
@@ -121,10 +120,10 @@
             <h3 class="font-bold text-lg mb-4">Input Pembayaran</h3>
             <div x-show="selectedHp">
                 <p class="text-sm mb-1"><span style="color:var(--text-secondary)">Pihak:</span> <strong x-text="selectedHp?.nama_supplier || selectedHp?.nama_pembeli"></strong></p>
-                <p class="text-sm mb-4"><span style="color:var(--text-secondary)">Sisa:</span> <strong class="text-red-500" x-text="'Rp ' + parseFloat(selectedHp?.sisa_hutang||0).toLocaleString('id-ID')"></strong></p>
+                <p class="text-sm mb-4"><span style="color:var(--text-secondary)">Sisa:</span> <strong style="color: var(--color-danger)" x-text="'Rp ' + parseFloat(selectedHp?.sisa_hutang||0).toLocaleString('id-ID')"></strong></p>
             </div>
             <div class="form-group">
-                <label class="form-label">Nominal Bayar <span class="text-red-500">*</span></label>
+                <label class="form-label">Nominal Bayar <span style="color: var(--color-danger)">*</span></label>
                 <input type="text"
                     :value="bayarForm.nominal_bayar"
                     @input="formatBayarMoney($event)"

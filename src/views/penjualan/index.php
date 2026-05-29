@@ -47,11 +47,11 @@
             </div>
             <div class="stat-card">
                 <p class="text-xs" style="color: var(--text-secondary)">Draft</p>
-                <p class="text-2xl font-bold text-yellow-500" x-text="notaList.filter(n=>n.status==='draft').length"></p>
+                <p class="text-2xl font-bold" style="color: var(--color-warning)" x-text="notaList.filter(n=>n.status==='draft').length"></p>
             </div>
             <div class="stat-card">
                 <p class="text-xs" style="color: var(--text-secondary)">Final</p>
-                <p class="text-2xl font-bold text-green-500" x-text="notaList.filter(n=>n.status==='final').length"></p>
+                <p class="text-2xl font-bold" style="color: var(--color-success)" x-text="notaList.filter(n=>n.status==='final').length"></p>
             </div>
         </div>
 

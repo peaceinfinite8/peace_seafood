@@ -43,17 +43,17 @@
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Pending</p>
-            <p class="text-2xl font-bold text-yellow-500"
+            <p class="text-2xl font-bold" style="color: var(--color-warning)"
                 x-text="list.filter(r => r.status === 'pending').length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Approved</p>
-            <p class="text-2xl font-bold text-green-500"
+            <p class="text-2xl font-bold" style="color: var(--color-success)"
                 x-text="list.filter(r => ['approved','posted'].includes(r.status)).length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Rejected</p>
-            <p class="text-2xl font-bold text-red-500"
+            <p class="text-2xl font-bold" style="color: var(--color-danger)"
                 x-text="list.filter(r => r.status === 'rejected').length"></p>
         </div>
     </div>

@@ -39,12 +39,12 @@
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Aktif</p>
-            <p class="text-2xl font-bold text-blue-500"
+            <p class="text-2xl font-bold" style="color: var(--color-info)"
                 x-text="list.filter(t => ['masuk','dijual_sebagian'].includes(t.status)).length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Selesai</p>
-            <p class="text-2xl font-bold text-green-500"
+            <p class="text-2xl font-bold" style="color: var(--color-success)"
                 x-text="list.filter(t => t.status === 'selesai').length"></p>
         </div>
         <div class="stat-card">
@@ -89,7 +89,7 @@
                             <td><span class="text-sm" x-text="t.nama_produk || '-'"></span></td>
                             <td>
                                 <span class="text-sm font-semibold" x-text="parseFloat(t.jumlah||0).toFixed(1) + ' kg'"></span>
-                                <span x-show="t.jumlah_terjual > 0" class="block text-xs text-green-600"
+                                <span x-show="t.jumlah_terjual > 0" class="block text-xs" style="color: var(--color-success)"
                                     x-text="'Terjual: ' + parseFloat(t.jumlah_terjual||0).toFixed(1) + ' kg'"></span>
                             </td>
                             <td><span class="text-sm" x-text="'Rp ' + parseFloat(t.harga_titip||0).toLocaleString('id-ID')"></span></td>
