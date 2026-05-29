@@ -104,5 +104,3 @@ curl -X POST "http://localhost/saas/create-owner" -d "email=boss@example.com" -u
 - Pastikan audit log mencatat siapa yang membuat owner baru.
 - Uji alur aktivasi akun dan reset password.
 
----
-Butuh saya implementasikan endpoint dan `SaasService` secara langsung sekarang? Saya bisa buat kerangka file (migration, model, service, controller, route) jika Anda mau — beri konfirmasi dan saya kerjakan.
