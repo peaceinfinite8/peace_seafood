@@ -56,9 +56,9 @@ class StokService
     {
         // Safe warehouse fallback
         if ($idGudang <= 0) {
-            $firstGudang = Database::fetchOne("SELECT id FROM gudang WHERE is_active = 1 LIMIT 1");
-            if ($firstGudang) {
-                $idGudang = (int)$firstGudang['id'];
+            $firstGudangId = Helper::firstActiveGudangId();
+            if ($firstGudangId !== null) {
+                $idGudang = $firstGudangId;
             } else {
                 \App\Utils\Response::error('Gudang tidak ditemukan untuk mengaitkan data ini.', 422);
             }
@@ -70,8 +70,8 @@ class StokService
             \App\Utils\Response::error('Supplier tidak boleh kosong', 422);
         }
 
-        if (!is_numeric($idSupplier) || (int)$idSupplier <= 0) {
-            $namaSupplier = trim((string)$idSupplier);
+        if (!is_numeric($idSupplier) || (int) $idSupplier <= 0) {
+            $namaSupplier = trim((string) $idSupplier);
             if (empty($namaSupplier)) {
                 \App\Utils\Response::error('Supplier tidak boleh kosong', 422);
             }
@@ -83,49 +83,49 @@ class StokService
             );
 
             if ($existing) {
-                $idSupplier = (int)$existing['id'];
+                $idSupplier = (int) $existing['id'];
             } else {
                 // Auto-create new supplier
                 $idSupplier = Database::insert('supplier', [
                     'id_gudang' => $idGudang,
-                    'nama'      => $namaSupplier,
+                    'nama' => $namaSupplier,
                     'is_active' => 1
                 ]);
 
                 // Log in Audit Trail
                 ActivityLogHelper::log('INSERT', 'supplier', $idSupplier, null, [
                     'id_gudang' => $idGudang,
-                    'nama'      => $namaSupplier,
+                    'nama' => $namaSupplier,
                     'is_active' => 1
                 ]);
             }
         } else {
-            $idSupplier = (int)$idSupplier;
+            $idSupplier = (int) $idSupplier;
         }
 
-        $qty = (float)($data['berat_nota_supplier'] ?? $data['qty'] ?? 0);
-        $hargaBeli = (float)$data['harga_beli'];
+        $qty = (float) ($data['berat_nota_supplier'] ?? $data['qty'] ?? 0);
+        $hargaBeli = (float) $data['harga_beli'];
         $total = $qty * $hargaBeli;
 
         $id = Database::insert('stok_masuk', [
-            'id_gudang'   => $idGudang,
+            'id_gudang' => $idGudang,
             'id_supplier' => $idSupplier,
-            'id_produk'   => $data['id_produk'],
-            'qty'         => $qty,
-            'harga_beli'  => $hargaBeli,
-            'catatan'     => $data['catatan'] ?? null,
-            'status'      => 'pending',
-            'created_by'  => $idUser,
+            'id_produk' => $data['id_produk'],
+            'qty' => $qty,
+            'harga_beli' => $hargaBeli,
+            'catatan' => $data['catatan'] ?? null,
+            'status' => 'pending',
+            'created_by' => $idUser,
         ]);
 
         // Audit Trail Log
         ActivityLogHelper::log('INSERT', 'stok_masuk', $id, null, [
-            'id_gudang'   => $idGudang,
+            'id_gudang' => $idGudang,
             'id_supplier' => $data['id_supplier'],
-            'id_produk'   => $data['id_produk'],
-            'qty'         => $qty,
-            'harga_beli'  => $hargaBeli,
-            'status'      => 'pending',
+            'id_produk' => $data['id_produk'],
+            'qty' => $qty,
+            'harga_beli' => $hargaBeli,
+            'status' => 'pending',
         ]);
 
         // Buat notifikasi timbangan pending untuk Admin
@@ -151,64 +151,65 @@ class StokService
             [$idStokMasuk]
         );
 
-        if (!$stokMasuk) return false;
+        if (!$stokMasuk)
+            return false;
 
-        $qtyTeoritis = (float)$stokMasuk['qty']; // ini berat_nota_supplier
-        $qtyActual  = (float)($data['berat_riil_gudang'] ?? $data['qty_actual'] ?? 0);
-        $susut      = $qtyTeoritis - $qtyActual;
+        $qtyTeoritis = (float) $stokMasuk['qty']; // ini berat_nota_supplier
+        $qtyActual = (float) ($data['berat_riil_gudang'] ?? $data['qty_actual'] ?? 0);
+        $susut = $qtyTeoritis - $qtyActual;
 
         // Simpan data timbangan
         $idTimbangan = Database::insert('timbangan', [
-            'id_stok_masuk'  => $idStokMasuk,
-            'id_produk'      => $stokMasuk['id_produk'],
-            'qty_teoritis'   => $qtyTeoritis,
-            'qty_actual'     => $qtyActual,
-            'alasan_susut'   => $data['alasan_susut'] ?? null,
-            'created_by'     => $idUser,
+            'id_stok_masuk' => $idStokMasuk,
+            'id_produk' => $stokMasuk['id_produk'],
+            'qty_teoritis' => $qtyTeoritis,
+            'qty_actual' => $qtyActual,
+            'alasan_susut' => $data['alasan_susut'] ?? null,
+            'created_by' => $idUser,
         ]);
 
         // Audit Trail Log untuk timbangan
         ActivityLogHelper::log('INSERT', 'timbangan', $idTimbangan, null, [
-            'id_stok_masuk'  => $idStokMasuk,
-            'qty_teoritis'   => $qtyTeoritis,
-            'qty_actual'     => $qtyActual,
+            'id_stok_masuk' => $idStokMasuk,
+            'qty_teoritis' => $qtyTeoritis,
+            'qty_actual' => $qtyActual,
         ]);
 
         // Auto-Jurnal Kerugian Penyusutan ke Biaya Operasional jika terjadi penyusutan
         $persenSusut = $qtyTeoritis > 0 ? round(($susut / $qtyTeoritis) * 100, 2) : 0;
         if ($susut > 0) {
-            $hargaBeli = (float)$stokMasuk['harga_beli'];
+            $hargaBeli = (float) $stokMasuk['harga_beli'];
             $kerugian = $susut * $hargaBeli;
 
             $idBiaya = Database::insert('biaya_operasional', [
-                'id_gudang'   => $stokMasuk['id_gudang'],
-                'kategori'    => 'Penyusutan Stok',
-                'deskripsi'   => "Kerugian penyusutan air/es stok masuk #{$idStokMasuk} ({$susut} kg, {$persenSusut}%) untuk produk ID {$stokMasuk['id_produk']}",
-                'nominal'     => (int)$kerugian,
-                'tanggal'     => date('Y-m-d'),
-                'created_by'  => $idUser,
+                'id_gudang' => $stokMasuk['id_gudang'],
+                'kategori' => 'Penyusutan Stok',
+                'deskripsi' => "Kerugian penyusutan air/es stok masuk #{$idStokMasuk} ({$susut} kg, {$persenSusut}%) untuk produk ID {$stokMasuk['id_produk']}",
+                'nominal' => (int) $kerugian,
+                'tanggal' => date('Y-m-d'),
+                'created_by' => $idUser,
             ]);
 
             // Audit Trail Log untuk biaya
             ActivityLogHelper::log('INSERT', 'biaya_operasional', $idBiaya, null, [
-                'id_gudang'  => $stokMasuk['id_gudang'],
-                'kategori'   => 'Penyusutan Stok',
-                'nominal'    => (int)$kerugian,
+                'id_gudang' => $stokMasuk['id_gudang'],
+                'kategori' => 'Penyusutan Stok',
+                'nominal' => (int) $kerugian,
             ]);
         }
 
         // Update stok masuk ke CONFIRMED
         Database::update('stok_masuk', [
-            'status'     => 'confirmed',
+            'status' => 'confirmed',
         ], 'id = ?', [$idStokMasuk]);
 
         ActivityLogHelper::log('UPDATE', 'stok_masuk', $idStokMasuk, $stokMasuk, [
-            'id'     => $idStokMasuk,
+            'id' => $idStokMasuk,
             'status' => 'confirmed'
         ]);
 
         // Update inventory produk
-        $this->updateInventory($stokMasuk['id_produk'], $qtyActual, (float)$stokMasuk['harga_beli'], $stokMasuk['id_gudang']);
+        $this->updateInventory($stokMasuk['id_produk'], $qtyActual, (float) $stokMasuk['harga_beli'], $stokMasuk['id_gudang']);
 
         // Buat notifikasi timbangan selesai untuk Bos (dan Admin)
         $produk = Database::fetchOne("SELECT nama FROM produk WHERE id = ?", [$stokMasuk['id_produk']]);
@@ -243,13 +244,14 @@ class StokService
             [$idProduk, $idGudang]
         );
 
-        if (!$produk) return;
+        if (!$produk)
+            return;
 
-        $stokBaru    = (float)$produk['stok_qty'] + $qtyTambah;
-        $nilaiStok   = $stokBaru * $hargaBeli;
+        $stokBaru = (float) $produk['stok_qty'] + $qtyTambah;
+        $nilaiStok = $stokBaru * $hargaBeli;
 
         Database::update('produk', [
-            'stok_qty'   => $stokBaru,
+            'stok_qty' => $stokBaru,
             'nilai_stok' => $nilaiStok,
             'harga_beli' => $hargaBeli, // update harga beli terbaru
         ], 'id = ?', [$idProduk]);
@@ -265,15 +267,17 @@ class StokService
             [$idProduk, $idGudang]
         );
 
-        if (!$produk) return false;
-        if ((float)$produk['stok_qty'] < $qty) return false; // insufficient stock
+        if (!$produk)
+            return false;
+        if ((float) $produk['stok_qty'] < $qty)
+            return false; // insufficient stock
 
-        $stokBaru  = (float)$produk['stok_qty'] - $qty;
-        $nilaiStok = $stokBaru * (float)$produk['harga_beli'];
+        $stokBaru = (float) $produk['stok_qty'] - $qty;
+        $nilaiStok = $stokBaru * (float) $produk['harga_beli'];
 
         Database::update('produk', [
-            'stok_qty'    => $stokBaru,
-            'nilai_stok'  => $nilaiStok,
+            'stok_qty' => $stokBaru,
+            'nilai_stok' => $nilaiStok,
         ], 'id = ?', [$idProduk]);
 
         $this->checkStokMinimumAlert($idProduk, $idGudang);
@@ -293,9 +297,10 @@ class StokService
             [$idProduk]
         );
 
-        if (!$produk) return;
+        if (!$produk)
+            return;
 
-        if ((float)$produk['stok_qty'] < (float)$produk['stok_minimum']) {
+        if ((float) $produk['stok_qty'] < (float) $produk['stok_minimum']) {
             // Cek apakah notifikasi serupa sudah ada (hindari duplikasi)
             $existing = Database::fetchOne(
                 "SELECT id FROM notifikasi WHERE tipe = 'stok_minimum' 
@@ -365,30 +370,30 @@ class StokService
     public function getHistory(int $idGudang, array $filters = [], bool $allGudang = false): array
     {
         if ($allGudang && $idGudang === 0) {
-            $where  = "1=1";
+            $where = "1=1";
             $params = [];
         } else {
-            $where  = "sm.id_gudang = ?";
+            $where = "sm.id_gudang = ?";
             $params = [$idGudang];
         }
 
         if (!empty($filters['dari'])) {
-            $where    .= " AND DATE(sm.created_at) >= ?";
-            $params[]  = $filters['dari'];
+            $where .= " AND DATE(sm.created_at) >= ?";
+            $params[] = $filters['dari'];
         }
         if (!empty($filters['sampai'])) {
-            $where    .= " AND DATE(sm.created_at) <= ?";
-            $params[]  = $filters['sampai'];
+            $where .= " AND DATE(sm.created_at) <= ?";
+            $params[] = $filters['sampai'];
         }
         if (!empty($filters['id_produk'])) {
-            $where    .= " AND sm.id_produk = ?";
-            $params[]  = $filters['id_produk'];
+            $where .= " AND sm.id_produk = ?";
+            $params[] = $filters['id_produk'];
         }
 
         $gudangJoin = ($allGudang && $idGudang === 0)
             ? "JOIN gudang g ON sm.id_gudang = g.id"
             : "";
-        $gudangCol  = ($allGudang && $idGudang === 0)
+        $gudangCol = ($allGudang && $idGudang === 0)
             ? ", g.nama as nama_gudang"
             : "";
 

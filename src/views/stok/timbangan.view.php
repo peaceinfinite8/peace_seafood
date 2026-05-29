@@ -19,14 +19,16 @@
                     ✓ Tidak ada stok yang menunggu timbangan
                 </div>
                 <template x-for="item in pendingList" :key="item.id">
-                    <div :id="'timbangan-' + item.id" :data-highlight="'timbangan-' + item.id" class="p-4 mb-3 rounded-lg border cursor-pointer hover:shadow-sm transition-all"
+                    <div :id="'timbangan-' + item.id" :data-highlight="'timbangan-' + item.id"
+                        class="p-4 mb-3 rounded-lg border cursor-pointer hover:shadow-sm transition-all"
                         style="border-color: var(--border-color)"
                         :style="selectedId == item.id ? 'border-color: var(--color-primary); background: var(--color-primary-light)' : ''"
                         @click="selectItem(item)">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="font-semibold text-sm" x-text="item.nama_produk"></p>
-                                <p class="text-xs mt-1" style="color: var(--text-secondary)" x-text="'Supplier: ' + item.nama_supplier"></p>
+                                <p class="text-xs mt-1" style="color: var(--text-secondary)"
+                                    x-text="'Supplier: ' + item.nama_supplier"></p>
                             </div>
                             <div class="text-right">
                                 <p class="font-bold text-sm" x-text="formatKg(item.qty, 2)"></p>
@@ -51,7 +53,8 @@
             <div x-show="selectedId" x-cloak>
                 <!-- Selected item info -->
                 <div class="p-4 rounded-lg mb-4" style="background: var(--color-primary-light)">
-                    <p class="font-semibold text-sm" style="color: var(--color-primary)" x-text="selectedItem?.nama_produk"></p>
+                    <p class="font-semibold text-sm" style="color: var(--color-primary)"
+                        x-text="selectedItem?.nama_produk"></p>
                     <p class="text-xs mt-1" style="color: var(--text-secondary)">
                         Qty Teoritis: <strong x-text="formatKg(selectedItem?.qty||0, 2)"></strong>
                     </p>
@@ -59,9 +62,10 @@
 
                 <form @submit.prevent="submitTimbangan()">
                     <div class="form-group">
-                        <label class="form-label">Qty Actual (kg) <span style="color: var(--color-danger)">*</span></label>
-                        <input type="number" x-model="form.qty_actual" class="form-input"
-                            min="0" step="0.01" @input="calcSusut()" required>
+                        <label class="form-label">Qty Actual (kg) <span
+                                style="color: var(--color-danger)">*</span></label>
+                        <input type="number" x-model="form.qty_actual" class="form-input" min="0" step="0.01"
+                            @input="calcSusut()" required>
                     </div>
 
                     <!-- Susut indicator -->
@@ -70,7 +74,8 @@
                         x-show="form.qty_actual">
                         <div class="flex justify-between text-sm">
                             <span>Susut:</span>
-                            <span :style="susut > 0 ? 'color: var(--color-danger); font-weight: bold;' : 'color: var(--color-success); font-weight: bold;'"
+                            <span
+                                :style="susut > 0 ? 'color: var(--color-danger); font-weight: bold;' : 'color: var(--color-success); font-weight: bold;'"
                                 x-text="(susut > 0 ? '-' : '') + formatKg(Math.abs(susut), 2) + ' (' + susutPersen.toFixed(1) + '%)'"></span>
                         </div>
                     </div>

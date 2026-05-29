@@ -40,24 +40,18 @@ class ExportService
      */
     public function exportStokCsv(int $idGudang, array $filters = [], bool $allGudang = false): string
     {
-        if ($allGudang && $idGudang === 0) {
-            $where  = "1=1";
-            $params = [];
-        } else {
-            $where  = "sm.id_gudang = ?";
-            $params = [$idGudang];
+        $scope = \App\Utils\Helper::buildGudangScope('sm', $idGudang, $allGudang);
+        $where = $scope['where'];
+        $params = $scope['params'];
+
+        foreach (['dari' => 'DATE(sm.created_at) >=', 'sampai' => 'DATE(sm.created_at) <='] as $key => $field) {
+            if (!empty($filters[$key])) {
+                $where .= ' AND ' . $field . ' ?';
+                $params[] = $filters[$key];
+            }
         }
 
-        if (!empty($filters['dari'])) {
-            $where   .= " AND DATE(sm.created_at) >= ?";
-            $params[] = $filters['dari'];
-        }
-        if (!empty($filters['sampai'])) {
-            $where   .= " AND DATE(sm.created_at) <= ?";
-            $params[] = $filters['sampai'];
-        }
-
-        $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+        $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
         $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON sm.id_gudang = g.id" : "";
 
         $data = Database::fetchAll(
@@ -75,9 +69,19 @@ class ExportService
             $params
         );
 
-        $headers = ['Tanggal', 'Supplier', 'Produk', 'Jenis Ikan',
-                    'Qty Teoritis', 'Qty Actual', 'Harga Beli', 'Total', 'Status'];
-        if ($allGudang && $idGudang === 0) $headers[] = 'Gudang';
+        $headers = [
+            'Tanggal',
+            'Supplier',
+            'Produk',
+            'Jenis Ikan',
+            'Qty Teoritis',
+            'Qty Actual',
+            'Harga Beli',
+            'Total',
+            'Status'
+        ];
+        if ($allGudang && $idGudang === 0)
+            $headers[] = 'Gudang';
 
         $rows = [];
         foreach ($data as $d) {
@@ -88,11 +92,12 @@ class ExportService
                 $d['jenis_ikan'],
                 $d['qty'] . ' kg',
                 $d['qty_actual'] ? $d['qty_actual'] . ' kg' : '-',
-                'Rp ' . number_format((float)$d['harga_beli'], 0, ',', '.'),
-                'Rp ' . number_format((float)$d['total'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['harga_beli'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['total'], 0, ',', '.'),
                 strtoupper($d['status']),
             ];
-            if ($allGudang && $idGudang === 0) $row[] = $d['nama_gudang'] ?? '-';
+            if ($allGudang && $idGudang === 0)
+                $row[] = $d['nama_gudang'] ?? '-';
             $rows[] = $row;
         }
 
@@ -105,28 +110,18 @@ class ExportService
      */
     public function exportPenjualanCsv(int $idGudang, array $filters = [], bool $allGudang = false): string
     {
-        if ($allGudang && $idGudang === 0) {
-            $where  = "1=1";
-            $params = [];
-        } else {
-            $where  = "n.id_gudang = ?";
-            $params = [$idGudang];
+        $scope = \App\Utils\Helper::buildGudangScope('n', $idGudang, $allGudang);
+        $where = $scope['where'];
+        $params = $scope['params'];
+
+        foreach (['dari' => 'DATE(n.tanggal_nota) >=', 'sampai' => 'DATE(n.tanggal_nota) <=', 'status' => 'n.status ='] as $key => $field) {
+            if (!empty($filters[$key])) {
+                $where .= ' AND ' . $field . ' ?';
+                $params[] = $filters[$key];
+            }
         }
 
-        if (!empty($filters['dari'])) {
-            $where   .= " AND DATE(n.tanggal_nota) >= ?";
-            $params[] = $filters['dari'];
-        }
-        if (!empty($filters['sampai'])) {
-            $where   .= " AND DATE(n.tanggal_nota) <= ?";
-            $params[] = $filters['sampai'];
-        }
-        if (!empty($filters['status'])) {
-            $where   .= " AND n.status = ?";
-            $params[] = $filters['status'];
-        }
-
-        $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+        $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
         $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON n.id_gudang = g.id" : "";
 
         $data = Database::fetchAll(
@@ -141,9 +136,19 @@ class ExportService
             $params
         );
 
-        $headers = ['No Nota', 'Tanggal', 'Pembeli',
-                    'Subtotal', 'Diskon', 'Pajak', 'Total', 'Pembayaran', 'Status'];
-        if ($allGudang && $idGudang === 0) $headers[] = 'Gudang';
+        $headers = [
+            'No Nota',
+            'Tanggal',
+            'Pembeli',
+            'Subtotal',
+            'Diskon',
+            'Pajak',
+            'Total',
+            'Pembayaran',
+            'Status'
+        ];
+        if ($allGudang && $idGudang === 0)
+            $headers[] = 'Gudang';
 
         $rows = [];
         foreach ($data as $d) {
@@ -151,14 +156,15 @@ class ExportService
                 $d['no_nota'],
                 date('d/m/Y', strtotime($d['tanggal_nota'])),
                 $d['pembeli'] ?? '-',
-                'Rp ' . number_format((float)$d['subtotal'], 0, ',', '.'),
-                'Rp ' . number_format((float)$d['diskon'], 0, ',', '.'),
-                'Rp ' . number_format((float)$d['pajak'], 0, ',', '.'),
-                'Rp ' . number_format((float)$d['total'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['subtotal'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['diskon'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['pajak'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['total'], 0, ',', '.'),
                 strtoupper($d['jenis_pembayaran']),
                 strtoupper($d['status']),
             ];
-            if ($allGudang && $idGudang === 0) $row[] = $d['nama_gudang'] ?? '-';
+            if ($allGudang && $idGudang === 0)
+                $row[] = $d['nama_gudang'] ?? '-';
             $rows[] = $row;
         }
 
@@ -171,32 +177,18 @@ class ExportService
      */
     public function exportKeuanganCsv(int $idGudang, array $filters = [], bool $allGudang = false): string
     {
-        if ($allGudang && $idGudang === 0) {
-            $where  = "1=1";
-            $params = [];
-        } else {
-            $where  = "hp.id_gudang = ?";
-            $params = [$idGudang];
+        $scope = \App\Utils\Helper::buildGudangScope('hp', $idGudang, $allGudang);
+        $where = $scope['where'];
+        $params = $scope['params'];
+
+        foreach (['jenis' => 'hp.jenis =', 'status' => 'hp.status =', 'dari' => 'DATE(hp.created_at) >=', 'sampai' => 'DATE(hp.created_at) <='] as $key => $field) {
+            if (!empty($filters[$key])) {
+                $where .= ' AND ' . $field . ' ?';
+                $params[] = $filters[$key];
+            }
         }
 
-        if (!empty($filters['jenis'])) {
-            $where   .= " AND hp.jenis = ?";
-            $params[] = $filters['jenis'];
-        }
-        if (!empty($filters['status'])) {
-            $where   .= " AND hp.status = ?";
-            $params[] = $filters['status'];
-        }
-        if (!empty($filters['dari'])) {
-            $where   .= " AND DATE(hp.created_at) >= ?";
-            $params[] = $filters['dari'];
-        }
-        if (!empty($filters['sampai'])) {
-            $where   .= " AND DATE(hp.created_at) <= ?";
-            $params[] = $filters['sampai'];
-        }
-
-        $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+        $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
         $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON hp.id_gudang = g.id" : "";
 
         $data = Database::fetchAll(
@@ -213,20 +205,22 @@ class ExportService
         );
 
         $headers = ['Jenis', 'Pihak', 'Nominal', 'Sisa', 'Jatuh Tempo', 'Status', 'Tanggal'];
-        if ($allGudang && $idGudang === 0) $headers[] = 'Gudang';
+        if ($allGudang && $idGudang === 0)
+            $headers[] = 'Gudang';
 
         $rows = [];
         foreach ($data as $d) {
             $row = [
                 strtoupper($d['jenis']),
                 $d['pihak'] ?? '-',
-                'Rp ' . number_format((float)$d['nominal'], 0, ',', '.'),
-                'Rp ' . number_format((float)$d['sisa_hutang'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['nominal'], 0, ',', '.'),
+                'Rp ' . number_format((float) $d['sisa_hutang'], 0, ',', '.'),
                 $d['jatuh_tempo'] ? date('d/m/Y', strtotime($d['jatuh_tempo'])) : '-',
                 strtoupper($d['status']),
                 date('d/m/Y', strtotime($d['created_at'])),
             ];
-            if ($allGudang && $idGudang === 0) $row[] = $d['nama_gudang'] ?? '-';
+            if ($allGudang && $idGudang === 0)
+                $row[] = $d['nama_gudang'] ?? '-';
             $rows[] = $row;
         }
 
@@ -239,7 +233,7 @@ class ExportService
     public function exportLaporanCsv(string $dariTanggal, string $sampaiTanggal, string $tabActive, int $idGudang, bool $allGudang = false): string
     {
         $filters = ['dari' => $dariTanggal, 'sampai' => $sampaiTanggal];
-        return match($tabActive) {
+        return match ($tabActive) {
             'stok' => $this->exportStokCsv($idGudang, $filters, $allGudang),
             'keuangan', 'aging' => $this->exportKeuanganCsv($idGudang, $filters, $allGudang),
             default => $this->exportPenjualanCsv($idGudang, $filters, $allGudang),
@@ -255,24 +249,18 @@ class ExportService
 
         // 1. Fetch data depending on active tab
         if ($tabActive === 'stok') {
-            if ($allGudang && $idGudang === 0) {
-                $where  = "1=1";
-                $params = [];
-            } else {
-                $where  = "sm.id_gudang = ?";
-                $params = [$idGudang];
+            $scope = \App\Utils\Helper::buildGudangScope('sm', $idGudang, $allGudang);
+            $where = $scope['where'];
+            $params = $scope['params'];
+
+            foreach (['dari' => 'DATE(sm.created_at) >=', 'sampai' => 'DATE(sm.created_at) <='] as $key => $field) {
+                if (!empty($filters[$key])) {
+                    $where .= ' AND ' . $field . ' ?';
+                    $params[] = $filters[$key];
+                }
             }
 
-            if (!empty($filters['dari'])) {
-                $where   .= " AND DATE(sm.created_at) >= ?";
-                $params[] = $filters['dari'];
-            }
-            if (!empty($filters['sampai'])) {
-                $where   .= " AND DATE(sm.created_at) <= ?";
-                $params[] = $filters['sampai'];
-            }
-
-            $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+            $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
             $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON sm.id_gudang = g.id" : "";
 
             $data = Database::fetchAll(
@@ -295,24 +283,23 @@ class ExportService
                 $headers[] = 'Gudang';
             }
         } elseif ($tabActive === 'penjualan') {
-            if ($allGudang && $idGudang === 0) {
-                $where  = "1=1";
-                $params = [];
-            } else {
-                $where  = "n.id_gudang = ?";
-                $params = [$idGudang];
+            $scope = \App\Utils\Helper::buildGudangScope('n', $idGudang, $allGudang);
+            $where = $scope['where'];
+            $params = $scope['params'];
+
+            foreach (['dari' => 'DATE(n.tanggal_nota) >=', 'sampai' => 'DATE(n.tanggal_nota) <='] as $key => $field) {
+                if (!empty($filters[$key])) {
+                    $where .= ' AND ' . $field . ' ?';
+                    $params[] = $filters[$key];
+                }
             }
 
-            if (!empty($filters['dari'])) {
-                $where   .= " AND DATE(n.tanggal_nota) >= ?";
-                $params[] = $filters['dari'];
-            }
-            if (!empty($filters['sampai'])) {
-                $where   .= " AND DATE(n.tanggal_nota) <= ?";
-                $params[] = $filters['sampai'];
+            if (!empty($filters['status'])) {
+                $where .= ' AND n.status = ?';
+                $params[] = $filters['status'];
             }
 
-            $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+            $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
             $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON n.id_gudang = g.id" : "";
 
             $data = Database::fetchAll(
@@ -332,28 +319,22 @@ class ExportService
                 $headers[] = 'Gudang';
             }
         } else { // keuangan or aging
-            if ($allGudang && $idGudang === 0) {
-                $where  = "1=1";
-                $params = [];
-            } else {
-                $where  = "hp.id_gudang = ?";
-                $params = [$idGudang];
-            }
+            $scope = \App\Utils\Helper::buildGudangScope('hp', $idGudang, $allGudang);
+            $where = $scope['where'];
+            $params = $scope['params'];
 
             if ($tabActive === 'aging') {
                 $where .= " AND hp.status != 'lunas' AND hp.status != 'cancelled'";
             }
 
-            if (!empty($filters['dari'])) {
-                $where   .= " AND DATE(hp.created_at) >= ?";
-                $params[] = $filters['dari'];
-            }
-            if (!empty($filters['sampai'])) {
-                $where   .= " AND DATE(hp.created_at) <= ?";
-                $params[] = $filters['sampai'];
+            foreach (['dari' => 'DATE(hp.created_at) >=', 'sampai' => 'DATE(hp.created_at) <='] as $key => $field) {
+                if (!empty($filters[$key])) {
+                    $where .= ' AND ' . $field . ' ?';
+                    $params[] = $filters[$key];
+                }
             }
 
-            $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+            $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
             $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON hp.id_gudang = g.id" : "";
 
             $data = Database::fetchAll(
@@ -378,7 +359,7 @@ class ExportService
         // Initialize Spreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        
+
         // Ensure gridlines are visible
         $sheet->setShowGridlines(true);
 
@@ -389,7 +370,7 @@ class ExportService
         $sheet->freezePane('A11');
 
         // Branding and Title block
-        $titleText = match($tabActive) {
+        $titleText = match ($tabActive) {
             'stok' => 'Laporan Mutasi Stok Masuk',
             'penjualan' => 'Laporan Penjualan Produk',
             'keuangan' => 'Laporan Keuangan & Kas',
@@ -397,7 +378,7 @@ class ExportService
             default => 'Laporan Peace Seafood',
         };
 
-        $periodeStr = ($dariTanggal && $sampaiTanggal) 
+        $periodeStr = ($dariTanggal && $sampaiTanggal)
             ? date('d M Y', strtotime($dariTanggal)) . " s/d " . date('d M Y', strtotime($sampaiTanggal))
             : "Semua Periode";
 
@@ -429,32 +410,32 @@ class ExportService
         $sheet->getStyle('A4:' . $lastCol . '4')->getBorders()->getBottom()->getColor()->setARGB('FF1E3A8A');
 
         // Helper function for rendering KPI Cards
-        $renderKpiCard = function($sheet, $startCol, $endCol, $title, $value, $numberFormat, $bgColorARGB) {
+        $renderKpiCard = function ($sheet, $startCol, $endCol, $title, $value, $numberFormat, $bgColorARGB) {
             $titleRow = 6;
             $valRow = 7;
-            
+
             $sheet->mergeCells($startCol . $titleRow . ':' . $endCol . $titleRow);
             $sheet->mergeCells($startCol . $valRow . ':' . $endCol . $valRow);
-            
+
             $sheet->setCellValue($startCol . $titleRow, $title);
             $sheet->setCellValue($startCol . $valRow, $value);
-            
+
             if ($numberFormat) {
                 $sheet->getStyle($startCol . $valRow)->getNumberFormat()->setFormatCode($numberFormat);
             }
-            
+
             $sheet->getStyle($startCol . $titleRow)->getFont()->setBold(true)->setSize(8.5)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF4B5563'));
             $sheet->getStyle($startCol . $titleRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle($startCol . $titleRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-            
+
             $sheet->getStyle($startCol . $valRow)->getFont()->setBold(true)->setSize(13)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF1E3A8A'));
             $sheet->getStyle($startCol . $valRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle($startCol . $valRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-            
+
             $sheet->getStyle($startCol . $titleRow . ':' . $endCol . $valRow)->getFill()
                 ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                 ->getStartColor()->setARGB($bgColorARGB);
-                
+
             $cardBorder = [
                 'borders' => [
                     'outline' => [
@@ -467,13 +448,13 @@ class ExportService
         };
 
         // Helper function for soft badges
-        $applySoftBadgeStyle = function($sheet, $cell, $status) {
-            $status = strtoupper(trim((string)$status));
-            
+        $applySoftBadgeStyle = function ($sheet, $cell, $status) {
+            $status = strtoupper(trim((string) $status));
+
             $bg = 'FFF1F5F9';
             $fg = 'FF64748B';
             $border = 'FFCBD5E1';
-            
+
             if (in_array($status, ['CONFIRMED', 'FINAL', 'LUNAS', 'CASH', 'OK', 'AMAN'])) {
                 $bg = 'FFDCFCE7';     // Soft Green
                 $fg = 'FF15803D';     // Dark Green text
@@ -487,13 +468,13 @@ class ExportService
                 $fg = 'FFB91C1C';     // Dark Red text
                 $border = 'FFF5C2C2'; // Red border
             }
-            
+
             $sheet->getStyle($cell)->getFill()
                 ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                 ->getStartColor()->setARGB($bg);
-                
+
             $sheet->getStyle($cell)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color($fg))->setBold(true);
-            
+
             $badgeBorder = [
                 'borders' => [
                     'outline' => [
@@ -547,11 +528,11 @@ class ExportService
             $totalNominal = 0;
 
             foreach ($data as $item) {
-                $qtyT = (float)$item['qty'];
-                $qtyA = $item['qty_actual'] !== null ? (float)$item['qty_actual'] : $qtyT;
+                $qtyT = (float) $item['qty'];
+                $qtyA = $item['qty_actual'] !== null ? (float) $item['qty_actual'] : $qtyT;
                 $totalTeoritis += $qtyT;
                 $totalAktual += $qtyA;
-                $totalNominal += (float)$item['total'];
+                $totalNominal += (float) $item['total'];
             }
 
             // Draw KPI Cards
@@ -565,22 +546,22 @@ class ExportService
                 $sheet->setCellValue('C' . $rowIdx, $item['supplier']);
                 $sheet->setCellValue('D' . $rowIdx, $item['produk']);
                 $sheet->setCellValue('E' . $rowIdx, $item['jenis_ikan']);
-                
-                $qtyTeoritis = (float)$item['qty'];
+
+                $qtyTeoritis = (float) $item['qty'];
                 $sheet->setCellValue('F' . $rowIdx, $qtyTeoritis);
                 $sheet->getStyle('F' . $rowIdx)->getNumberFormat()->setFormatCode('#,##0" kg"');
 
-                $qtyAktual = $item['qty_actual'] !== null ? (float)$item['qty_actual'] : $qtyTeoritis;
+                $qtyAktual = $item['qty_actual'] !== null ? (float) $item['qty_actual'] : $qtyTeoritis;
                 $sheet->setCellValue('G' . $rowIdx, $item['qty_actual'] !== null ? $qtyAktual : '-');
                 if ($item['qty_actual'] !== null) {
                     $sheet->getStyle('G' . $rowIdx)->getNumberFormat()->setFormatCode('#,##0" kg"');
                 }
 
-                $hargaBeli = (float)$item['harga_beli'];
+                $hargaBeli = (float) $item['harga_beli'];
                 $sheet->setCellValue('H' . $rowIdx, $hargaBeli);
                 $sheet->getStyle('H' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
-                $total = (float)$item['total'];
+                $total = (float) $item['total'];
                 $sheet->setCellValue('I' . $rowIdx, $total);
                 $sheet->getStyle('I' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
@@ -614,10 +595,10 @@ class ExportService
             $numTrans = count($data);
 
             foreach ($data as $item) {
-                $totalSubtotal += (float)$item['subtotal'];
-                $totalDiskon += (float)$item['diskon'];
-                $totalPajak += (float)$item['pajak'];
-                $totalTotal += (float)$item['total'];
+                $totalSubtotal += (float) $item['subtotal'];
+                $totalDiskon += (float) $item['diskon'];
+                $totalPajak += (float) $item['pajak'];
+                $totalTotal += (float) $item['total'];
             }
 
             // Draw KPI Cards
@@ -631,19 +612,19 @@ class ExportService
                 $sheet->setCellValue('C' . $rowIdx, date('d/m/Y', strtotime($item['tanggal_nota'])));
                 $sheet->setCellValue('D' . $rowIdx, $item['pembeli'] ?? 'Umum');
 
-                $subtotal = (float)$item['subtotal'];
+                $subtotal = (float) $item['subtotal'];
                 $sheet->setCellValue('E' . $rowIdx, $subtotal);
                 $sheet->getStyle('E' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
-                $diskon = (float)$item['diskon'];
+                $diskon = (float) $item['diskon'];
                 $sheet->setCellValue('F' . $rowIdx, $diskon);
                 $sheet->getStyle('F' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
-                $pajak = (float)$item['pajak'];
+                $pajak = (float) $item['pajak'];
                 $sheet->setCellValue('G' . $rowIdx, $pajak);
                 $sheet->getStyle('G' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
-                $total = (float)$item['total'];
+                $total = (float) $item['total'];
                 $sheet->setCellValue('H' . $rowIdx, $total);
                 $sheet->getStyle('H' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
@@ -682,8 +663,8 @@ class ExportService
 
             foreach ($data as $item) {
                 $jenis = strtolower($item['jenis']);
-                $nom = (float)$item['nominal'];
-                $sisa = (float)$item['sisa_hutang'];
+                $nom = (float) $item['nominal'];
+                $sisa = (float) $item['sisa_hutang'];
                 $totalNominal += $nom;
                 if ($jenis === 'hutang') {
                     $totalSisaHutang += $sisa;
@@ -699,18 +680,18 @@ class ExportService
 
             foreach ($data as $item) {
                 $sheet->setCellValue('A' . $rowIdx, $no++);
-                
+
                 $jenis = strtoupper($item['jenis']);
                 $sheet->setCellValue('B' . $rowIdx, $jenis);
                 $applySoftBadgeStyle($sheet, 'B' . $rowIdx, $jenis);
 
                 $sheet->setCellValue('C' . $rowIdx, $item['pihak'] ?? '-');
 
-                $nominal = (float)$item['nominal'];
+                $nominal = (float) $item['nominal'];
                 $sheet->setCellValue('D' . $rowIdx, $nominal);
                 $sheet->getStyle('D' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
-                $sisa = (float)$item['sisa_hutang'];
+                $sisa = (float) $item['sisa_hutang'];
                 $sheet->setCellValue('E' . $rowIdx, $sisa);
                 $sheet->getStyle('E' . $rowIdx)->getNumberFormat()->setFormatCode('Rp#,##0;(Rp#,##0);"-"');
 
@@ -858,9 +839,10 @@ class ExportService
         $filters = ['dari' => $dariTanggal, 'sampai' => $sampaiTanggal];
 
         $gudang = $idGudang ? Database::fetchOne("SELECT * FROM gudang WHERE id = ?", [$idGudang]) : null;
-        if (!$gudang) $gudang = ['nama' => 'Semua Gudang'];
+        if (!$gudang)
+            $gudang = ['nama' => 'Semua Gudang'];
 
-        $data = match($tabActive) {
+        $data = match ($tabActive) {
             'stok' => (new StokService())->getHistory($idGudang, $filters, $allGudang),
             'keuangan', 'aging' => (new KeuanganService())->getHutangAging($idGudang, $allGudang),
             default => (new PenjualanService())->getNotaList($idGudang, $filters, $allGudang),
@@ -887,21 +869,21 @@ class ExportService
      */
     public function generateReportHtml(string $tipe, array $data, array $gudang, string $dariTanggal = '', string $sampaiTanggal = ''): string
     {
-        $title = match($tipe) {
-            'stok'      => 'Laporan Mutasi Stok Masuk',
+        $title = match ($tipe) {
+            'stok' => 'Laporan Mutasi Stok Masuk',
             'penjualan' => 'Laporan Penjualan Produk',
-            'keuangan'  => 'Laporan Keuangan & Kas',
-            'aging'     => 'Laporan Analisis Hutang Aging',
-            default     => 'Laporan Peace Seafood',
+            'keuangan' => 'Laporan Keuangan & Kas',
+            'aging' => 'Laporan Analisis Hutang Aging',
+            default => 'Laporan Peace Seafood',
         };
 
-        $periodeStr = ($dariTanggal && $sampaiTanggal) 
+        $periodeStr = ($dariTanggal && $sampaiTanggal)
             ? date('d M Y', strtotime($dariTanggal)) . " s/d " . date('d M Y', strtotime($sampaiTanggal))
             : "Semua Periode";
 
         $gudangNama = htmlspecialchars($gudang['nama'] ?? 'Semua Gudang');
-        $cetakTgl   = date('d-m-Y H:i');
-        $totalRows  = count($data);
+        $cetakTgl = date('d-m-Y H:i');
+        $totalRows = count($data);
 
         $html = "
 <!DOCTYPE html>
@@ -1190,10 +1172,10 @@ class ExportService
             $no = 1;
 
             foreach ($data as $row) {
-                $qty = (float)$row['qty'];
-                $qty_act = $row['qty_actual'] !== null ? (float)$row['qty_actual'] : 0.0;
-                $harga = (float)$row['harga_beli'];
-                $total = (float)$row['total'];
+                $qty = (float) $row['qty'];
+                $qty_act = $row['qty_actual'] !== null ? (float) $row['qty_actual'] : 0.0;
+                $harga = (float) $row['harga_beli'];
+                $total = (float) $row['total'];
 
                 $totalTeoritis += $qty;
                 $totalAktual += ($row['qty_actual'] !== null ? $qty_act : $qty);
@@ -1227,7 +1209,7 @@ class ExportService
         </tbody>
     </table>";
 
-        // ==================== PENJUALAN REPORT ====================
+            // ==================== PENJUALAN REPORT ====================
         } elseif ($tipe === 'penjualan') {
             $html .= "
     <table class='data-table'>
@@ -1263,9 +1245,9 @@ class ExportService
             $no = 1;
 
             foreach ($data as $row) {
-                $sub = (float)$row['subtotal'];
-                $disc = (float)($row['diskon_nominal'] ?? $row['diskon'] ?? 0.0);
-                $total = (float)$row['total'];
+                $sub = (float) $row['subtotal'];
+                $disc = (float) ($row['diskon_nominal'] ?? $row['diskon'] ?? 0.0);
+                $total = (float) $row['total'];
 
                 $totalSubtotal += $sub;
                 $totalDiskon += $disc;
@@ -1302,7 +1284,7 @@ class ExportService
         </tbody>
     </table>";
 
-        // ==================== KEUANGAN / AGING REPORT ====================
+            // ==================== KEUANGAN / AGING REPORT ====================
         } else {
             $html .= "
     <table class='data-table'>
@@ -1335,21 +1317,21 @@ class ExportService
             $no = 1;
 
             foreach ($data as $row) {
-                $nom = (float)$row['nominal'];
-                $sisa = (float)$row['sisa_hutang'];
+                $nom = (float) $row['nominal'];
+                $sisa = (float) $row['sisa_hutang'];
                 $totalNominal += $nom;
                 $totalSisa += $sisa;
 
                 $jenisBadge = $row['jenis'] === 'hutang' ? 'badge-hutang' : 'badge-piutang';
                 $jenisLabel = strtoupper($row['jenis']);
                 $aging = $row['aging_status'] ?? 'ok';
-                $agingBadge = match($aging) {
+                $agingBadge = match ($aging) {
                     'overdue' => 'badge-danger',
                     'soon' => 'badge-warning',
                     'no_due' => 'badge-gray',
                     default => 'badge-success'
                 };
-                $agingLabel = match($aging) {
+                $agingLabel = match ($aging) {
                     'overdue' => 'JATUH TEMPO',
                     'soon' => 'SEGERA',
                     'no_due' => 'NO DUE',
@@ -1359,7 +1341,7 @@ class ExportService
                 $jt = $row['jatuh_tempo'] ? date('d-m-Y', strtotime($row['jatuh_tempo'])) : '-';
                 $pihak = $row['nama_supplier'] ?? $row['nama_pembeli'] ?? $row['pihak'] ?? '-';
                 $hariRaw = $row['hari_jatuh_tempo'] ?? null;
-                $hari = $hariRaw !== null ? ((int)$hariRaw . ' hari') : '-';
+                $hari = $hariRaw !== null ? ((int) $hariRaw . ' hari') : '-';
 
                 $html .= "
             <tr>
@@ -1406,17 +1388,18 @@ class ExportService
         $penjualanService = new \App\Services\PenjualanService();
         $nota = $penjualanService->getNotaDetail($idNota, $idGudang, $allGudang);
 
-        if (!$nota) return null;
+        if (!$nota)
+            return null;
 
-        $noNota         = htmlspecialchars($nota['no_nota']);
-        $tanggalNota    = date('d-m-Y', strtotime($nota['tanggal_nota']));
-        $pembeli        = htmlspecialchars($nota['nama_pembeli'] ?? 'Umum');
-        $telepon        = htmlspecialchars($nota['telepon_pembeli'] ?? '-');
-        $alamat         = htmlspecialchars($nota['alamat_pembeli'] ?? '-');
-        $gudang         = htmlspecialchars($nota['nama_gudang'] ?? '-');
-        $pembayaran     = strtoupper($nota['pembayaran']);
-        $statusBayar    = strtoupper($nota['status_pembayaran'] ?? 'OPEN');
-        $kasir          = htmlspecialchars($nota['nama_user'] ?? 'Staff');
+        $noNota = htmlspecialchars($nota['no_nota']);
+        $tanggalNota = date('d-m-Y', strtotime($nota['tanggal_nota']));
+        $pembeli = htmlspecialchars($nota['nama_pembeli'] ?? 'Umum');
+        $telepon = htmlspecialchars($nota['telepon_pembeli'] ?? '-');
+        $alamat = htmlspecialchars($nota['alamat_pembeli'] ?? '-');
+        $gudang = htmlspecialchars($nota['nama_gudang'] ?? '-');
+        $pembayaran = strtoupper($nota['pembayaran']);
+        $statusBayar = strtoupper($nota['status_pembayaran'] ?? 'OPEN');
+        $kasir = htmlspecialchars($nota['nama_user'] ?? 'Staff');
 
         // Build HTML with highly elegant, modern, and premium styles
         $html = "
@@ -1682,12 +1665,12 @@ class ExportService
 
         $totalQty = 0;
         foreach ($nota['items'] as $item) {
-            $namaProduk  = htmlspecialchars($item['nama_produk']);
-            $qty         = (float)$item['qty'];
-            $satuan      = htmlspecialchars($item['satuan'] ?? 'kg');
-            $hargaJual   = (float)$item['harga_jual'];
-            $subtotal    = (float)$item['subtotal'];
-            $totalQty   += $qty;
+            $namaProduk = htmlspecialchars($item['nama_produk']);
+            $qty = (float) $item['qty'];
+            $satuan = htmlspecialchars($item['satuan'] ?? 'kg');
+            $hargaJual = (float) $item['harga_jual'];
+            $subtotal = (float) $item['subtotal'];
+            $totalQty += $qty;
 
             // Format weight
             $weightStr = number_format($qty, 2, ',', '.') . ' ' . $satuan;
@@ -1722,8 +1705,8 @@ class ExportService
 
         // Info bank account if payment is transfer
         if ($nota['pembayaran'] === 'transfer' && !empty($nota['nama_bank'])) {
-            $namaBank  = htmlspecialchars($nota['nama_bank']);
-            $accName   = htmlspecialchars($nota['account_name']);
+            $namaBank = htmlspecialchars($nota['nama_bank']);
+            $accName = htmlspecialchars($nota['account_name']);
             $accNumber = htmlspecialchars($nota['account_number']);
 
             $html .= "
@@ -1740,29 +1723,29 @@ class ExportService
                     <table class='summary-table'>
                         <tr>
                             <td class='summary-title'>Subtotal:</td>
-                            <td class='summary-value'>Rp " . number_format((float)$nota['subtotal'], 0, ',', '.') . "</td>
+                            <td class='summary-value'>Rp " . number_format((float) $nota['subtotal'], 0, ',', '.') . "</td>
                         </tr>";
 
-        if ((float)$nota['diskon_nominal'] > 0) {
+        if ((float) $nota['diskon_nominal'] > 0) {
             $html .= "
                         <tr>
                             <td class='summary-title' style='color: #dc2626;'>Potongan Diskon:</td>
-                            <td class='summary-value' style='color: #dc2626;'>- Rp " . number_format((float)$nota['diskon_nominal'], 0, ',', '.') . "</td>
+                            <td class='summary-value' style='color: #dc2626;'>- Rp " . number_format((float) $nota['diskon_nominal'], 0, ',', '.') . "</td>
                         </tr>";
         }
 
-        if ((float)$nota['pajak'] > 0) {
+        if ((float) $nota['pajak'] > 0) {
             $html .= "
                         <tr>
                             <td class='summary-title'>Pajak:</td>
-                            <td class='summary-value'>+ Rp " . number_format((float)$nota['pajak'], 0, ',', '.') . "</td>
+                            <td class='summary-value'>+ Rp " . number_format((float) $nota['pajak'], 0, ',', '.') . "</td>
                         </tr>";
         }
 
         $html .= "
                         <tr class='total-row'>
                             <td class='summary-title' style='font-weight: bold;'>TOTAL AKHIR:</td>
-                            <td class='summary-value total-value'>Rp " . number_format((float)$nota['total'], 0, ',', '.') . "</td>
+                            <td class='summary-value total-value'>Rp " . number_format((float) $nota['total'], 0, ',', '.') . "</td>
                         </tr>
                     </table>
                 </div>

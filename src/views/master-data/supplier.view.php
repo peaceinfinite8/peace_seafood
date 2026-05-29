@@ -30,11 +30,20 @@
         <div class="overflow-x-auto">
             <table class="table">
                 <thead>
-                    <tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th>Email</th><th x-show="['super_admin','admin'].includes(user.role)">Aksi</th></tr>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Telepon</th>
+                        <th>Alamat</th>
+                        <th>Email</th>
+                        <th x-show="['super_admin','admin'].includes(user.role)">Aksi</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr><td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="s in filtered" :key="s.id">
                         <tr>

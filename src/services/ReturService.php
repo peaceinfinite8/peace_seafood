@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Middleware\AuthMiddleware;
 use App\Utils\Database;
+use App\Utils\Helper;
 
 class ReturService
 {
@@ -15,19 +16,19 @@ class ReturService
     public function createRetur(array $data, int $idUser, int $idGudang): int
     {
         return Database::insert('retur', [
-            'id_gudang'   => $idGudang,
-            'id_produk'   => $data['id_produk'] ?? null,
+            'id_gudang' => $idGudang,
+            'id_produk' => $data['id_produk'] ?? null,
             'id_supplier' => $data['id_supplier'] ?? null,
-            'id_pembeli'  => $data['id_pembeli'] ?? null,
-            'id_nota'     => $data['id_nota'] ?? null,
-            'tipe'        => $data['tipe'],
-            'qty'         => $data['qty'] ?? null,
-            'nominal'     => $data['nominal'] ?? null,
-            'alasan'      => $data['alasan'],
-            'foto_bukti'  => $data['foto_bukti'] ?? null,
-            'status'      => 'pending',
-            'catatan'     => $data['catatan'] ?? null,
-            'created_by'  => $idUser,
+            'id_pembeli' => $data['id_pembeli'] ?? null,
+            'id_nota' => $data['id_nota'] ?? null,
+            'tipe' => $data['tipe'],
+            'qty' => $data['qty'] ?? null,
+            'nominal' => $data['nominal'] ?? null,
+            'alasan' => $data['alasan'],
+            'foto_bukti' => $data['foto_bukti'] ?? null,
+            'status' => 'pending',
+            'catatan' => $data['catatan'] ?? null,
+            'created_by' => $idUser,
         ]);
     }
 
@@ -41,7 +42,8 @@ class ReturService
             [$idRetur, $idGudang]
         );
 
-        if (!$retur) return false;
+        if (!$retur)
+            return false;
 
         if ($retur['tipe'] === 'stok') {
             // Kurangi stok produk
@@ -52,9 +54,9 @@ class ReturService
                         nilai_stok = GREATEST(0, stok_qty - ?) * harga_beli
                      WHERE id = ? AND id_gudang = ?",
                     [
-                        (float)$retur['qty'],
-                        (float)$retur['qty'],
-                        (int)$retur['id_produk'],
+                        (float) $retur['qty'],
+                        (float) $retur['qty'],
+                        (int) $retur['id_produk'],
                         $idGudang,
                     ]
                 );
@@ -64,26 +66,26 @@ class ReturService
             if ($retur['id_nota'] && $retur['nominal']) {
                 $hp = Database::fetchOne(
                     "SELECT * FROM hutang_piutang WHERE id_nota = ? AND status != 'lunas'",
-                    [(int)$retur['id_nota']]
+                    [(int) $retur['id_nota']]
                 );
 
                 if ($hp) {
-                    $returNominal = (float)$retur['nominal'];
-                    $nominalBaru  = max((float)$hp['nominal_bayar'], (float)$hp['nominal'] - $returNominal);
-                    $status       = ($nominalBaru - (float)$hp['nominal_bayar']) <= 0 ? 'lunas' : 'sebagian';
+                    $returNominal = (float) $retur['nominal'];
+                    $nominalBaru = max((float) $hp['nominal_bayar'], (float) $hp['nominal'] - $returNominal);
+                    $status = ($nominalBaru - (float) $hp['nominal_bayar']) <= 0 ? 'lunas' : 'sebagian';
 
                     Database::update('hutang_piutang', [
                         'nominal' => $nominalBaru,
-                        'status'  => $status,
-                    ], 'id = ?', [(int)$hp['id']]);
+                        'status' => $status,
+                    ], 'id = ?', [(int) $hp['id']]);
 
                     // Simpan history sesuai kolom tabel hutang_piutang_history
                     Database::insert('hutang_piutang_history', [
                         'id_hutang_piutang' => $hp['id'],
-                        'nominal_bayar'     => 0,
-                        'metode_bayar'      => 'retur',
-                        'keterangan'        => "Retur #{$idRetur}: {$retur['alasan']} (Nilai: Rp " . number_format($returNominal, 0, ',', '.') . ")",
-                        'created_by'        => AuthMiddleware::getAuthUserId() ?? (int)$retur['created_by'],
+                        'nominal_bayar' => 0,
+                        'metode_bayar' => 'retur',
+                        'keterangan' => "Retur #{$idRetur}: {$retur['alasan']} (Nilai: Rp " . number_format($returNominal, 0, ',', '.') . ")",
+                        'created_by' => AuthMiddleware::getAuthUserId() ?? (int) $retur['created_by'],
                     ]);
                 }
             }
@@ -106,8 +108,8 @@ class ReturService
         return Database::update(
             'retur',
             [
-                'status'     => 'rejected',
-                'catatan'    => $alasan,
+                'status' => 'rejected',
+                'catatan' => $alasan,
             ],
             'id = ? AND id_gudang = ? AND status = \'pending\'',
             [$idRetur, $idGudang]
@@ -120,28 +122,18 @@ class ReturService
      */
     public function getReturList(int $idGudang, array $filters = [], bool $allGudang = false): array
     {
-        if ($allGudang && $idGudang === 0) {
-            $where  = "1=1";
-            $params = [];
-        } else {
-            $where  = "r.id_gudang = ?";
-            $params = [$idGudang];
+        $scope = Helper::buildGudangScope('r', $idGudang, $allGudang);
+        $where = $scope['where'];
+        $params = $scope['params'];
+
+        foreach (['tipe' => 'r.tipe =', 'status' => 'r.status =', 'dari' => 'DATE(r.created_at) >='] as $key => $field) {
+            if (!empty($filters[$key])) {
+                $where .= ' AND ' . $field . ' ?';
+                $params[] = $filters[$key];
+            }
         }
 
-        if (!empty($filters['tipe'])) {
-            $where    .= " AND r.tipe = ?";
-            $params[]  = $filters['tipe'];
-        }
-        if (!empty($filters['status'])) {
-            $where    .= " AND r.status = ?";
-            $params[]  = $filters['status'];
-        }
-        if (!empty($filters['dari'])) {
-            $where    .= " AND DATE(r.created_at) >= ?";
-            $params[]  = $filters['dari'];
-        }
-
-        $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+        $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
         $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON r.id_gudang = g.id" : "";
 
         return Database::fetchAll(
