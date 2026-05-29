@@ -18,9 +18,13 @@ Reduce duplicate files and tighten the project structure without breaking runtim
 
 - Removed redundant root `check.php` copy; `public/check.php` remains the web-root placeholder.
 - Removed unused duplicate `src/views/pages/check.php` copy.
- - Renamed `src/views/master-data/pembeli.php` to `pembeli.view.php` to distinguish view from model class.
- - Renamed `src/views/master-data/produk.php` to `produk.view.php` to distinguish view from model class.
- - Updated route references in `routes/web.php` to reflect new view file names.
+- Renamed `src/views/master-data/pembeli.php` to `pembeli.view.php` to distinguish view from model class.
+- Renamed `src/views/master-data/produk.php` to `produk.view.php` to distinguish view from model class.
+- Renamed `src/views/master-data/supplier.php` to `supplier.view.php` to distinguish view from model class.
+- Renamed `src/views/stok/timbangan.php` to `timbangan.view.php` to distinguish view from model class.
+- Updated route references in `routes/web.php` to reflect all new view file names.
+- Deleted tracked `public/manifest.json`; `scripts/build-assets.mjs` now copies the canonical root `manifest.json` into `public/manifest.json` during builds.
+- Updated `.docs/merge_prepare.md` to reflect current duplicates.
 
 ### Phase 1: Confirm source of truth
 
