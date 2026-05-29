@@ -10,9 +10,8 @@ Generated: 2026-05-30T02:20:15.5925681+07:00
 - C:\xampp\htdocs\peace_seafood\public\check.php
 - C:\xampp\htdocs\peace_seafood\src\views\pages\check.php
 
-### manifest.json (count: 3)
+### manifest.json (count: 2)
 - C:\xampp\htdocs\peace_seafood\manifest.json
-- C:\xampp\htdocs\peace_seafood\public\manifest.json
 - C:\xampp\htdocs\peace_seafood\public\build\manifest.json
 
 ### README.md (count: 3)

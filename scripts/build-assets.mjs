@@ -159,7 +159,7 @@ async function watchMode() {
   console.log('Watching asset files for changes...');
 
   // Keep process alive
-  await new Promise(() => {});
+  await new Promise(() => { });
 }
 
 const { watch } = parseArgs(process.argv.slice(2));
