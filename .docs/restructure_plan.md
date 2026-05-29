@@ -190,8 +190,8 @@ Below are the same-name groups discovered in the duplicate scan, classified with
 
 - `Pembeli.php`, `Produk.php`, `Supplier.php`, `Timbangan.php` (model vs view filenames)
   - Classification: models vs views sharing names.
-  - Action: prefer distinct naming conventions: keep model classes under `src/models/` and move/rename view files (e.g., `pembeli_view.php`) to reduce confusion; low-risk refactor.
-  - Priority: medium
+  - Action: completed — renamed `pembeli.php` → `pembeli.view.php`, `produk.php` → `produk.view.php`, `supplier.php` → `supplier.view.php`, `timbangan.php` → `timbangan.view.php`; updated route references.
+  - Priority: done/complete
 
 - `create.php` across `src/views/*/create.php`
   - Classification: feature-specific create pages (expected same filename across modules).
@@ -199,6 +199,7 @@ Below are the same-name groups discovered in the duplicate scan, classified with
   - Priority: low
 
 Notes:
+- All model/view name collisions have been resolved (4 view files renamed with `.view.php` suffix).
 - Where the action says "rename" or "convert to template-only", do so in small commits and update references. Use `git mv` to preserve history where possible.
-- Medium-priority items are good candidates for a focused refactor sprint: `index.php` view templates and model/view name collisions. Low-priority items can be cleaned opportunistically.
+- Remaining medium-priority items: `index.php` view templates (10 across feature folders — consider renaming to `index.tpl.php`). Low-priority items can be cleaned opportunistically.
 
