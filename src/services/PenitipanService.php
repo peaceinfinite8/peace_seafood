@@ -62,7 +62,7 @@ class PenitipanService
     public function jual(array $data, int $idUser, int $idGudang): bool
     {
         $idTitipan = (int) $data['titipan_id'];
-        
+
         $sql = "SELECT * FROM titipan WHERE id = ?";
         $params = [$idTitipan];
         if ($idGudang > 0) {
@@ -86,13 +86,13 @@ class PenitipanService
             return false;
 
         // Hitung harga kesepakatan dari data titipan
-        $hargaKesepakatan = (float) $titipan['qty_total'] > 0 
+        $hargaKesepakatan = (float) $titipan['qty_total'] > 0
             ? (float) $titipan['nominal_total'] / (float) $titipan['qty_total']
             : 0;
-        
+
         // Total jual untuk pencatatan penjualan
         $totalJual = $qtyTerjual * $hargaJual;
-        
+
         // Komisi dihitung dari harga kesepakatan, bukan harga jual
         $totalKesepakatan = $qtyTerjual * $hargaKesepakatan;
         $komisi = $totalKesepakatan * ((float) $titipan['komisi_persen'] / 100);
@@ -138,7 +138,6 @@ class PenitipanService
                 'jenis' => 'piutang',
                 'id_supplier' => $titipan['id_pengirim'],
                 'nominal' => $komisi,
-                'sisa_hutang' => $komisi,
                 'nominal_bayar' => 0,
                 'jatuh_tempo' => date('Y-m-d', strtotime('+7 days')),
                 'status' => 'open',

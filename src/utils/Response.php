@@ -13,6 +13,9 @@ class Response
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -22,7 +25,7 @@ class Response
         self::json([
             'success' => true,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $status);
     }
 
@@ -32,16 +35,16 @@ class Response
     }
 
     public static function error(
-        int    $status,
+        int $status,
         string $errorCode,
         string $message,
-        array  $errors = []
+        array $errors = []
     ): never {
         self::json([
-            'success'    => false,
+            'success' => false,
             'error_code' => $errorCode,
-            'message'    => $message,
-            'errors'     => $errors,
+            'message' => $message,
+            'errors' => $errors,
         ], $status);
     }
 
@@ -74,14 +77,14 @@ class Response
     {
         self::json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
             'pagination' => [
                 'current_page' => $page,
-                'per_page'     => $perPage,
-                'total'        => $total,
-                'total_pages'  => (int) ceil($total / $perPage),
-                'has_next'     => ($page * $perPage) < $total,
-                'has_prev'     => $page > 1,
+                'per_page' => $perPage,
+                'total' => $total,
+                'total_pages' => (int) ceil($total / $perPage),
+                'has_next' => ($page * $perPage) < $total,
+                'has_prev' => $page > 1,
             ],
         ]);
     }

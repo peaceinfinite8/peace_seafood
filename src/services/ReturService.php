@@ -71,18 +71,18 @@ class ReturService
                     "SELECT * FROM produk WHERE id = ? AND id_gudang = ?",
                     [(int) $retur['id_produk'], $idGudang]
                 );
-                
+
                 if ($produk) {
                     $qtyRetur = (float) $retur['qty'];
                     $stokLama = (float) $produk['stok_qty'];
                     $nilaiStokLama = (float) $produk['nilai_stok'];
                     $hargaRataRata = (float) $produk['harga_beli'];
-                    
+
                     // Tambah stok dan nilai
                     $stokBaru = $stokLama + $qtyRetur;
                     $nilaiTambahan = $qtyRetur * $hargaRataRata;
                     $nilaiStokBaru = $nilaiStokLama + $nilaiTambahan;
-                    
+
                     Database::update('produk', [
                         'stok_qty' => $stokBaru,
                         'nilai_stok' => $nilaiStokBaru,
@@ -122,15 +122,16 @@ class ReturService
                     $sisaHutangLama = (float) ($hp['sisa_hutang'] ?? $nominalLama);
                     $nominalBayar = (float) ($hp['nominal_bayar'] ?? 0);
                     $nominalRetur = (float) $retur['nominal'];
-                    
-                    // Kurangi nominal dan sisa hutang
+
+                    // Kurangi nominal (nominal_bayar tidak berubah). sisa_hutang adalah GENERATED (nominal - nominal_bayar).
                     $nominalBaru = max(0, $nominalLama - $nominalRetur);
-                    $sisaHutangBaru = max(0, $sisaHutangLama - $nominalRetur);
-                    
-                    // Tentukan status berdasarkan sisa hutang
+
+                    // Tentukan status berdasarkan sisa_hutang baru (nominal - nominal_bayar)
+                    $nominalBayarExisting = (float) $nominalBayar;
+                    $sisaHutangBaru = max(0, $nominalBaru - $nominalBayarExisting);
                     if ($sisaHutangBaru <= 0) {
                         $status = 'lunas';
-                    } elseif ($nominalBayar > 0) {
+                    } elseif ($nominalBayarExisting > 0) {
                         $status = 'sebagian';
                     } else {
                         $status = 'open';
@@ -138,17 +139,15 @@ class ReturService
 
                     Database::update('hutang_piutang', [
                         'nominal' => $nominalBaru,
-                        'sisa_hutang' => $sisaHutangBaru,
                         'status' => $status,
                     ], 'id = ?', [(int) $hp['id']]);
 
-                    // Simpan history
+                    // Simpan history retur (gunakan kolom yang ada pada schema)
                     Database::insert('hutang_piutang_history', [
                         'id_hutang_piutang' => $hp['id'],
-                        'tipe' => 'retur',
-                        'nominal' => $nominalRetur,
-                        'tanggal_bayar' => date('Y-m-d'),
-                        'catatan' => "Retur #{$idRetur}: {$retur['alasan']}",
+                        'nominal_bayar' => $nominalRetur * -1, // negative to indicate reduction
+                        'metode_bayar' => null,
+                        'keterangan' => "Retur #{$idRetur}: {$retur['alasan']}",
                         'created_by' => $idUser,
                     ]);
                 }
