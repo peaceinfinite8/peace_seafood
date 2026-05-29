@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use App\Utils\Response;
+use App\utils\Response;
 
 /**
  * Role-based Access Control Middleware
@@ -13,6 +13,7 @@ class RoleMiddleware
 {
     /**
      * Require one of the given roles.
+     * @param string|array $roles
      */
     public static function require(string|array $roles): void
     {
@@ -23,6 +24,13 @@ class RoleMiddleware
         }
 
         $roles = (array) $roles;
+
+        // Bypass strictly for verified super_admin and saas_owner roles from database session
+        // NOTE: admin no longer bypasses permission checks to avoid unintended privilege escalation.
+        $currentRole = $user['role'] ?? '';
+        if ($currentRole === 'super_admin' || $currentRole === 'saas_owner') {
+            return;
+        }
 
         if (!in_array($user['role'], $roles, true)) {
             Response::forbidden(
@@ -38,6 +46,12 @@ class RoleMiddleware
     {
         $user = AuthMiddleware::user();
         if (empty($user)) return false;
+
+        // Bypass strictly for verified super_admin and saas_owner roles from database session
+        $currentRole = $user['role'] ?? '';
+        if ($currentRole === 'super_admin' || $currentRole === 'saas_owner') {
+            return true;
+        }
 
         $permissions = require __DIR__ . '/../../config/roles.php';
         $rolePerms   = $permissions[$user['role']] ?? [];

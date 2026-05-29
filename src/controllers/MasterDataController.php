@@ -9,7 +9,9 @@ use App\Models\Pembeli;
 use App\Models\JenisIkan;
 use App\Models\Produk;
 use App\Models\HargaHistory;
+use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
+use App\Utils\Database;
 use App\Utils\Helper;
 use App\Utils\Response;
 use App\Utils\Validator;
@@ -26,28 +28,69 @@ class MasterDataController
 
     public function supplierStore(): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.create');
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, ['nama' => 'required|string']);
-        if ($validator->hasErrors())
-            Response::validationError($validator->getErrors());
+        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+
+        $user = AuthMiddleware::getAuthUser();
+
+        // Normalisasi telepon ke telpon
+        if (isset($body['telepon'])) {
+            $body['telpon'] = $body['telepon'];
+            unset($body['telepon']);
+        }
+
+        // Hapus field non-database
+        unset($body['email']);
+
+        // Pastikan id_gudang terisi
+        if (empty($body['id_gudang'])) {
+            if (!empty($user['id_gudang'])) {
+                $body['id_gudang'] = (int)$user['id_gudang'];
+            } else {
+                $firstGudang = Database::fetchOne("SELECT id FROM gudang WHERE is_active = 1 LIMIT 1");
+                if ($firstGudang) {
+                    $body['id_gudang'] = (int)$firstGudang['id'];
+                } else {
+                    Response::error('Gudang tidak ditemukan untuk mengaitkan data ini.', 422);
+                }
+            }
+        }
 
         $id = (new Supplier())->insert($body);
         Response::created(['id' => $id], 'Supplier berhasil ditambahkan');
     }
 
+    public function supplierShow(string $id): void
+    {
+        $data = (new Supplier())->findById((int)$id);
+        if (!$data) Response::notFound('Supplier tidak ditemukan');
+        Response::success($data);
+    }
+
     public function supplierUpdate(string $id): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.update');
         $body = Helper::getRequestBody();
+
+        // Normalisasi telepon ke telpon
+        if (isset($body['telepon'])) {
+            $body['telpon'] = $body['telepon'];
+            unset($body['telepon']);
+        }
+
+        // Hapus field non-database
+        unset($body['email']);
+
         (new Supplier())->update((int) $id, $body);
         Response::success(null, 'Supplier berhasil diperbarui');
     }
 
     public function supplierDestroy(string $id): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.delete');
         (new Supplier())->update((int) $id, ['is_active' => 0]);
         Response::success(null, 'Supplier berhasil dinonaktifkan');
     }
@@ -62,28 +105,92 @@ class MasterDataController
 
     public function pembeliStore(): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.create');
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, ['nama' => 'required|string']);
-        if ($validator->hasErrors())
-            Response::validationError($validator->getErrors());
+        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
+
+        $user = AuthMiddleware::getAuthUser();
+
+        // Normalisasi telepon ke telpon
+        if (isset($body['telepon'])) {
+            $body['telpon'] = $body['telepon'];
+            unset($body['telepon']);
+        }
+
+        // Map tipe agar sesuai dengan ENUM database ('retail', 'bulk', 'reseller')
+        if (isset($body['tipe'])) {
+            $tipeMap = [
+                'umum'      => 'retail',
+                'grosir'    => 'bulk',
+                'langganan' => 'reseller',
+                'retail'    => 'retail',
+                'bulk'      => 'bulk',
+                'reseller'  => 'reseller',
+            ];
+            $body['tipe'] = $tipeMap[strtolower($body['tipe'])] ?? 'retail';
+        }
+
+        // Pastikan id_gudang terisi
+        if (empty($body['id_gudang'])) {
+            if (!empty($user['id_gudang'])) {
+                $body['id_gudang'] = (int)$user['id_gudang'];
+            } else {
+                $firstGudang = Database::fetchOne("SELECT id FROM gudang WHERE is_active = 1 LIMIT 1");
+                if ($firstGudang) {
+                    $body['id_gudang'] = (int)$firstGudang['id'];
+                } else {
+                    Response::error('Gudang tidak ditemukan untuk mengaitkan data ini.', 422);
+                }
+            }
+        }
 
         $id = (new Pembeli())->insert($body);
         Response::created(['id' => $id], 'Pembeli berhasil ditambahkan');
     }
 
+    public function pembeliShow(string $id): void
+    {
+        $data = (new Pembeli())->findById((int)$id);
+        if (!$data) Response::notFound('Pembeli tidak ditemukan');
+        Response::success($data);
+    }
+
     public function pembeliUpdate(string $id): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.update');
         $body = Helper::getRequestBody();
+
+        // Normalisasi telepon ke telpon
+        if (isset($body['telepon'])) {
+            $body['telpon'] = $body['telepon'];
+            unset($body['telepon']);
+        }
+
+        // Map tipe agar sesuai dengan ENUM database ('retail', 'bulk', 'reseller')
+        if (isset($body['tipe'])) {
+            $tipeMap = [
+                'umum'      => 'retail',
+                'grosir'    => 'bulk',
+                'langganan' => 'reseller',
+                'retail'    => 'retail',
+                'bulk'      => 'bulk',
+                'reseller'  => 'reseller',
+            ];
+            $body['tipe'] = $tipeMap[strtolower($body['tipe'])] ?? 'retail';
+        }
+
+        // Hapus field non-database
+        unset($body['email']);
+
         (new Pembeli())->update((int) $id, $body);
         Response::success(null, 'Pembeli berhasil diperbarui');
     }
 
     public function pembeliDestroy(string $id): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.delete');
         (new Pembeli())->update((int) $id, ['is_active' => 0]);
         Response::success(null, 'Pembeli berhasil dinonaktifkan');
     }
@@ -98,12 +205,11 @@ class MasterDataController
 
     public function jenisIkanStore(): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.create');
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, ['nama' => 'required|string']);
-        if ($validator->hasErrors())
-            Response::validationError($validator->getErrors());
+        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
 
         $id = (new JenisIkan())->insert($body);
         Response::created(['id' => $id], 'Jenis ikan berhasil ditambahkan');
@@ -111,51 +217,131 @@ class MasterDataController
 
     public function jenisIkanUpdate(string $id): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.update');
         $body = Helper::getRequestBody();
         (new JenisIkan())->update((int) $id, $body);
         Response::success(null, 'Jenis ikan berhasil diperbarui');
+    }
+
+    public function jenisIkanDestroy(string $id): void
+    {
+        RoleMiddleware::requirePermission('master_data.delete');
+
+        $data = (new JenisIkan())->findById((int)$id);
+        if (!$data) {
+            Response::notFound('Jenis ikan tidak ditemukan');
+        }
+
+        (new JenisIkan())->update((int)$id, ['is_active' => 0]);
+        Response::success(null, 'Jenis ikan berhasil dinonaktifkan');
     }
 
     // ── Produk ────────────────────────────────────────────────
 
     public function produkIndex(): void
     {
-        $data = (new Produk())->findWithJenis();
+        $user = AuthMiddleware::getAuthUser();
+        $idGudang = !empty($_GET['id_gudang']) ? (int)$_GET['id_gudang'] : (int)($user['id_gudang'] ?? 0);
+        $data = Produk::findWithJenis($idGudang, AuthMiddleware::isAllGudang());
         Response::success($data);
     }
 
     public function produkStore(): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.create');
+        $user = AuthMiddleware::getAuthUser();
         $body = Helper::getRequestBody();
+
+        if (in_array($user['role'], ['super_admin', 'bos'], true)) {
+            $firstGudang = Database::fetchOne("SELECT id FROM gudang WHERE is_active = 1 ORDER BY id ASC LIMIT 1");
+            if ($firstGudang) {
+                $body['id_gudang'] = (int) $firstGudang['id'];
+            } else {
+                Response::error('Gudang aktif tidak ditemukan untuk mengaitkan produk.', 422);
+            }
+        } elseif (empty($body['id_gudang']) && !empty($user['id_gudang'])) {
+            $body['id_gudang'] = (int)$user['id_gudang'];
+        } elseif (empty($body['id_gudang'])) {
+            Response::error('id_gudang wajib diisi.', 422);
+        }
 
         $validator = Validator::make($body, [
             'id_jenis_ikan' => 'required|integer',
-            'nama' => 'required|string',
+            'id_gudang'     => 'required|integer',
+            'nama'          => 'required|string',
+            'satuan'        => 'nullable|string',
         ]);
-        if ($validator->hasErrors())
-            Response::validationError($validator->getErrors());
+        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
 
-        // Hanya izinkan field yang valid, termasuk gambar
-        $allowed = ['id_jenis_ikan', 'nama', 'deskripsi', 'gambar', 'harga_beli', 'harga_jual', 'stok_minimum', 'satuan'];
-        $data = array_intersect_key($body, array_flip($allowed));
-
-        $id = (new Produk())->insert($data);
+        $id = Produk::insert($body);
         Response::created(['id' => $id], 'Produk berhasil ditambahkan');
+    }
+
+    public function produkShow(string $id): void
+    {
+        $data = Produk::findById((int)$id);
+        if (!$data) Response::notFound('Produk tidak ditemukan');
+        Response::success($data);
     }
 
     public function produkUpdate(string $id): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('master_data.update');
+        $user = AuthMiddleware::getAuthUser();
         $body = Helper::getRequestBody();
 
-        // Hanya izinkan field yang valid, termasuk gambar
-        $allowed = ['id_jenis_ikan', 'nama', 'deskripsi', 'gambar', 'harga_beli', 'harga_jual', 'stok_minimum', 'satuan'];
-        $data = array_intersect_key($body, array_flip($allowed));
+        if (in_array($user['role'], ['super_admin', 'bos'], true)) {
+            $firstGudang = Database::fetchOne("SELECT id FROM gudang WHERE is_active = 1 ORDER BY id ASC LIMIT 1");
+            if ($firstGudang) {
+                $body['id_gudang'] = (int) $firstGudang['id'];
+            }
+        } elseif (empty($body['id_gudang']) && !empty($user['id_gudang'])) {
+            $body['id_gudang'] = (int)$user['id_gudang'];
+        }
 
-        (new Produk())->update((int) $id, $data);
+        if (empty($body['id_gudang'])) {
+            Response::error('id_gudang wajib diisi.', 422);
+        }
+
+        Produk::updateRecord((int) $id, $body);
         Response::success(null, 'Produk berhasil diperbarui');
+    }
+
+    public function pembeliCreditStatus(string $id): void
+    {
+        $user = AuthMiddleware::getAuthUser();
+        $idGudang = AuthMiddleware::resolveGudang();
+        $allGudang = AuthMiddleware::isAllGudang();
+
+        $pembeli = Database::fetchOne(
+            "SELECT id, nama, kredit_limit FROM pembeli WHERE id = ? AND is_active = 1",
+            [(int)$id]
+        );
+        if (!$pembeli) Response::notFound('Pembeli tidak ditemukan');
+
+        if ($allGudang && $idGudang === 0) {
+            $row = Database::fetchOne(
+                "SELECT COALESCE(SUM(sisa_hutang),0) as outstanding FROM hutang_piutang WHERE id_pembeli = ? AND status != 'lunas'",
+                [(int)$id]
+            );
+        } else {
+            $row = Database::fetchOne(
+                "SELECT COALESCE(SUM(sisa_hutang),0) as outstanding FROM hutang_piutang WHERE id_pembeli = ? AND id_gudang = ? AND status != 'lunas'",
+                [(int)$id, $idGudang]
+            );
+        }
+
+        $outstanding = (float)($row['outstanding'] ?? 0);
+        $kreditLimit = (float)($pembeli['kredit_limit'] ?? 0);
+
+        Response::success([
+            'id'           => (int)$pembeli['id'],
+            'nama'         => $pembeli['nama'],
+            'kredit_limit' => $kreditLimit,
+            'outstanding'  => $outstanding,
+            'available'    => max(0, $kreditLimit - $outstanding),
+            'is_over'      => $kreditLimit > 0 ? ($outstanding >= $kreditLimit) : false,
+        ]);
     }
 
     // ── Harga ─────────────────────────────────────────────────
@@ -163,34 +349,32 @@ class MasterDataController
     public function hargaIndex(): void
     {
         $produkId = (int) ($_GET['produk_id'] ?? 0);
-        $data = (new HargaHistory())->findByProduk($produkId);
+        $data     = (new HargaHistory())->findByProduk($produkId);
         Response::success($data);
     }
 
     public function hargaStore(): void
     {
-        RoleMiddleware::require(['superadmin', 'admin']);
+        RoleMiddleware::requirePermission('harga.create');
         $body = Helper::getRequestBody();
 
         $validator = Validator::make($body, [
             'produk_id' => 'required|integer',
             'harga_baru' => 'required|numeric|min:0',
-            'tipe' => 'required|in:beli,jual',
+            'tipe'       => 'required|in:beli,jual',
         ]);
-        if ($validator->hasErrors())
-            Response::validationError($validator->getErrors());
+        if ($validator->fails()) Response::error('Validation failed', 422, $validator->errors());
 
         $produk = (new Produk())->findById((int) $body['produk_id']);
-        if (!$produk)
-            Response::notFound('Produk tidak ditemukan');
+        if (!$produk) Response::notFound('Produk tidak ditemukan');
 
         $hargaLama = $body['tipe'] === 'beli' ? $produk['harga_beli'] : $produk['harga_jual'];
 
         (new HargaHistory())->insert([
-            'produk_id' => $body['produk_id'],
+            'produk_id'  => $body['produk_id'],
             'harga_lama' => $hargaLama,
             'harga_baru' => $body['harga_baru'],
-            'tipe' => $body['tipe'],
+            'tipe'       => $body['tipe'],
         ]);
 
         $field = $body['tipe'] === 'beli' ? 'harga_beli' : 'harga_jual';

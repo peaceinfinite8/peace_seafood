@@ -30,7 +30,7 @@
                             <p class="text-xs mt-1" style="color:var(--text-secondary)">Barang fisik dikembalikan</p>
                         </div>
                     </label>
-                    <label class="cursor-pointer" x-show="['bos','admin'].includes(user.role)">
+                    <label class="cursor-pointer" x-show="['super_admin','admin'].includes(user.role)">
                         <input type="radio" x-model="form.tipe" value="piutang" class="sr-only">
                         <div class="p-4 rounded-xl border-2 text-center transition-all"
                              :style="form.tipe==='piutang' ? 'border-color:#2563eb; background:var(--color-primary-light)' : 'border-color: var(--border-color)'">

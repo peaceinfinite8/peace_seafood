@@ -6,7 +6,7 @@ namespace App\Models;
 
 class HutangPiutangHistory extends Model
 {
-    protected string $table = 'hutang_piutang_history';
+    protected static string $table = 'hutang_piutang_history';
 
     public function findByHutangPiutang(int $hutangPiutangId): array
     {

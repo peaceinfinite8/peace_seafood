@@ -17,11 +17,15 @@
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --border-color: #334155;
+
+  --color-primary: #3b82f6;
+  --color-primary-light: rgba(59, 130, 246, 0.15);
+  --color-primary-dark: #1d4ed8;
 }
 
 [data-theme="dark"] .card {
-  background-color: var(--bg-card);
-  border-color: var(--border-color);
+  background-color: var(--bg-card-glass, var(--bg-card));
+  border-color: var(--border-card-glass, var(--border-color));
 }
 
 [data-theme="dark"] .table {
@@ -29,12 +33,12 @@
 }
 
 [data-theme="dark"] .table > :not(caption) > * > * {
-  background-color: var(--bg-card);
+  background-color: transparent;
   border-color: var(--border-color);
 }
 
 [data-theme="dark"] .modal-content {
-  background-color: var(--bg-card);
+  background-color: var(--bg-card-glass, var(--bg-card));
   color: var(--text-primary);
 }
 
@@ -346,4 +350,40 @@
 [data-theme="dark"] .flatpickr-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* =====================================================
+   Coastal Theme - Night Mode Adjustments
+   ===================================================== */
+[data-theme="dark"] .coastal-celestial-orb {
+  /* Silver moonlight glow */
+  background: radial-gradient(circle, rgba(186, 230, 253, 0.08) 0%, rgba(186, 230, 253, 0.02) 40%, transparent 70%);
+}
+
+[data-theme="dark"] .coastal-stars-container {
+  opacity: 1; /* Munculkan bintang malam */
+}
+
+[data-theme="dark"] .wind-streak {
+  /* Wind glows silver under the moon */
+  background: linear-gradient(to right, transparent, rgba(224, 242, 254, 0.15), transparent);
+}
+
+[data-theme="dark"] .beach-sand {
+  /* Dark shore sand */
+  background: linear-gradient(to top, #0f172a, #1e293b);
+}
+
+[data-theme="dark"] .wave-back {
+  fill: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="dark"] .wave-mid {
+  fill: rgba(30, 41, 59, 0.3);
+}
+
+[data-theme="dark"] .wave-front {
+  fill: rgba(51, 65, 85, 0.25);
+  /* Glowing bioluminescent foam under the moonlight */
+  filter: drop-shadow(0px -2px 6px rgba(14, 165, 233, 0.35));
 }

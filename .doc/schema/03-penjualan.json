@@ -1,0 +1,90 @@
+{
+  "module": "penjualan",
+  "description": "Sales/transaction management",
+  "tables": [
+    {
+      "name": "nota",
+      "description": "Main sales invoice/transaction",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_gudang", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "id_pembeli", "type": "INT", "constraint": "NOT NULL" },
+        {
+          "name": "no_nota",
+          "type": "VARCHAR(20)",
+          "constraint": "NOT NULL UNIQUE"
+        },
+        { "name": "tanggal_nota", "type": "DATE", "constraint": "NOT NULL" },
+        { "name": "subtotal", "type": "BIGINT", "constraint": "NOT NULL" },
+        {
+          "name": "diskon_nominal",
+          "type": "BIGINT",
+          "constraint": "DEFAULT 0"
+        },
+        { "name": "pajak", "type": "BIGINT", "constraint": "DEFAULT 0" },
+        { "name": "total", "type": "BIGINT", "constraint": "NOT NULL" },
+        {
+          "name": "pembayaran",
+          "type": "ENUM('cash', 'hutang')",
+          "constraint": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "ENUM('draft', 'final', 'cancel')",
+          "constraint": "DEFAULT 'draft'"
+        },
+        { "name": "created_by", "type": "INT", "constraint": "NOT NULL" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_no_nota", "columns": ["no_nota"] },
+        { "name": "idx_id_gudang", "columns": ["id_gudang"] },
+        { "name": "idx_id_pembeli", "columns": ["id_pembeli"] },
+        { "name": "idx_status", "columns": ["status"] },
+        { "name": "idx_tanggal", "columns": ["tanggal_nota"] }
+      ],
+      "foreignKeys": [
+        { "column": "id_gudang", "references": "gudang(id)" },
+        { "column": "id_pembeli", "references": "pembeli(id)" },
+        { "column": "created_by", "references": "users(id)" }
+      ]
+    },
+    {
+      "name": "nota_detail",
+      "description": "Line items in sales invoice",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_nota", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "id_produk", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "qty", "type": "DECIMAL(10,2)", "constraint": "NOT NULL" },
+        { "name": "harga_jual", "type": "BIGINT", "constraint": "NOT NULL" },
+        { "name": "subtotal", "type": "BIGINT", "constraint": "NOT NULL" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_id_nota", "columns": ["id_nota"] },
+        { "name": "idx_id_produk", "columns": ["id_produk"] }
+      ],
+      "foreignKeys": [
+        { "column": "id_nota", "references": "nota(id) ON DELETE CASCADE" },
+        { "column": "id_produk", "references": "produk(id)" }
+      ]
+    }
+  ]
+}

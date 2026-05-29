@@ -6,7 +6,7 @@ namespace App\Models;
 
 class Titipan extends Model
 {
-    protected string $table = 'titipan';
+    protected static string $table = 'titipan';
 
     public function findAktif(int $gudangId): array
     {

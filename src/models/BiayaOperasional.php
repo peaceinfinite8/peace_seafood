@@ -6,7 +6,7 @@ namespace App\Models;
 
 class BiayaOperasional extends Model
 {
-    protected string $table = 'biaya_operasional';
+    protected static string $table = 'biaya_operasional';
 
     public function findByGudangAndPeriod(int $gudangId, string $from, string $to): array
     {

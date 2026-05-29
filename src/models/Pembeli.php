@@ -4,22 +4,21 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Utils\Database;
-
 class Pembeli extends Model
 {
-    protected string $table = 'pembeli';
+    protected static string $table = 'pembeli';
 
-    public function findActive(): array
+    public function findActive(string $orderBy = 'nama ASC'): array
     {
-        return Database::fetchAll("SELECT *, telpon AS telepon FROM `pembeli` WHERE `is_active` = 1 ORDER BY `nama` ASC");
+        return $this->findAll(['is_active' => 1], $orderBy);
     }
 
     public function search(string $keyword): array
     {
-        return Database::fetchAll(
-            "SELECT *, telpon AS telepon FROM `pembeli` WHERE `nama` LIKE ? AND `is_active` = 1 ORDER BY `nama` ASC",
-            ["%{$keyword}%"]
+        $stmt = $this->db->prepare(
+            "SELECT * FROM `pembeli` WHERE `nama` LIKE ? AND `is_active` = 1 ORDER BY `nama` ASC"
         );
+        $stmt->execute(["%{$keyword}%"]);
+        return $stmt->fetchAll();
     }
 }

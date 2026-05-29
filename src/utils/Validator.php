@@ -126,6 +126,17 @@ class Validator
         return !empty($this->errors);
     }
 
+    // Backwards compatible aliases
+    public function fails(): bool
+    {
+        return $this->hasErrors();
+    }
+
+    public function errors(): array
+    {
+        return $this->getErrors();
+    }
+
     /** Static shorthand */
     public static function make(array $data, array $rules): self
     {

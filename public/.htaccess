@@ -5,16 +5,11 @@ RewriteEngine On
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-# Strip /peace_seafood prefix untuk cek file fisik
-# Jika request adalah /peace_seafood/assets/... maka cek apakah /assets/... ada
-RewriteCond %{REQUEST_URI} ^/peace_seafood/(.+)$
-RewriteCond %{DOCUMENT_ROOT}/%1 -f
-RewriteRule ^peace_seafood/(.+)$ /$1 [L]
+# Redirect to HTTPS (uncomment in production)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Jika file/folder benar-benar ada (tanpa prefix), serve langsung
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Semua request lain → index.php
+# Route all requests to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]

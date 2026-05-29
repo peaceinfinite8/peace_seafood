@@ -4,30 +4,21 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use App\Utils\JWT;
-use App\Utils\Response;
-use App\Utils\Database;
-use App\Utils\Session;
+use App\utils\JWT;
+use App\utils\Response;
+use App\utils\Database;
 
 /**
- * JWT Authentication Middleware with Session Support
+ * JWT Authentication Middleware
  */
 class AuthMiddleware
 {
     /**
-     * Verify JWT and Session, attach user to request context.
+     * Verify JWT and attach user to request context.
      * Returns decoded user payload or calls Response::unauthorized().
      */
     public static function handle(): array
     {
-        // Initialize session
-        Session::init();
-
-        // Check if session is valid
-        if (!Session::isValid()) {
-            Response::unauthorized('Session expired. Silakan login ulang.');
-        }
-
         $token = JWT::getFromRequest();
 
         if (!$token) {
@@ -37,40 +28,29 @@ class AuthMiddleware
         $payload = JWT::verify($token);
 
         if (!$payload) {
-            // Token expired or invalid - destroy session
-            Session::destroy();
-            JWT::clearCookie();
             Response::unauthorized('Token tidak valid atau sudah expired. Silakan login ulang.');
         }
 
-        // Verify user still exists and is active
+        // Verify user still exists, is active, and fetch SaaS statuses
         $user = Database::fetchOne(
-            "SELECT id, name, email, role, id_gudang, is_active FROM users WHERE id = ?",
+            "SELECT id, name, email, role, id_gudang, is_active, is_first_login, registration_status FROM users WHERE id = ?",
             [$payload['id'] ?? $payload['user_id'] ?? 0]
         );
 
         if (!$user || !$user['is_active']) {
-            Session::destroy();
-            JWT::clearCookie();
             Response::unauthorized('Akun tidak aktif atau tidak ditemukan.');
         }
 
-        // Verify session user matches token user
-        $sessionUserId = Session::get('user_id');
-        if ($sessionUserId && $sessionUserId != $user['id']) {
-            Session::destroy();
-            JWT::clearCookie();
-            Response::unauthorized('Session mismatch. Silakan login ulang.');
-        }
+        // Bypass Protection for First Login Change Password
+        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $requestUri = preg_replace('#^/peace_seafood#', '', $requestUri);
+        $requestUri = preg_replace('#^/public#', '', $requestUri);
+        $requestUri = preg_replace('#^/api#', '', $requestUri);
+        $requestUri = rtrim($requestUri, '/') ?: '/';
 
-        // Update session data if needed
-        if (!$sessionUserId) {
-            Session::set('user_id', $user['id']);
-            Session::set('user_email', $user['email']);
-            Session::set('user_role', $user['role']);
-            Session::set('user_name', $user['name']);
-            Session::set('id_gudang', $user['id_gudang']);
-            Session::set('authenticated', true);
+        $allowedUris = ['/auth/change-password', '/auth/logout', '/auth/profile'];
+        if ((int)$user['is_first_login'] === 1 && !in_array($requestUri, $allowedUris, true)) {
+            Response::error('Silakan ganti password default Anda terlebih dahulu.', 412);
         }
 
         // Attach to global context
@@ -106,18 +86,51 @@ class AuthMiddleware
     /**
      * Resolve gudang ID for the current request.
      *
-     * - BOS: returns ?id_gudang query param if provided, otherwise 0 (= all warehouses).
+     * - saas_owner / super_admin / bos: returns ?id_gudang query param if provided, otherwise 0 (= all warehouses).
      * - Admin/Checker: always returns their assigned id_gudang.
      *
-     * Callers that receive 0 for BOS must query WITHOUT a gudang filter.
+     * Performs strict IDOR checking and Trial/Subscription verification on resolved warehouse.
      */
     public static function resolveGudang(): int
     {
         $user = self::user();
-        if ($user['role'] === 'bos') {
-            return !empty($_GET['id_gudang']) ? (int)$_GET['id_gudang'] : 0;
+        $gudangId = 0;
+
+        if (in_array($user['role'], ['saas_owner', 'super_admin', 'bos'], true)) {
+            $gudangId = !empty($_GET['id_gudang']) ? (int)$_GET['id_gudang'] : 0;
+        } else {
+            $gudangId = (int)($user['id_gudang'] ?? 0);
         }
-        return (int)($user['id_gudang'] ?? 0);
+
+        // Strict IDOR and Trial Expiration checks
+        if ($gudangId > 0) {
+            $gudang = Database::fetchOne(
+                "SELECT id, id_bos, subscription_until, status_langganan FROM gudang WHERE id = ?",
+                [$gudangId]
+            );
+
+            if (!$gudang) {
+                Response::notFound('Gudang tidak ditemukan.');
+            }
+
+            // IDOR Check: Bos can only view/operate on their own warehouses
+            if ($user['role'] === 'bos' && (int)$gudang['id_bos'] !== (int)$user['id']) {
+                Response::forbidden('Anda tidak memiliki akses ke data gudang ini.');
+            }
+
+            // Subscription/Trial Check (exempt saas_owner and super_admin from billing locks)
+            if (!in_array($user['role'], ['saas_owner', 'super_admin'], true)) {
+                $expiry = $gudang['subscription_until'];
+                $isExpired = $expiry && (strtotime($expiry) < time());
+                $isSuspended = $gudang['status_langganan'] === 'suspend';
+
+                if ($isExpired || $isSuspended) {
+                    Response::error('Masa aktif uji coba (trial) atau langganan gudang ini telah berakhir.', 402);
+                }
+            }
+        }
+
+        return $gudangId;
     }
 
     /**
@@ -127,6 +140,6 @@ class AuthMiddleware
     public static function isAllGudang(): bool
     {
         $user = self::user();
-        return $user['role'] === 'bos' && empty($_GET['id_gudang']);
+        return in_array($user['role'], ['bos', 'super_admin', 'saas_owner'], true) && empty($_GET['id_gudang']);
     }
 }

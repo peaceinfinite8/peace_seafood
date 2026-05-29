@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 
 // Roles
+define('ROLE_SUPER_ADMIN', 'super_admin');
 define('ROLE_BOS',     'bos');
 define('ROLE_ADMIN',   'admin');
 define('ROLE_CHECKER', 'checker');

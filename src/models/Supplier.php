@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Utils\Database;
+use App\utils\Database;
 
 class Supplier extends Model
 {
     protected static string $table = 'supplier';
-
-    public static function findActive(): array
-    {
-        return Database::fetchAll(
-            "SELECT *, telpon AS telepon FROM supplier WHERE is_active = 1 ORDER BY nama"
-        );
-    }
 
     public static function getByGudang(int $idGudang, bool $activeOnly = true): array
     {
@@ -45,6 +38,6 @@ class Supplier extends Model
              WHERE id_supplier = ? AND jenis = 'hutang' AND status != 'lunas'",
             [$idSupplier]
         );
-        return (int) ($row['total'] ?? 0);
+        return (int)($row['total'] ?? 0);
     }
 }

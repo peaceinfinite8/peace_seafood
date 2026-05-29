@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Services\StokService;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\RoleMiddleware;
 use App\Utils\Helper;
 use App\Utils\Response;
 
@@ -23,11 +24,12 @@ class StokController
      */
     public function index(): void
     {
+        RoleMiddleware::requirePermission('stok.view');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = $this->resolveGudang($user);
 
         // BOS tanpa filter gudang → ambil semua gudang
-        $data = $this->stokService->getInventory($idGudang, $user['role'] === 'bos');
+        $data = $this->stokService->getInventory($idGudang, in_array($user['role'], ['bos', 'super_admin'], true));
         Response::success($data);
     }
 
@@ -36,12 +38,15 @@ class StokController
      */
     public function masuk(): void
     {
+        RoleMiddleware::requirePermission('stok.create');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = $this->resolveGudang($user);
         $body     = Helper::getRequestBody();
 
-        if (empty($body['id_supplier']) || empty($body['id_produk']) || empty($body['qty']) || empty($body['harga_beli'])) {
-            Response::error('Data tidak lengkap', 422, ['required' => ['id_supplier', 'id_produk', 'qty', 'harga_beli']]);
+        $qty = $body['berat_nota_supplier'] ?? $body['qty'] ?? null;
+
+        if (empty($body['id_supplier']) || empty($body['id_produk']) || empty($qty) || empty($body['harga_beli'])) {
+            Response::error('Data tidak lengkap', 422, ['required' => ['id_supplier', 'id_produk', 'qty / berat_nota_supplier', 'harga_beli']]);
         }
 
         $id = $this->stokService->inputStokMasuk($body, (int)$user['id'], $idGudang);
@@ -53,14 +58,16 @@ class StokController
      */
     public function showMasuk(string $id): void
     {
+        RoleMiddleware::requirePermission('stok.view');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = $this->resolveGudang($user);
 
         $data = \App\Utils\Database::fetchOne(
-            "SELECT sm.*, p.nama as nama_produk, s.nama as nama_supplier
+            "SELECT sm.*, p.nama as nama_produk, s.nama as nama_supplier, u.name as nama_user
              FROM stok_masuk sm
              JOIN produk p ON sm.id_produk = p.id
              JOIN supplier s ON sm.id_supplier = s.id
+             JOIN users u ON sm.created_by = u.id
              WHERE sm.id = ? AND sm.id_gudang = ?",
             [(int)$id, $idGudang]
         );
@@ -74,18 +81,21 @@ class StokController
      */
     public function timbang(): void
     {
+        RoleMiddleware::requirePermission('stok.timbang');
         $user     = AuthMiddleware::getAuthUser();
-        $this->resolveGudang($user);
+        $idGudang = $this->resolveGudang($user);
         $body     = Helper::getRequestBody();
 
-        if (empty($body['id_stok_masuk']) || !isset($body['qty_actual'])) {
+        $qtyActual = $body['berat_riil_gudang'] ?? $body['qty_actual'] ?? null;
+
+        if (empty($body['id_stok_masuk']) || !isset($qtyActual)) {
             Response::error('Data tidak lengkap', 422);
         }
 
         $ok = $this->stokService->timbangStok((int)$body['id_stok_masuk'], $body, (int)$user['id']);
-        
+
         if (!$ok) Response::error('Gagal proses timbangan. Pastikan stok berstatus pending.', 422);
-        
+
         Response::success(null, 'Timbangan dikonfirmasi. Stok diperbarui.');
     }
 
@@ -94,6 +104,7 @@ class StokController
      */
     public function history(): void
     {
+        RoleMiddleware::requirePermission('stok.history');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = $this->resolveGudang($user);
         $filters  = [
@@ -102,7 +113,7 @@ class StokController
             'id_produk' => $_GET['id_produk'] ?? null,
         ];
 
-        $data = $this->stokService->getHistory($idGudang, $filters, $user['role'] === 'bos');
+        $data = $this->stokService->getHistory($idGudang, $filters, in_array($user['role'], ['bos', 'super_admin'], true));
         Response::success($data);
     }
 
@@ -111,10 +122,11 @@ class StokController
      */
     public function pendingTimbang(): void
     {
+        RoleMiddleware::requirePermission('stok.view');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = $this->resolveGudang($user);
 
-        $data = $this->stokService->getPendingTimbangan($idGudang, $user['role'] === 'bos');
+        $data = $this->stokService->getPendingTimbangan($idGudang, in_array($user['role'], ['bos', 'super_admin'], true));
         Response::success($data);
     }
 
@@ -125,7 +137,7 @@ class StokController
      */
     private function resolveGudang(array $user): int
     {
-        if ($user['role'] === 'bos') {
+        if (in_array($user['role'], ['bos', 'super_admin'], true)) {
             return !empty($_GET['id_gudang']) ? (int)$_GET['id_gudang'] : 0;
         }
         return (int)($user['id_gudang'] ?? 0);

@@ -9,6 +9,7 @@ use App\Services\PenjualanService;
 use App\Services\KeuanganService;
 use App\Services\ExportService;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\RoleMiddleware;
 use App\Utils\Database;
 use App\Utils\Response;
 
@@ -19,11 +20,12 @@ class LaporanController
      */
     public function stok(): void
     {
+        RoleMiddleware::requirePermission('laporan.view');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
         $filters  = ['dari' => $_GET['dari'] ?? null, 'sampai' => $_GET['sampai'] ?? null];
 
-        $data = (new StokService())->getHistory($idGudang, $filters, $user['role'] === 'bos');
+        $data = (new StokService())->getHistory($idGudang, $filters, AuthMiddleware::isAllGudang());
         Response::success($data);
     }
 
@@ -32,6 +34,7 @@ class LaporanController
      */
     public function penjualan(): void
     {
+        RoleMiddleware::requirePermission('laporan.view');
         $idGudang = AuthMiddleware::resolveGudang();
         $filters  = [
             'dari'   => $_GET['dari']   ?? null,
@@ -48,6 +51,7 @@ class LaporanController
      */
     public function keuangan(): void
     {
+        RoleMiddleware::requirePermission('laporan.view');
         $idGudang = AuthMiddleware::resolveGudang();
         $summary  = (new KeuanganService())->getSummary($idGudang, AuthMiddleware::isAllGudang());
         Response::success($summary);
@@ -58,77 +62,72 @@ class LaporanController
      */
     public function hutangAging(): void
     {
+        RoleMiddleware::requirePermission('laporan.view');
         $idGudang = AuthMiddleware::resolveGudang();
         $data     = (new KeuanganService())->getHutangAging($idGudang, AuthMiddleware::isAllGudang());
         Response::success($data);
     }
 
     /**
-     * POST /laporan/export/pdf
+     * GET/POST /laporan/export/pdf
      */
     public function exportPdf(): void
     {
-        AuthMiddleware::getAuthUser();
-        $idGudang = AuthMiddleware::resolveGudang();
+        RoleMiddleware::requirePermission('laporan.export');
+        $user      = AuthMiddleware::getAuthUser();
+        $idGudang  = AuthMiddleware::resolveGudang();
         $allGudang = AuthMiddleware::isAllGudang();
-        $tipe     = $_GET['tipe'] ?? 'penjualan';
+
+        $tipe      = $_GET['tab'] ?? $_GET['tipe'] ?? 'penjualan';
+        $dari      = $_GET['dari'] ?? '';
+        $sampai    = $_GET['sampai'] ?? '';
 
         $exportService = new ExportService();
 
-        $gudang = $idGudang ? Database::fetchOne("SELECT * FROM gudang WHERE id = ?", [$idGudang]) : null;
-        if (!$gudang) $gudang = ['nama' => 'All Gudang'];
+        try {
+            $pdfContent = $exportService->exportLaporanPdf($dari, $sampai, $tipe, $idGudang, $allGudang);
 
-        $data = match($tipe) {
-            'stok'     => (new StokService())->getHistory($idGudang, [], $allGudang),
-            'keuangan' => (new KeuanganService())->getHutangAging($idGudang, $allGudang),
-            default    => (new PenjualanService())->getNotaList($idGudang, [], $allGudang),
-        };
-
-        $html = $exportService->generateReportHtml($tipe, $data, $gudang);
-
-        if (class_exists('\Dompdf\Dompdf')) {
-            $dompdf = new \Dompdf\Dompdf();
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'landscape');
-            $dompdf->render();
             header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename="laporan_' . $tipe . '_' . date('Ymd') . '.pdf"');
-            echo $dompdf->output();
+            echo $pdfContent;
             exit;
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), 500);
         }
-
-        header('Content-Type: text/html');
-        echo $html;
-        exit;
     }
 
     /**
-     * POST /laporan/export/excel
+     * GET/POST /laporan/export/excel
      */
     public function exportExcel(): void
     {
+        RoleMiddleware::requirePermission('laporan.export');
+        $user      = AuthMiddleware::getAuthUser();
         $idGudang  = AuthMiddleware::resolveGudang();
         $allGudang = AuthMiddleware::isAllGudang();
-        $tipe      = $_GET['tipe'] ?? 'penjualan';
-        $filters   = ['dari' => $_GET['dari'] ?? null, 'sampai' => $_GET['sampai'] ?? null];
+
+        $tipe      = $_GET['tab'] ?? $_GET['tipe'] ?? 'penjualan';
+        $dari      = $_GET['dari'] ?? '';
+        $sampai    = $_GET['sampai'] ?? '';
 
         $exportService = new ExportService();
 
-        $filepath = match($tipe) {
-            'stok'     => $exportService->exportStokCsv($idGudang, $filters, $allGudang),
-            'keuangan' => $exportService->exportKeuanganCsv($idGudang, $filters, $allGudang),
-            default    => $exportService->exportPenjualanCsv($idGudang, $filters, $allGudang),
-        };
+        try {
+            $filepath = $exportService->exportLaporanXlsx($dari, $sampai, $tipe, $idGudang, $allGudang);
 
-        if (!file_exists($filepath)) {
-            Response::error('Gagal generate export', 500);
+            if (!file_exists($filepath)) {
+                Response::error('Gagal generate export', 500);
+            }
+
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+            header('Content-Length: ' . filesize($filepath));
+            header('Cache-Control: max-age=0');
+            readfile($filepath);
+            unlink($filepath);
+            exit;
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), 500);
         }
-
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
-        header('Content-Length: ' . filesize($filepath));
-        readfile($filepath);
-        unlink($filepath);
-        exit;
     }
 }

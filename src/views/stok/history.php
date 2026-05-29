@@ -16,7 +16,7 @@
     <div class="card p-4 mb-6">
         <div class="flex flex-wrap gap-3">
             <input type="text" x-model="search" placeholder="Cari produk / supplier..."
-                   class="form-input flex-1 min-w-48">
+                class="form-input flex-1 min-w-48">
             <input type="date" x-model="filterDari" class="form-input w-auto">
             <input type="date" x-model="filterSampai" class="form-input w-auto">
             <select x-model="filterStatus" class="form-input w-auto">
@@ -39,17 +39,17 @@
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Total Qty Masuk</p>
             <p class="text-lg font-bold" style="color: var(--color-primary)"
-               x-text="list.filter(i=>i.status==='confirmed').reduce((s,i)=>s+parseFloat(i.qty_actual||i.qty||0),0).toFixed(1) + ' kg'"></p>
+                x-text="formatKg(list.filter(i=>i.status==='confirmed').reduce((s,i)=>s+parseFloat(i.qty_actual||i.qty||0),0), 1)"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Pending</p>
             <p class="text-2xl font-bold text-yellow-500"
-               x-text="list.filter(i=>i.status==='pending').length"></p>
+                x-text="list.filter(i=>i.status==='pending').length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Confirmed</p>
             <p class="text-2xl font-bold text-green-500"
-               x-text="list.filter(i=>i.status==='confirmed').length"></p>
+                x-text="list.filter(i=>i.status==='confirmed').length"></p>
         </div>
     </div>
 
@@ -72,15 +72,18 @@
                         <th>Susut</th>
                         <th>Harga Beli</th>
                         <th>Total</th>
+                        <th>Penanggung Jawab</th>
                         <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr><td colspan="10" class="text-center py-10" style="color:var(--text-secondary)">
-                            Tidak ada history stok
-                        </td></tr>
+                        <tr>
+                            <td colspan="11" class="text-center py-10" style="color:var(--text-secondary)">
+                                Tidak ada history stok
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="item in filtered" :key="item.id">
                         <tr>
@@ -88,29 +91,32 @@
                             <td><span class="font-medium text-sm" x-text="item.nama_produk || '-'"></span></td>
                             <td><span class="text-sm" x-text="item.nama_supplier || '-'"></span></td>
                             <td>
-                                <span class="text-sm" x-text="parseFloat(item.qty||0).toFixed(1) + ' kg'"></span>
+                                <span class="text-sm" x-text="formatKg(item.qty||0, 1)"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-semibold"
-                                      :style="item.qty_actual ? 'color:var(--color-success)' : 'color:var(--text-secondary)'"
-                                      x-text="item.qty_actual ? parseFloat(item.qty_actual).toFixed(1)+' kg' : '-'"></span>
+                                    :style="item.qty_actual ? 'color:var(--color-success)' : 'color:var(--text-secondary)'"
+                                    x-text="item.qty_actual ? formatKg(item.qty_actual,1) : '-'"></span>
                             </td>
                             <td>
                                 <span class="text-sm"
-                                      :class="item.susut > 0 ? 'text-red-500' : 'text-gray-400'"
-                                      x-text="item.susut ? parseFloat(item.susut).toFixed(1)+' kg' : '-'"></span>
+                                    :class="item.susut > 0 ? 'text-red-500' : 'text-gray-400'"
+                                    x-text="item.susut ? formatKg(item.susut,1) : '-'"></span>
                             </td>
                             <td>
                                 <span class="text-sm" x-text="'Rp '+parseFloat(item.harga_beli||0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-semibold" style="color:var(--color-primary)"
-                                      x-text="'Rp '+(parseFloat(item.qty_actual||item.qty||0)*parseFloat(item.harga_beli||0)).toLocaleString('id-ID')"></span>
+                                    x-text="'Rp '+(parseFloat(item.qty_actual||item.qty||0)*parseFloat(item.harga_beli||0)).toLocaleString('id-ID')"></span>
+                            </td>
+                            <td>
+                                <span class="text-sm" x-text="item.nama_user || '-' "></span>
                             </td>
                             <td>
                                 <span class="badge"
-                                      :class="item.status==='confirmed' ? 'badge-success' : 'badge-warning'"
-                                      x-text="item.status?.toUpperCase()"></span>
+                                    :class="item.status==='confirmed' ? 'badge-success' : 'badge-warning'"
+                                    x-text="item.status?.toUpperCase()"></span>
                             </td>
                             <td>
                                 <button @click="openDetail(item)" class="btn btn-secondary p-1.5" title="Detail">
@@ -148,16 +154,16 @@
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Qty Input</p>
-                            <p class="font-semibold" x-text="parseFloat(selected.qty||0).toFixed(1) + ' kg'"></p>
+                            <p class="font-semibold" x-text="formatKg(selected.qty||0,1)"></p>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Qty Aktual (Timbang)</p>
-                            <p class="font-semibold text-green-600" x-text="selected.qty_actual ? parseFloat(selected.qty_actual).toFixed(1)+' kg' : 'Belum ditimbang'"></p>
+                            <p class="font-semibold text-green-600" x-text="selected.qty_actual ? formatKg(selected.qty_actual,1) : 'Belum ditimbang'"></p>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Susut</p>
                             <p class="font-semibold" :class="selected.susut > 0 ? 'text-red-500' : ''"
-                               x-text="selected.susut ? parseFloat(selected.susut).toFixed(1)+' kg' : '0 kg'"></p>
+                                x-text="selected.susut ? formatKg(selected.susut,1) : formatKg(0,1)"></p>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Harga Beli</p>
@@ -166,7 +172,7 @@
                         <div class="p-3 rounded-lg col-span-2" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Total Nilai</p>
                             <p class="font-bold text-lg" style="color:var(--color-primary)"
-                               x-text="'Rp '+(parseFloat(selected.qty_actual||selected.qty||0)*parseFloat(selected.harga_beli||0)).toLocaleString('id-ID')"></p>
+                                x-text="'Rp '+(parseFloat(selected.qty_actual||selected.qty||0)*parseFloat(selected.harga_beli||0)).toLocaleString('id-ID')"></p>
                         </div>
                     </div>
                     <div x-show="selected.alasan_susut" class="p-3 rounded-lg" style="background:var(--bg-gray)">
@@ -181,11 +187,15 @@
                         <div>
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Status</p>
                             <span class="badge" :class="selected.status==='confirmed'?'badge-success':'badge-warning'"
-                                  x-text="selected.status?.toUpperCase()"></span>
+                                x-text="selected.status?.toUpperCase()"></span>
                         </div>
                         <div class="text-right">
                             <p class="text-xs" style="color:var(--text-secondary)" x-text="formatDate(selected.tanggal_masuk||selected.created_at)"></p>
                         </div>
+                    </div>
+                    <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
+                        <p class="text-xs mb-1" style="color:var(--text-secondary)">Penanggung Jawab</p>
+                        <p class="font-semibold" x-text="selected.nama_user || '-' "></p>
                     </div>
                 </div>
             </template>
@@ -218,6 +228,10 @@ function stokHistory() {
         },
 
         async init() {
+            if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
+                window.location.href = '/peace_seafood/dashboard';
+                return;
+            }
             await this.loadData();
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },

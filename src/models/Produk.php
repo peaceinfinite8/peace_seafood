@@ -4,28 +4,108 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Utils\Database;
+use App\utils\Database;
 
 class Produk extends Model
 {
     protected static string $table = 'produk';
 
-    public function findWithJenis(): array
+    public static function findWithJenis(int $idGudang = 0, bool $allGudang = false): array
     {
+        $satuanSelect = Database::hasColumn('produk', 'satuan')
+            ? ", COALESCE(p.satuan, 'kg') as satuan"
+            : ", 'kg' as satuan";
+
+        if ($allGudang && $idGudang === 0) {
+            return Database::fetchAll(
+                "SELECT p.*, j.nama as nama_jenis, g.nama as nama_gudang{$satuanSelect}
+                 FROM produk p
+                 JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
+                 JOIN gudang g ON g.id = p.id_gudang
+                 WHERE p.is_active = 1
+                 ORDER BY g.nama, j.nama, p.nama"
+            );
+        }
+
         return Database::fetchAll(
-            "SELECT p.*, p.gambar, j.nama AS nama_jenis
+            "SELECT p.*, j.nama as nama_jenis{$satuanSelect}
              FROM produk p
              JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
-             WHERE p.is_active = 1
-             ORDER BY p.nama"
+             WHERE p.id_gudang = ? AND p.is_active = 1
+             ORDER BY j.nama, p.nama",
+            [$idGudang]
         );
+    }
+
+    public static function findById(int $id): array|false
+    {
+        return Database::fetchOne("SELECT * FROM produk WHERE id = ?", [$id]);
+    }
+
+    public static function insert(array $data): int
+    {
+        $payload = [
+            'id_jenis_ikan' => (int)($data['id_jenis_ikan'] ?? $data['jenis_ikan_id'] ?? 0),
+            'id_gudang'     => (int)($data['id_gudang'] ?? 0),
+            'nama'          => $data['nama'],
+            'deskripsi'     => $data['deskripsi'] ?? null,
+            'harga_beli'    => (float)($data['harga_beli'] ?? 0),
+            'harga_jual'    => (float)($data['harga_jual'] ?? 0),
+            'stok_qty'      => (float)($data['stok_qty'] ?? 0),
+            'nilai_stok'    => (float)($data['nilai_stok'] ?? 0),
+            'stok_minimum'  => (float)($data['stok_minimum'] ?? 0),
+            'is_active'     => (int)($data['is_active'] ?? 1),
+        ];
+
+        if (Database::hasColumn('produk', 'satuan')) {
+            $payload['satuan'] = $data['satuan'] ?? 'kg';
+        }
+
+        if (Database::hasColumn('produk', 'size')) {
+            $payload['size'] = $data['size'] ?? null;
+            $payload['grade'] = $data['grade'] ?? null;
+            $payload['asal'] = $data['asal'] ?? null;
+        }
+
+        return Database::insert('produk', $payload);
+    }
+
+    public static function updateRecord(int $id, array $data): bool
+    {
+        $payload = [];
+
+        $allowedFields = ['id_jenis_ikan', 'nama', 'deskripsi', 'harga_beli', 'harga_jual', 'stok_qty', 'nilai_stok', 'stok_minimum', 'is_active'];
+        if (Database::hasColumn('produk', 'satuan')) {
+            $allowedFields[] = 'satuan';
+        }
+        if (Database::hasColumn('produk', 'size')) {
+            $allowedFields[] = 'size';
+            $allowedFields[] = 'grade';
+            $allowedFields[] = 'asal';
+        }
+
+        foreach ($allowedFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $payload[$field] = $data[$field];
+            }
+        }
+
+        if (empty($payload)) {
+            return false;
+        }
+
+        if (Database::hasColumn('produk', 'satuan') && array_key_exists('satuan', $data) && $data['satuan'] === null) {
+            $payload['satuan'] = 'kg';
+        }
+
+        return Database::update('produk', $payload, 'id = ?', [$id]);
     }
 
     public static function getByGudang(int $idGudang, bool $activeOnly = true): array
     {
         $where = $activeOnly ? "AND p.is_active = 1" : "";
         return Database::fetchAll(
-            "SELECT p.*, p.gambar, j.nama as jenis_ikan_nama
+            "SELECT p.*, j.nama as jenis_ikan_nama
              FROM produk p
              JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
              WHERE p.id_gudang = ? {$where}
@@ -37,7 +117,7 @@ class Produk extends Model
     public static function getWithStokStatus(int $idGudang): array
     {
         return Database::fetchAll(
-            "SELECT p.*, p.gambar, j.nama as jenis_ikan_nama,
+            "SELECT p.*, j.nama as jenis_ikan_nama,
                     CASE
                         WHEN p.stok_qty <= 0 THEN 'habis'
                         WHEN p.stok_qty < p.stok_minimum THEN 'critical'
@@ -55,7 +135,7 @@ class Produk extends Model
     public static function getBelowMinimum(int $idGudang): array
     {
         return Database::fetchAll(
-            "SELECT p.*, p.gambar, j.nama as jenis_ikan_nama
+            "SELECT p.*, j.nama as jenis_ikan_nama
              FROM produk p
              JOIN jenis_ikan j ON j.id = p.id_jenis_ikan
              WHERE p.id_gudang = ? AND p.is_active = 1
@@ -65,92 +145,44 @@ class Produk extends Model
         );
     }
 
-    /**
-     * Update stok produk (add atau subtract)
-     * 
-     * Formula untuk ADD:
-     * - Qty Baru = Qty Lama + Delta
-     * - Nilai Baru = Nilai Lama + (Delta × Harga Beli)
-     * 
-     * Formula untuk SUBTRACT:
-     * - Qty Baru = max(0, Qty Lama - Delta)
-     * - Nilai Keluar = Delta × Harga Beli Rata-rata
-     * - Nilai Baru = max(0, Nilai Lama - Nilai Keluar)
-     * 
-     * Contoh ADD:
-     * Stok: 100 kg @ Rp 50.000 = Rp 5.000.000
-     * Tambah: 50 kg @ Rp 60.000
-     * Stok baru: 150 kg = Rp 5.000.000 + Rp 3.000.000 = Rp 8.000.000
-     * 
-     * Contoh SUBTRACT:
-     * Stok: 150 kg @ Rp 53.333 = Rp 8.000.000
-     * Kurang: 30 kg
-     * Nilai keluar: 30 × Rp 53.333 = Rp 1.600.000
-     * Stok baru: 120 kg = Rp 8.000.000 - Rp 1.600.000 = Rp 6.400.000
-     */
     public static function updateStok(int $id, float $delta, string $operation = 'add'): bool
     {
         if ($operation === 'add') {
-            // Ambil data produk untuk hitung weighted average
-            $produk = Database::fetchOne("SELECT * FROM produk WHERE id = ?", [$id]);
-            if (!$produk) return false;
-            
-            $stokLama = (float) $produk['stok_qty'];
-            $nilaiLama = (float) $produk['nilai_stok'];
-            $hargaBeli = (float) $produk['harga_beli'];
-            
-            $stokBaru = $stokLama + $delta;
-            $nilaiTambahan = $delta * $hargaBeli;
-            $nilaiBaru = $nilaiLama + $nilaiTambahan;
-            
             return Database::execute(
                 "UPDATE produk SET
-                    stok_qty = ?,
-                    nilai_stok = ?,
+                    stok_qty = stok_qty + ?,
+                    nilai_stok = (stok_qty + ?) * harga_beli,
                     updated_at = NOW()
                  WHERE id = ?",
-                [$stokBaru, $nilaiBaru, $id]
+                [$delta, $delta, $id]
             );
         } else {
-            // Subtract: kurangi dengan harga rata-rata
-            $produk = Database::fetchOne("SELECT * FROM produk WHERE id = ?", [$id]);
-            if (!$produk) return false;
-            
-            $stokLama = (float) $produk['stok_qty'];
-            $nilaiLama = (float) $produk['nilai_stok'];
-            $hargaRataRata = (float) $produk['harga_beli'];
-            
-            $stokBaru = max(0, $stokLama - $delta);
-            $nilaiKeluar = $delta * $hargaRataRata;
-            $nilaiBaru = max(0, $nilaiLama - $nilaiKeluar);
-            
             return Database::execute(
                 "UPDATE produk SET
-                    stok_qty = ?,
-                    nilai_stok = ?,
+                    stok_qty = GREATEST(0, stok_qty - ?),
+                    nilai_stok = GREATEST(0, stok_qty - ?) * harga_beli,
                     updated_at = NOW()
                  WHERE id = ?",
-                [$stokBaru, $nilaiBaru, $id]
+                [$delta, $delta, $id]
             );
         }
     }
 
     public static function updateHarga(int $id, ?int $hargaBeli, ?int $hargaJual): bool
     {
-        $sets = [];
+        $sets   = [];
         $params = [];
 
         if ($hargaBeli !== null) {
-            $sets[] = 'harga_beli = ?';
+            $sets[]   = 'harga_beli = ?';
             $params[] = $hargaBeli;
         }
         if ($hargaJual !== null) {
-            $sets[] = 'harga_jual = ?';
+            $sets[]   = 'harga_jual = ?';
             $params[] = $hargaJual;
         }
 
-        if (empty($sets))
-            return false;
+        if (empty($sets)) return false;
 
         $params[] = $id;
         return Database::execute(
@@ -165,7 +197,7 @@ class Produk extends Model
             "SELECT COALESCE(SUM(nilai_stok), 0) as total FROM produk WHERE id_gudang = ? AND is_active = 1",
             [$idGudang]
         );
-        return (int) ($row['total'] ?? 0);
+        return (int)($row['total'] ?? 0);
     }
 
     public static function search(int $idGudang, string $keyword): array

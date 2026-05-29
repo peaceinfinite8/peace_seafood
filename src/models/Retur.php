@@ -6,7 +6,7 @@ namespace App\Models;
 
 class Retur extends Model
 {
-    protected string $table = 'retur';
+    protected static string $table = 'retur';
 
     public function findByGudang(int $gudangId, int $limit = 20, int $offset = 0): array
     {

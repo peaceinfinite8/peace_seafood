@@ -7,8 +7,8 @@
             <p class="text-sm" style="color: var(--text-secondary)">Kelola retur stok & retur piutang</p>
         </div>
         <a href="/peace_seafood/retur/create"
-           class="btn btn-primary"
-           x-show="['bos','admin','checker'].includes(user.role)">
+            class="btn btn-primary"
+            x-show="['bos','admin','checker'].includes(user.role)">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Buat Retur
         </a>
@@ -44,17 +44,17 @@
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Pending</p>
             <p class="text-2xl font-bold text-yellow-500"
-               x-text="list.filter(r => r.status === 'pending').length"></p>
+                x-text="list.filter(r => r.status === 'pending').length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Approved</p>
             <p class="text-2xl font-bold text-green-500"
-               x-text="list.filter(r => ['approved','posted'].includes(r.status)).length"></p>
+                x-text="list.filter(r => ['approved','posted'].includes(r.status)).length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Rejected</p>
             <p class="text-2xl font-bold text-red-500"
-               x-text="list.filter(r => r.status === 'rejected').length"></p>
+                x-text="list.filter(r => r.status === 'rejected').length"></p>
         </div>
     </div>
 
@@ -81,24 +81,26 @@
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr><td colspan="8" class="text-center py-10" style="color:var(--text-secondary)">
-                            Tidak ada data retur
-                        </td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-10" style="color:var(--text-secondary)">
+                                Tidak ada data retur
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="r in filtered" :key="r.id">
                         <tr>
                             <td>
                                 <span class="badge"
-                                      :class="r.tipe === 'stok' ? 'badge-info' : 'badge-warning'"
-                                      x-text="r.tipe === 'stok' ? 'Stok' : 'Piutang'"></span>
+                                    :class="r.tipe === 'stok' ? 'badge-info' : 'badge-warning'"
+                                    x-text="r.tipe === 'stok' ? 'Stok' : 'Piutang'"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-medium"
-                                      x-text="r.nama_produk || r.nama_supplier || r.nama_pembeli || '-'"></span>
+                                    x-text="r.nama_produk || r.nama_supplier || r.nama_pembeli || '-'"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-semibold"
-                                      x-text="r.tipe === 'stok'
+                                    x-text="r.tipe === 'stok'
                                         ? (parseFloat(r.qty||0).toFixed(1) + ' kg')
                                         : ('Rp ' + parseFloat(r.nominal||0).toLocaleString('id-ID'))">
                                 </span>
@@ -110,13 +112,13 @@
                             <td><span class="text-sm" x-text="formatDate(r.created_at)"></span></td>
                             <td>
                                 <span class="badge"
-                                      :class="{
+                                    :class="{
                                         'badge-warning': r.status === 'pending',
                                         'badge-success': r.status === 'approved' || r.status === 'posted',
                                         'badge-danger':  r.status === 'rejected',
                                         'badge-gray':    r.status === 'posted',
                                       }"
-                                      x-text="r.status?.toUpperCase()"></span>
+                                    x-text="r.status?.toUpperCase()"></span>
                             </td>
                             <td>
                                 <div class="flex gap-1.5">
@@ -124,13 +126,13 @@
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                     </button>
                                     <button x-show="r.status === 'pending' && user.role === 'bos'"
-                                            @click="approve(r.id)"
-                                            class="btn btn-success p-1.5" title="Approve">
+                                        @click="approve(r.id)"
+                                        class="btn btn-success p-1.5" title="Approve">
                                         <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                     </button>
                                     <button x-show="r.status === 'pending' && user.role === 'bos'"
-                                            @click="reject(r.id)"
-                                            class="btn btn-danger p-1.5" title="Reject">
+                                        @click="reject(r.id)"
+                                        class="btn btn-danger p-1.5" title="Reject">
                                         <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
@@ -155,13 +157,13 @@
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Tipe</p>
                             <span class="badge" :class="detail.tipe==='stok'?'badge-info':'badge-warning'"
-                                  x-text="detail.tipe==='stok'?'Retur Stok':'Retur Piutang'"></span>
+                                x-text="detail.tipe==='stok'?'Retur Stok':'Retur Piutang'"></span>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Status</p>
                             <span class="badge"
-                                  :class="{'badge-warning':detail.status==='pending','badge-success':['approved','posted'].includes(detail.status),'badge-danger':detail.status==='rejected'}"
-                                  x-text="detail.status?.toUpperCase()"></span>
+                                :class="{'badge-warning':detail.status==='pending','badge-success':['approved','posted'].includes(detail.status),'badge-danger':detail.status==='rejected'}"
+                                x-text="detail.status?.toUpperCase()"></span>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Produk / Pihak</p>
@@ -170,7 +172,7 @@
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" x-text="detail.tipe==='stok' ? 'Qty' : 'Nominal'" style="color:var(--text-secondary)"></p>
                             <p class="font-semibold"
-                               x-text="detail.tipe==='stok' ? (parseFloat(detail.qty||0).toFixed(1)+' kg') : ('Rp '+parseFloat(detail.nominal||0).toLocaleString('id-ID'))"></p>
+                                x-text="detail.tipe==='stok' ? (parseFloat(detail.qty||0).toFixed(1)+' kg') : ('Rp '+parseFloat(detail.nominal||0).toLocaleString('id-ID'))"></p>
                         </div>
                         <div class="p-3 rounded-lg col-span-2" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Alasan</p>
@@ -216,6 +218,10 @@ function returPage() {
         },
 
         async init() {
+            if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
+                window.location.href = '/peace_seafood/dashboard';
+                return;
+            }
             await this.loadData();
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },

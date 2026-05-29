@@ -14,7 +14,7 @@
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">Data Supplier</h2>
             <p class="text-sm" style="color: var(--text-secondary)">Kelola data pemasok ikan</p>
         </div>
-        <button @click="openAdd()" class="btn btn-primary" x-show="['bos','admin'].includes(user.role)">
+        <button @click="openAdd()" class="btn btn-primary" x-show="['super_admin','admin'].includes(user.role)">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Tambah Supplier
         </button>
@@ -30,7 +30,7 @@
         <div class="overflow-x-auto">
             <table class="table">
                 <thead>
-                    <tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th>Email</th><th x-show="['bos','admin'].includes(user.role)">Aksi</th></tr>
+                    <tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th>Email</th><th x-show="['super_admin','admin'].includes(user.role)">Aksi</th></tr>
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
@@ -39,10 +39,10 @@
                     <template x-for="s in filtered" :key="s.id">
                         <tr>
                             <td class="font-medium text-sm" x-text="s.nama"></td>
-                            <td class="text-sm" x-text="s.telepon || '-'"></td>
+                            <td class="text-sm" x-text="s.telpon || '-'"></td>
                             <td class="text-sm" x-text="s.alamat || '-'"></td>
                             <td class="text-sm" x-text="s.email || '-'"></td>
-                            <td x-show="['bos','admin'].includes(user.role)">
+                            <td x-show="['super_admin','admin'].includes(user.role)">
                                 <div class="flex gap-2">
                                     <button @click="openEdit(s)" class="btn btn-secondary p-1.5" title="Edit">
                                         <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
@@ -116,7 +116,7 @@ function supplierPage() {
         },
 
         openAdd() { this.editId = null; this.form = { nama: '', telepon: '', alamat: '', email: '' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
-        openEdit(s) { this.editId = s.id; this.form = { nama: s.nama, telepon: s.telepon||'', alamat: s.alamat||'', email: s.email||'' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
+        openEdit(s) { this.editId = s.id; this.form = { nama: s.nama, telepon: s.telpon||'', alamat: s.alamat||'', email: s.email||'' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
 
         async save() {
             if (!this.form.nama) return;
@@ -137,7 +137,7 @@ function supplierPage() {
         },
 
         async deleteItem(id) {
-            if (!confirm('Hapus supplier ini?')) return;
+            if (!await confirm('Hapus supplier ini?')) return;
             const token = localStorage.getItem('token');
             await axios.delete('/peace_seafood/api/master/supplier/' + id, { headers: { Authorization: 'Bearer ' + token } });
             iziToast.success({ title: 'Berhasil', message: 'Supplier dihapus', position: 'topRight' });

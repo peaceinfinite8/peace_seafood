@@ -14,6 +14,7 @@ use PDOStatement;
 class Database
 {
     private static ?PDO $instance = null;
+    private static array $columnCache = [];
 
     public static function getInstance(): PDO
     {
@@ -37,17 +38,32 @@ class Database
 
     public static function fetchOne(string $sql, array $params = []): array|false
     {
-        return self::query($sql, $params)->fetch();
+        try {
+            return self::query($sql, $params)->fetch();
+        } catch (PDOException $e) {
+            error_log('Database::fetchOne error: ' . $e->getMessage() . " -- SQL: {$sql}");
+            return false;
+        }
     }
 
     public static function fetchAll(string $sql, array $params = []): array
     {
-        return self::query($sql, $params)->fetchAll();
+        try {
+            return self::query($sql, $params)->fetchAll();
+        } catch (PDOException $e) {
+            error_log('Database::fetchAll error: ' . $e->getMessage() . " -- SQL: {$sql}");
+            return [];
+        }
     }
 
     public static function execute(string $sql, array $params = []): bool
     {
-        return self::query($sql, $params)->rowCount() > 0;
+        try {
+            return self::query($sql, $params)->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log('Database::execute error: ' . $e->getMessage() . " -- SQL: {$sql}");
+            return false;
+        }
     }
 
     public static function lastInsertId(): string
@@ -82,9 +98,14 @@ class Database
     {
         $cols        = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        $stmt = self::getInstance()->prepare("INSERT INTO `{$table}` ({$cols}) VALUES ({$placeholders})");
-        $stmt->execute(array_values($data));
-        return (int) self::getInstance()->lastInsertId();
+        try {
+            $stmt = self::getInstance()->prepare("INSERT INTO `{$table}` ({$cols}) VALUES ({$placeholders})");
+            $stmt->execute(array_values($data));
+            return (int) self::getInstance()->lastInsertId();
+        } catch (PDOException $e) {
+            error_log('Database::insert error: ' . $e->getMessage() . " -- TABLE: {$table}");
+            return 0;
+        }
     }
 
     /**
@@ -94,8 +115,59 @@ class Database
     {
         $setClause = implode(', ', array_map(fn($k) => "`{$k}` = ?", array_keys($data)));
         $params    = array_merge(array_values($data), $condParams);
-        $stmt = self::getInstance()->prepare("UPDATE `{$table}` SET {$setClause} WHERE {$condition}");
-        $stmt->execute($params);
-        return $stmt->rowCount() >= 0;
+        try {
+            $stmt = self::getInstance()->prepare("UPDATE `{$table}` SET {$setClause} WHERE {$condition}");
+            $stmt->execute($params);
+            return $stmt->rowCount() >= 0;
+        } catch (PDOException $e) {
+            error_log('Database::update error: ' . $e->getMessage() . " -- TABLE: {$table}");
+            return false;
+        }
+    }
+
+    /**
+     * Check whether a column exists in the current database schema.
+     * Cached to avoid repeated INFORMATION_SCHEMA lookups.
+     */
+    public static function hasColumn(string $table, string $column): bool
+    {
+        $key = strtolower($table . '.' . $column);
+
+        if (array_key_exists($key, self::$columnCache)) {
+            return self::$columnCache[$key];
+        }
+
+        $row = self::fetchOne(
+            "SELECT COUNT(*) as cnt
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?",
+            [$table, $column]
+        );
+
+        return self::$columnCache[$key] = ((int)($row['cnt'] ?? 0)) > 0;
+    }
+
+    /**
+     * Check whether a table exists in the current database schema.
+     */
+    public static function hasTable(string $table): bool
+    {
+        $key = strtolower('table.' . $table);
+
+        if (array_key_exists($key, self::$columnCache)) {
+            return self::$columnCache[$key];
+        }
+
+        $row = self::fetchOne(
+            "SELECT COUNT(*) as cnt
+             FROM INFORMATION_SCHEMA.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?",
+            [$table]
+        );
+
+        return self::$columnCache[$key] = ((int)($row['cnt'] ?? 0)) > 0;
     }
 }

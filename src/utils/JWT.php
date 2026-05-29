@@ -25,14 +25,12 @@ class JWT
         self::$expiration = $config['jwt']['expiration'];
     }
 
-    public static function generate(array $payload, ?int $customExpiration = null): string
+    public static function generate(array $payload): string
     {
         self::init();
 
-        $expiration = $customExpiration ?? self::$expiration;
-
         $payload['iat'] = time();
-        $payload['exp'] = time() + $expiration;
+        $payload['exp'] = time() + self::$expiration;
 
         return FirebaseJWT::encode($payload, self::$secret, self::$algorithm);
     }
@@ -49,17 +47,15 @@ class JWT
         }
     }
 
-    public static function setHttpOnlyCookie(string $token, ?int $customExpiration = null): void
+    public static function setHttpOnlyCookie(string $token): void
     {
         self::init();
 
-        $expiration = $customExpiration ?? self::$expiration;
-
         setcookie('auth_token', $token, [
-            'expires'  => time() + $expiration,
+            'expires'  => time() + self::$expiration,
             'path'     => '/',
             'httponly' => true,
-            'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'secure'   => isset($_SERVER['HTTPS']),
             'samesite' => 'Strict',
         ]);
     }
@@ -70,7 +66,7 @@ class JWT
             'expires'  => time() - 3600,
             'path'     => '/',
             'httponly' => true,
-            'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'secure'   => isset($_SERVER['HTTPS']),
             'samesite' => 'Strict',
         ]);
     }
@@ -96,6 +92,11 @@ class JWT
 
         if (str_starts_with($header, 'Bearer ')) {
             return substr($header, 7);
+        }
+
+        // Fallback for export downloads in new window
+        if (!empty($_GET['token'])) {
+            return $_GET['token'];
         }
 
         return false;

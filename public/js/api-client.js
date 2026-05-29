@@ -31,9 +31,29 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            // Token expired atau tidak valid — bersihkan storage dan redirect login
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/peace_seafood/login';
+        }
+        if (error.response?.status === 402) {
+            // SaaS Subscription Expired
+            window.dispatchEvent(new CustomEvent('saas-payment-required', {
+                detail: error.response?.data?.message || 'Masa aktif uji coba telah berakhir.'
+            }));
+        }
+        if (error.response?.status === 412) {
+            // SaaS Force Password Change First Login
+            window.dispatchEvent(new CustomEvent('saas-password-change-required'));
+        }
+        if (error.response?.status === 403) {
+            // Role tidak punya akses — tampilkan pesan, jangan redirect
+            const msg = error.response?.data?.message || 'Anda tidak memiliki izin untuk aksi ini.';
+            if (window.iziToast) {
+                iziToast.error({ title: 'Akses Ditolak', message: msg });
+            } else {
+                alert('Akses Ditolak: ' + msg);
+            }
         }
         return Promise.reject(error);
     }
