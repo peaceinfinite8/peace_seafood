@@ -39,28 +39,28 @@ $routes = [
     '/dashboard' => ['pages/dashboard', 'Dashboard', 'dashboard'],
 
     // Stok
-    '/stok' => ['stok/index', 'Stok & Inventory', 'stok'],
+    '/stok' => ['stok/index.view', 'Stok & Inventory', 'stok'],
     '/stok/masuk' => ['stok/masuk', 'Input Stok Masuk', 'stok'],
     '/stok/timbangan' => ['stok/timbangan.view', 'Timbangan & Susut', 'stok'],
     '/stok/history' => ['stok/history', 'History Stok', 'stok'],
 
     // Penjualan
-    '/penjualan' => ['penjualan/index', 'Penjualan', 'penjualan'],
+    '/penjualan' => ['penjualan/index.view', 'Penjualan', 'penjualan'],
     '/penjualan/create' => ['penjualan/create', 'Buat Nota Penjualan', 'penjualan'],
 
     // Penitipan
-    '/penitipan' => ['penitipan/index', 'Penitipan', 'penitipan'],
+    '/penitipan' => ['penitipan/index.view', 'Penitipan', 'penitipan'],
     '/penitipan/create' => ['penitipan/create', 'Terima Titipan', 'penitipan'],
 
     // Retur
-    '/retur' => ['retur/index', 'Retur', 'retur'],
+    '/retur' => ['retur/index.view', 'Retur', 'retur'],
     '/retur/create' => ['retur/create', 'Buat Retur', 'retur'],
 
     // Keuangan
-    '/keuangan' => ['keuangan/index', 'Keuangan', 'keuangan'],
+    '/keuangan' => ['keuangan/index.view', 'Keuangan', 'keuangan'],
 
     // Master Data
-    '/master-data' => ['master-data/index', 'Master Data', 'master-data'],
+    '/master-data' => ['master-data/index.view', 'Master Data', 'master-data'],
     '/master-data/supplier' => ['master-data/supplier.view', 'Data Supplier', 'master-data'],
     '/master-data/pembeli' => ['master-data/pembeli.view', 'Data Pembeli', 'master-data'],
     '/master-data/jenis-ikan' => ['master-data/jenis-ikan', 'Jenis Ikan', 'master-data'],
@@ -75,13 +75,13 @@ $routes = [
     '/checker/draft-penjualan' => ['checker/draft-penjualan', 'Buat Draft Nota', 'checker-draft'],
 
     // Audit Trail
-    '/activity-log' => ['activity-log/index', 'Activity Log', 'activity-log'],
+    '/activity-log' => ['activity-log/index.view', 'Activity Log', 'activity-log'],
 
     // Laporan
-    '/laporan' => ['laporan/index', 'Laporan & Export', 'laporan'],
+    '/laporan' => ['laporan/index.view', 'Laporan & Export', 'laporan'],
 
     // Settings
-    '/settings' => ['settings/index', 'Pengaturan', 'settings'],
+    '/settings' => ['settings/index.view', 'Pengaturan', 'settings'],
 ];
 
 // ── Halaman yang memerlukan role tertentu (server-side guard) ──────────────
