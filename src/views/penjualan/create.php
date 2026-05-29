@@ -753,8 +753,72 @@ function createNotaPage() {
                 if (mode === 'final' && id) {
                     await axios.post('/peace_seafood/api/penjualan/' + id + '/finalize', {}, { headers });
                 }
-                iziToast.success({ title: 'Berhasil', message: 'Nota tersimpan!', position: 'topRight' });
-                setTimeout(() => window.location.href = '/peace_seafood/penjualan', 1000);
+
+                // Get detail nota for WhatsApp share & immediate print
+                const detailRes = await axios.get('/peace_seafood/api/penjualan/' + id, { headers });
+                const detail = detailRes.data?.data;
+
+                // Construct WhatsApp Link
+                const phone = detail.telepon_pembeli ? detail.telepon_pembeli.replace(/[^0-9]/g, '') : '';
+                let formattedPhone = phone;
+                if (formattedPhone.startsWith('0')) {
+                    formattedPhone = '62' + formattedPhone.slice(1);
+                }
+                const companyName = detail.nama_gudang || 'Peace Seafood';
+                let msg = `Halo *${detail.nama_pembeli || 'Umum'}*,\n\n`;
+                msg += `Berikut adalah nota pembelian Anda dari *${companyName}*:\n\n`;
+                msg += `📄 *No Nota:* ${detail.no_nota}\n`;
+                msg += `📅 *Tanggal:* ${new Date(detail.tanggal_nota).toLocaleDateString('id-ID')}\n\n`;
+                msg += `*Rincian Belanja:*\n`;
+                if (detail.items && detail.items.length > 0) {
+                    detail.items.forEach(item => {
+                        let q = parseFloat(item.qty || 0);
+                        let wStr = this.formatQty(q, item.satuan);
+                        msg += `- *${item.nama_produk}*: ${wStr} x ${this.formatRupiah(item.harga_jual)} = ${this.formatRupiah(item.subtotal)}\n`;
+                    });
+                }
+                msg += `\n`;
+                msg += `💵 *Subtotal:* ${this.formatRupiah(detail.subtotal)}\n`;
+                if (parseFloat(detail.diskon_nominal || 0) > 0) {
+                    msg += `✂️ *Diskon:* -${this.formatRupiah(detail.diskon_nominal)}\n`;
+                }
+                if (parseFloat(detail.pajak || 0) > 0) {
+                    msg += `➕ *Pajak:* +${this.formatRupiah(detail.pajak)}\n`;
+                }
+                msg += `💰 *TOTAL TAGIHAN:* *${this.formatRupiah(detail.total)}*\n\n`;
+                msg += `💳 *Metode Bayar:* ${(detail.pembayaran || '').toUpperCase()}\n\n`;
+                msg += `Terima kasih atas kepercayaan Anda kepada kami! 🐟✨`;
+                const waLink = 'https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(msg);
+
+                // Show rich checkout success pop-up
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Transaksi Berhasil!',
+                    text: 'Nota penjualan telah sukses disimpan.',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: '<i class="lucide-message-circle" style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:5px;"></i> Kirim WA',
+                    denyButtonText: '<i class="lucide-printer" style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:5px;"></i> Cetak Struk',
+                    cancelButtonText: 'Tutup & Kembali',
+                    customClass: {
+                        popup: 'swal2-glassmorphic',
+                        confirmButton: 'swal2-confirm-btn',
+                        denyButton: 'swal2-confirm-btn bg-blue-600 ml-2',
+                        cancelButton: 'swal2-cancel-btn'
+                    },
+                    buttonsStyling: false,
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open(waLink, '_blank');
+                        window.location.href = '/peace_seafood/penjualan';
+                    } else if (result.isDenied) {
+                        // Redirect to sales page with auto print query parameter
+                        window.location.href = '/peace_seafood/penjualan?highlight=nota-' + id + '&print=true';
+                    } else {
+                        window.location.href = '/peace_seafood/penjualan';
+                    }
+                });
             } catch(e) {
                 iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal simpan nota', position: 'topRight' });
             } finally { this.saving = false; }

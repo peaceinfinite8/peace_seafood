@@ -8,7 +8,8 @@
     "dompdf/dompdf": "^2.0",
     "phpoffice/phpspreadsheet": "^3.0",
     "vlucas/phpdotenv": "^5.5",
-    "monolog/monolog": "^3.0"
+    "monolog/monolog": "^3.0",
+    "phpmailer/phpmailer": "^7.1"
   },
   "autoload": {
     "psr-4": {

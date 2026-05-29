@@ -35,10 +35,15 @@ $uri = rtrim($uri, '/') ?: '/';
 // Route Table
 // ============================================================
 $routes = [
-    // Auth (no auth required)
-    'POST /auth/login'    => [AuthController::class,    'login',   false],
-    'POST /auth/logout'   => [AuthController::class,    'logout',  true],
-    'GET  /auth/profile'  => [AuthController::class,    'profile', true],
+    // Auth
+    'POST /auth/login'           => [AuthController::class,    'login',          false],
+    'POST /auth/logout'          => [AuthController::class,    'logout',         true],
+    'GET  /auth/profile'         => [AuthController::class,    'profile',        true],
+    'POST /auth/signup'          => [AuthController::class,    'signup',         false],
+    'POST /auth/change-password' => [AuthController::class,    'changePassword', true],
+    'POST /auth/forgot-password' => [AuthController::class,    'forgotPassword', false],
+    'POST /auth/reset-password'  => [AuthController::class,    'resetPassword',  false],
+    'POST /auth/impersonate'     => [AuthController::class,    'impersonate',    true],
 
     // Dashboard
     'GET /dashboard'      => [DashboardController::class, 'index',  true],
@@ -52,12 +57,13 @@ $routes = [
     'GET /stok/pending-timbang'  => [StokController::class, 'pendingTimbang', true],
 
     // Penjualan
-    'GET /penjualan'                  => [PenjualanController::class, 'index',    true],
-    'POST /penjualan'                 => [PenjualanController::class, 'create',   true],
-    'GET /penjualan/{id}'             => [PenjualanController::class, 'show',     true],
-    'PUT /penjualan/{id}'             => [PenjualanController::class, 'update',   true],
-    'POST /penjualan/{id}/finalize'   => [PenjualanController::class, 'finalize', true],
-    'POST /penjualan/{id}/cancel'     => [PenjualanController::class, 'cancel',   true],
+    'GET /penjualan'                  => [PenjualanController::class, 'index',       true],
+    'POST /penjualan'                 => [PenjualanController::class, 'create',      true],
+    'POST /penjualan/draft'           => [PenjualanController::class, 'createDraft', true],
+    'GET /penjualan/{id}'             => [PenjualanController::class, 'show',        true],
+    'PUT /penjualan/{id}'             => [PenjualanController::class, 'update',      true],
+    'POST /penjualan/{id}/finalize'   => [PenjualanController::class, 'finalize',    true],
+    'POST /penjualan/{id}/cancel'     => [PenjualanController::class, 'cancel',      true],
 
     // Penitipan
     'GET /penitipan'                  => [PenitipanController::class, 'index',      true],
@@ -130,6 +136,8 @@ $routes = [
     'PUT /settings/{kunci}'         => [SettingsController::class, 'update',           true],
     'GET /settings/users'           => [SettingsController::class, 'users',            true],
     'POST /settings/users'          => [SettingsController::class, 'storeUser',        true],
+    'POST /settings/pre-approve'    => [SettingsController::class, 'preApproveUser',   true],
+    'POST /onboarding/complete'     => [SettingsController::class, 'completeOnboarding', true],
     'PUT /settings/users/{id}'      => [SettingsController::class, 'updateUser',       true],
     'DELETE /settings/users/{id}'   => [SettingsController::class, 'deleteUser',       true],
     'GET /settings/gudang'          => [SettingsController::class, 'gudang',           true],

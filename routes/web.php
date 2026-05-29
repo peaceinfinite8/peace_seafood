@@ -35,6 +35,7 @@ function renderView(string $view, array $vars = []): void
 $routes = [
     '/'          => ['pages/login', 'Login'],
     '/login'     => ['pages/login', 'Login'],
+    '/reset-password' => ['pages/login', 'Reset Password'],
     '/dashboard' => ['pages/dashboard', 'Dashboard', 'dashboard'],
 
     // Stok
@@ -70,6 +71,9 @@ $routes = [
     '/stok-opname'             => ['stok/opname', 'Stok Opname', 'stok-opname'],
     '/stok-transfer'           => ['stok/transfer', 'Stok Transfer', 'stok-transfer'],
 
+    // Checker — Draft Penjualan
+    '/checker/draft-penjualan' => ['checker/draft-penjualan', 'Buat Draft Nota', 'checker-draft'],
+
     // Audit Trail
     '/activity-log'            => ['activity-log/index', 'Activity Log', 'activity-log'],
 
@@ -83,7 +87,7 @@ $routes = [
 // ── Halaman yang memerlukan role tertentu (server-side guard) ──────────────
 // Key = URI, Value = array role yang diizinkan
 $pageRoles = [
-    '/settings'      => ['super_admin'],
+    '/settings'      => ['super_admin', 'saas_owner', 'bos'],
     '/activity-log'  => ['super_admin', 'bos'],
     '/laporan'       => ['super_admin', 'bos', 'admin'],
     '/migrasi'       => ['super_admin', 'admin'],
@@ -99,6 +103,15 @@ $pageRoles = [
     '/penitipan/create'      => ['super_admin', 'admin'],
     '/retur'                 => ['super_admin', 'bos', 'admin'],
     '/retur/create'          => ['super_admin', 'admin'],
+
+    // Stok & Inventory
+    '/stok'                  => ['super_admin', 'bos', 'admin', 'checker'],
+    '/stok/masuk'            => ['super_admin', 'admin'],
+    '/stok/timbangan'        => ['super_admin', 'admin', 'checker'],
+    '/stok/history'          => ['super_admin', 'bos', 'admin'],
+    '/stok-opname'           => ['super_admin', 'bos', 'admin', 'checker'],
+    '/stok-transfer'         => ['super_admin', 'bos', 'admin', 'checker'],
+    '/checker/draft-penjualan' => ['checker'],
 ];
 
 /**
@@ -148,12 +161,16 @@ if (isset($routes[$uri])) {
                 exit;
             }
 
-            if (!in_array($userRole, $pageRoles[$uri], true)) {
-                http_response_code(403);
-                $roleSafe = htmlspecialchars(strtoupper($userRole ?? ''));
-                $uriSafe  = htmlspecialchars($uri);
-                include BASE_PATH . '/src/views/errors/403.php';
-                exit;
+            // 'super_admin' bypass all web page guards (operator teknis)
+            // 'saas_owner' dan role lain tetap dicek sesuai $pageRoles
+            if ($userRole !== 'super_admin') {
+                if (!in_array($userRole, $pageRoles[$uri], true)) {
+                    http_response_code(403);
+                    $roleSafe = htmlspecialchars(strtoupper($userRole ?? ''));
+                    $uriSafe  = htmlspecialchars($uri);
+                    include BASE_PATH . '/src/views/errors/403.php';
+                    exit;
+                }
             }
         }
         // ── Akhir role guard ────────────────────────────────────────────────

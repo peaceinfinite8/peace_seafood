@@ -74,7 +74,7 @@
                             <td>
                                 <div class="flex gap-2">
                                     <button class="btn btn-secondary p-1.5" @click="showDetail(item.id)"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button>
-                                    <button class="btn btn-success p-1.5" x-show="item.status === 'draft'" @click="finalize(item.id)"><i data-lucide="check" class="w-3.5 h-3.5"></i></button>
+                                    <button class="btn btn-success p-1.5" x-show="item.status === 'draft' && ['super_admin','bos','admin'].includes(user.role)" @click="finalize(item.id)"><i data-lucide="check" class="w-3.5 h-3.5"></i></button>
                                 </div>
                             </td>
                         </tr>

@@ -105,8 +105,11 @@ try {
     Database::execute("DELETE FROM jenis_ikan WHERE nama = ?", ['AutoTest Ikan']);
     out('Deleted jenis_ikan AutoTest Ikan');
 
-    // Clean up any leftover activity_log with AutoTest text
+    // Clean up any leftover activity_log, biaya_operasional, and hutang_piutang with AutoTest text
     Database::execute("DELETE FROM activity_log WHERE before_value LIKE '%AutoTest%' OR after_value LIKE '%AutoTest%'");
+    Database::execute("DELETE FROM biaya_operasional WHERE deskripsi LIKE '%AutoTest%'");
+    Database::execute("DELETE FROM hutang_piutang WHERE catatan LIKE '%AutoTest%'");
+    out('Deleted leftover activity logs, operational costs, and debt/receivables containing AutoTest markers');
 
     Database::commit();
     out('Cleanup committed');

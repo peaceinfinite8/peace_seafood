@@ -17,6 +17,29 @@
             <div class="card p-3 space-y-1 shadow-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
                 <h3 class="text-2xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 py-2">Navigasi Pengaturan</h3>
 
+                <!-- View Mode Toggle: Platform vs Tenant -->
+                <div class="px-3 py-2 flex gap-2">
+                    <button type="button" @click="switchViewMode('platform')"
+                        x-show="['super_admin','saas_owner'].includes(user.role)"
+                        :class="viewMode === 'platform' ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-600 dark:text-slate-300'"
+                        class="flex-1 text-xs py-1 rounded-md">Platform</button>
+
+                    <button type="button" @click="switchViewMode('tenant')"
+                        :class="viewMode === 'tenant' ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-600 dark:text-slate-300'"
+                        class="flex-1 text-xs py-1 rounded-md">Tenant</button>
+                </div>
+
+                <!-- Select Gudang when in Tenant view for platform users -->
+                <div class="px-3 py-2" x-show="viewMode === 'tenant' && (user.role === 'saas_owner' || user.role === 'super_admin')">
+                    <label class="text-3xs mb-1 block" style="color:var(--text-secondary)">Pilih Gudang</label>
+                    <select x-model="selectedGudangId" class="form-input text-sm" @change="loadSettingsForGudang()">
+                        <option value="">-- Pilih Gudang --</option>
+                        <template x-for="g in gudang" :key="g.id">
+                            <option :value="g.id" x-text="g.nama + ' (' + (g.kota||'') + ')' "></option>
+                        </template>
+                    </select>
+                </div>
+
                 <button @click="tab = 'umum'"
                     class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
                     :class="tab === 'umum' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
@@ -25,6 +48,7 @@
                 </button>
 
                 <button @click="tab = 'rekening'"
+                    x-show="viewMode === 'tenant'"
                     class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
                     :class="tab === 'rekening' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
                     <i data-lucide="credit-card" class="w-4 h-4"></i>
@@ -32,6 +56,7 @@
                 </button>
 
                 <button @click="tab = 'users'"
+                    x-show="viewMode === 'tenant'"
                     class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
                     :class="tab === 'users' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
                     <i data-lucide="users" class="w-4 h-4"></i>
@@ -39,10 +64,20 @@
                 </button>
 
                 <button @click="tab = 'gudang'"
+                    x-show="viewMode === 'tenant'"
                     class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
                     :class="tab === 'gudang' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
                     <i data-lucide="building-2" class="w-4 h-4"></i>
                     <span>Kelola Gudang</span>
+                </button>
+
+                <button @click="tab = 'saas'"
+                    x-show="((viewMode === 'platform') && ['super_admin','saas_owner'].includes(user.role)) || ((viewMode === 'tenant') && user.role === 'bos')"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                    :class="tab === 'saas' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+                    x-cloak>
+                    <i data-lucide="crown" class="w-4 h-4"></i>
+                    <span x-text="['super_admin', 'saas_owner'].includes(user.role) ? 'SaaS Developer Panel' : 'Status Langganan'"></span>
                 </button>
             </div>
         </div>
@@ -151,7 +186,7 @@
                 </div>
 
                 <!-- Database Backup Component Section -->
-                <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                <div x-show="['super_admin', 'saas_owner'].includes(user.role)" class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800" x-cloak>
                     <h4 class="font-bold text-sm mb-2" style="color: var(--text-primary)">
                         <i data-lucide="database" class="w-4 h-4 inline mr-1 text-blue-500"></i>
                         Pencadangan Sistem & Database
@@ -178,7 +213,7 @@
             </div>
 
             <!-- Tab Rekening Bank -->
-            <div x-show="tab === 'rekening'" class="space-y-4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
+            <div x-show="tab === 'rekening' && viewMode === 'tenant'" class="space-y-4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="text-lg font-bold" style="color: var(--text-primary)">Rekening Bank BOS</h3>
@@ -231,7 +266,7 @@
             </div>
 
             <!-- Tab Users -->
-            <div x-show="tab === 'users'" class="space-y-4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
+            <div x-show="tab === 'users' && viewMode === 'tenant'" class="space-y-4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="text-lg font-bold" style="color: var(--text-primary)">Manajemen User</h3>
@@ -290,7 +325,7 @@
             </div>
 
             <!-- Tab Gudang -->
-            <div x-show="tab === 'gudang'" class="space-y-4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
+            <div x-show="tab === 'gudang' && viewMode === 'tenant'" class="space-y-4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="text-lg font-bold" style="color: var(--text-primary)">Kelola Cabang Gudang</h3>
@@ -341,6 +376,229 @@
                             </div>
                         </div>
                     </template>
+                </div>
+            </div>
+
+            <!-- Tab SaaS Developer Panel (Developer) / Status Langganan (Bos) -->
+            <div x-show="tab === 'saas'" class="space-y-6" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800 text-left">
+                    <div>
+                        <h3 class="text-lg font-bold" style="color: var(--text-primary)" x-text="['super_admin', 'saas_owner'].includes(user.role) ? 'SaaS Developer / Owner Panel' : 'Status Langganan Gudang'"></h3>
+                        <p class="text-xs" style="color: var(--text-secondary)" x-text="['super_admin', 'saas_owner'].includes(user.role) ? 'Pusat kendali komersialisasi trial Bos, pre-approval email pendaftaran, bypass impersonate, dan support WhatsApp.' : 'Informasi masa aktif langganan dan kontak pengembang sistem.'"></p>
+                    </div>
+                </div>
+
+                <!-- ====== BOS ONLY: Subscription Status Card ====== -->
+                <div x-show="user.role === 'bos'" x-cloak class="space-y-4">
+
+                    <!-- Kartu Status Trial Per Gudang -->
+                    <template x-for="g in gudang" :key="g.id">
+                        <div class="card p-5 border rounded-xl text-left transition-all duration-300"
+                            :class="getRemainingDaysNum(g.subscription_until) < 0
+                                        ? 'border-red-400 dark:border-red-700 bg-red-50/40 dark:bg-red-900/10'
+                                        : getRemainingDaysNum(g.subscription_until) <= 7
+                                            ? 'border-amber-400 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-900/10'
+                                            : 'border-emerald-400 dark:border-emerald-700 bg-emerald-50/20 dark:bg-emerald-900/10'">
+
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2.5 rounded-xl"
+                                        :class="getRemainingDaysNum(g.subscription_until) < 0
+                                                    ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                                    : getRemainingDaysNum(g.subscription_until) <= 7
+                                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                                        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'">
+                                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold" style="color: var(--text-primary)" x-text="g.nama"></h4>
+                                        <p class="text-xs" style="color: var(--text-secondary)" x-text="g.kota || 'Lokasi belum diset'"></p>
+                                    </div>
+                                </div>
+                                <!-- Status Badge -->
+                                <span class="badge text-3xs font-black px-3 py-1 rounded-full"
+                                    :class="getRemainingDaysNum(g.subscription_until) < 0
+                                                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'"
+                                    x-text="getRemainingDaysNum(g.subscription_until) < 0 ? '⚠ HABIS' : '✓ AKTIF'">
+                                </span>
+                            </div>
+
+                            <!-- Subscription Info Grid -->
+                            <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div class="p-3 rounded-xl bg-white/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/40">
+                                    <p class="text-3xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Tanggal Berakhir</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-primary)" x-text="g.subscription_until ? new Date(g.subscription_until).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : 'Belum dimulai'"></p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-white/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/40">
+                                    <p class="text-3xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Sisa Waktu</p>
+                                    <p class="text-sm font-bold"
+                                        :class="getRemainingDaysNum(g.subscription_until) < 0 ? 'text-red-600 dark:text-red-400' : getRemainingDaysNum(g.subscription_until) <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'"
+                                        x-text="getRemainingDaysNum(g.subscription_until) < 0 ? 'Masa aktif habis' : getRemainingDaysNum(g.subscription_until) + ' hari lagi'"></p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-white/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/40">
+                                    <p class="text-3xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Status Sewa</p>
+                                    <p class="text-sm font-bold capitalize" x-text="g.status_langganan || 'aktif'" :class="(g.status_langganan || 'aktif') === 'aktif' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"></p>
+                                </div>
+                            </div>
+
+                            <!-- Peringatan jika hampir habis -->
+                            <div x-show="getRemainingDaysNum(g.subscription_until) >= 0 && getRemainingDaysNum(g.subscription_until) <= 7"
+                                class="mt-3 p-3 rounded-lg bg-amber-100/80 dark:bg-amber-900/20 border border-amber-300/50 dark:border-amber-700/30 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0"></i>
+                                <span>Masa langganan gudang ini akan segera berakhir. Hubungi pengembang untuk memperpanjang akses.</span>
+                            </div>
+                            <div x-show="getRemainingDaysNum(g.subscription_until) < 0"
+                                class="mt-3 p-3 rounded-lg bg-red-100/80 dark:bg-red-900/20 border border-red-300/50 dark:border-red-700/30 text-xs text-red-800 dark:text-red-300 flex items-center gap-2">
+                                <i data-lucide="lock" class="w-4 h-4 flex-shrink-0"></i>
+                                <span>Masa aktif gudang ini telah berakhir. Akses operasional dikunci. Hubungi pengembang untuk mengaktifkan kembali.</span>
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <!-- Tombol Hubungi Developer -->
+                    <div class="card p-5 border border-slate-200 dark:border-slate-800 rounded-xl text-left">
+                        <div class="flex items-center gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                            <i data-lucide="headphones" class="w-4 h-4 text-emerald-500"></i>
+                            <h4 class="text-sm font-bold" style="color: var(--text-primary)">Hubungi Tim Pengembang</h4>
+                        </div>
+                        <p class="text-xs mb-4" style="color: var(--text-secondary)">Untuk perpanjangan langganan, pertanyaan, atau kendala teknis, hubungi pengembang sistem melalui WhatsApp di bawah ini.</p>
+                        <a :href="'https://wa.me/' + devWhatsappNumber + '?text=' + encodeURIComponent('Halo Developer, saya ' + user.name + ' ingin menanyakan tentang langganan Peace Seafood WMS.')"
+                            target="_blank" rel="noopener noreferrer"
+                            class="btn w-full justify-center text-sm py-3 gap-2 font-bold"
+                            style="background: #25D366; color: white; border: none; border-radius: 0.75rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                            </svg>
+                            Hubungi Pengembang via WhatsApp
+                        </a>
+                    </div>
+                </div>
+                <!-- ====== END BOS ONLY ====== -->
+
+                <!-- Pre-Approval Form & WhatsApp Settings Card (Developer Only) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" x-show="['super_admin', 'saas_owner'].includes(user.role)" x-cloak>
+
+                    <!-- Pre-Approval Form -->
+                    <div class="md:col-span-2 card p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl space-y-4 text-left">
+                        <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <i data-lucide="user-plus" class="w-4 h-4 text-blue-500"></i>
+                            <h4 class="text-sm font-bold" style="color: var(--text-primary)">Pra-Persetujuan (Pre-Approve) Akun Bos Baru</h4>
+                        </div>
+
+                        <form @submit.prevent="runPreApprove()" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label text-slate-700 dark:text-slate-300">Nama Lengkap Calon Bos *</label>
+                                <input type="text" x-model="preApproveForm.name" class="form-input text-xs" placeholder="Contoh: Bos Ronald" required>
+                            </div>
+                            <div>
+                                <label class="form-label text-slate-700 dark:text-slate-300">Email Gmail Calon Bos *</label>
+                                <input type="email" x-model="preApproveForm.email" class="form-input text-xs" placeholder="Contoh: ronald@gmail.com" required>
+                            </div>
+                            <div class="sm:col-span-2 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-4">
+                                <div class="flex-1">
+                                    <label class="form-label text-slate-700 dark:text-slate-300">Durasi Masa Trial Uji Coba *</label>
+                                    <select x-model="preApproveForm.trial_days" class="form-input text-xs">
+                                        <option value="7">7 Hari (1 Uji Coba)</option>
+                                        <option value="14">14 Hari (2 Uji Coba - Default)</option>
+                                        <option value="30">30 Hari (1 Bulan)</option>
+                                        <option value="60">60 Hari (2 Bulan)</option>
+                                        <option value="90">90 Hari (3 Bulan)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary py-2 px-5 text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/10 h-[38px]" :disabled="preApproving">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    <span x-text="preApproving ? 'Memproses...' : 'Setujui Email'"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Developer WhatsApp Support Setting -->
+                    <div class="card p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl space-y-4 text-left">
+                        <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <i data-lucide="message-circle" class="w-4 h-4 text-emerald-500"></i>
+                            <h4 class="text-sm font-bold" style="color: var(--text-primary)">No. WhatsApp Developer</h4>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="form-label text-slate-500">Nomor WhatsApp Support (Gunakan format 628xxx tanpa tanda + atau 0 di depan)</label>
+                            <div class="flex gap-2">
+                                <input type="text" x-model="devWhatsappNumber" class="form-input text-xs flex-1" placeholder="Contoh: 628123456789">
+                                <button type="button" @click="saveDevWhatsapp()" class="btn btn-primary p-2 flex items-center justify-center" :disabled="savingWa">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Gudang SaaS Listing with Expiry Adjustments & Impersonation (Developer Only) -->
+                <div class="card overflow-hidden shadow-sm rounded-xl" x-show="['super_admin', 'saas_owner'].includes(user.role)" x-cloak>
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-left">
+                        <h4 class="text-sm font-bold flex items-center gap-1.5" style="color: var(--text-primary)">
+                            <i data-lucide="layout-grid" class="w-4.5 h-4.5 text-blue-500"></i>
+                            Daftar Gudang Tenant SaaS & Masa Sewa
+                        </h4>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="table text-left">
+                            <thead>
+                                <tr>
+                                    <th>Nama Gudang</th>
+                                    <th>Kota</th>
+                                    <th>Milik Bos (Executive)</th>
+                                    <th>Masa Trial / Sewa</th>
+                                    <th>Status Sewa</th>
+                                    <th>Aksi Pengembang</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="g in gudang" :key="g.id">
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                        <td class="font-bold text-sm" style="color: var(--text-primary)" x-text="g.nama"></td>
+                                        <td class="text-sm" x-text="g.kota || '-'"></td>
+                                        <td>
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold" style="color: var(--text-primary)" x-text="g.nama_bos || 'Belum di-assign'"></span>
+                                                <span class="text-3xs text-slate-400" x-text="getBosEmail(g.id_bos)"></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="flex items-center gap-2">
+                                                <input type="date"
+                                                    :value="g.subscription_until ? g.subscription_until.substring(0,10) : ''"
+                                                    @change="updateGudangSubscription(g, $event.target.value)"
+                                                    class="form-input text-xs py-1 px-2 w-36">
+                                                <span class="text-3xs text-slate-400" x-text="getRemainingDaysText(g.subscription_until)"></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select :value="g.status_langganan || 'aktif'"
+                                                @change="updateGudangStatus(g, $event.target.value)"
+                                                class="form-input text-xs py-1 px-2 w-28">
+                                                <option value="aktif">Aktif</option>
+                                                <option value="suspend">Suspend</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <div class="flex gap-2">
+                                                <button type="button"
+                                                    @click="impersonateUser(g.id_bos)"
+                                                    class="btn btn-secondary py-1 px-2 text-3xs flex items-center gap-1 font-bold bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/20">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                    Masuk Sebagai Bos
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -487,13 +745,12 @@
                 <div class="form-group">
                     <label class="form-label">Role *</label>
                     <select x-model="userForm.role" class="form-input" required>
-                        <option value="super_admin">Super Admin</option>
-                        <option value="bos">Bos (Executive Owner)</option>
-                        <option value="admin">Admin Gudang</option>
-                        <option value="checker">Checker Lapangan</option>
+                        <template x-for="r in availableRoles" :key="r.value">
+                            <option :value="r.value" x-text="r.label"></option>
+                        </template>
                     </select>
                 </div>
-                <div class="form-group" x-show="userForm.role !== 'bos' && userForm.role !== 'super_admin'">
+                <div class="form-group" x-show="userForm.role !== 'bos' && userForm.role !== 'super_admin' && userForm.role !== 'saas_owner'">
                     <label class="form-label">Gudang Alokasi</label>
                     <select x-model="userForm.id_gudang" class="form-input" :required="userForm.role !== 'bos' && userForm.role !== 'super_admin'">
                         <option value="">-- Pilih Gudang Cabang --</option>
@@ -574,7 +831,9 @@ function settingsPage() {
     return {
         user: JSON.parse(localStorage.getItem('user') || '{}'),
         tab: 'umum',
+        viewMode: 'tenant', // 'platform' or 'tenant' - UI-only switch
         settings: [],
+        selectedGudangId: '',
         users: [],
         gudang: [],
         bankAccounts: [],
@@ -592,6 +851,13 @@ function settingsPage() {
         userForm: { name: '', email: '', password: '', role: 'admin', id_gudang: '' },
         bankForm: { bank_name: '', account_number: '', account_name: '', is_active: '1' },
         gudangForm: { nama: '', alamat: '', kota: '', telpon: '', id_bos: '', is_active: '1' },
+        
+        // SaaS Developer States
+        preApproving: false,
+        savingWa: false,
+        devWhatsappNumber: '628123456789',
+        preApproveForm: { name: '', email: '', trial_days: '14' },
+
         showCropModal: false,
         cropImageSrc: '',
         cropZoom: 1.0,
@@ -603,8 +869,29 @@ function settingsPage() {
         dragStartY: 0,
 
         async init() {
-            if (this.user.role !== 'super_admin') { window.location.href = '/peace_seafood/dashboard'; return; }
+            if (this.user.role !== 'super_admin' && this.user.role !== 'saas_owner' && this.user.role !== 'bos') {
+                window.location.href = '/peace_seafood/dashboard';
+                return;
+            }
             await this.loadAll();
+            // Default view mode: platform for saas_owner/super_admin, tenant otherwise
+            if (['super_admin','saas_owner'].includes(this.user.role)) this.viewMode = 'platform';
+            else this.viewMode = 'tenant';
+            
+            // Prefill WhatsApp Number
+            const wa = this.settings.find(x => x.kunci === 'platform_developer_whatsapp');
+            if (wa && wa.nilai) {
+                this.devWhatsappNumber = wa.nilai;
+            }
+            // Default selected gudang for platform users: first in list
+            if (['super_admin','saas_owner'].includes(this.user.role)) {
+                if (this.gudang && this.gudang.length) this.selectedGudangId = this.gudang[0].id;
+            } else if (this.user.role === 'bos') {
+                this.selectedGudangId = this.user.id_gudang || '';
+            }
+            // If tenant view and a gudang selected, load its settings
+            if (this.viewMode === 'tenant' && this.selectedGudangId) await this.loadSettingsForGudang();
+            
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
 
@@ -621,15 +908,68 @@ function settingsPage() {
             this.gudang   = gudRes.data?.data || [];
             this.bankAccounts = bankRes.data?.data || [];
             
+            this.syncLogoFromSettings();
+        },
+
+        syncLogoFromSettings() {
             const logo = this.settings.find(x => x.kunci === 'company_logo_base64');
             this.logoBase64 = logo ? logo.nilai : '';
         },
 
-        /* ── Field type helpers ── */
+        async loadSettingsForPlatform() {
+            const token = localStorage.getItem('token'); const headers = { Authorization: 'Bearer ' + token };
+            const res = await axios.get('/peace_seafood/api/settings', { headers });
+            this.settings = res.data?.data || [];
+            this.syncLogoFromSettings();
+        },
+
+        async loadSettingsForGudang() {
+            try {
+                const token = localStorage.getItem('token'); const headers = { Authorization: 'Bearer ' + token };
+                if (!this.selectedGudangId) {
+                    // reload default server-provided settings
+                    const res = await axios.get('/peace_seafood/api/settings', { headers });
+                    this.settings = res.data?.data || [];
+                } else {
+                    const res = await axios.get('/peace_seafood/api/settings', { headers, params: { id_gudang: this.selectedGudangId } });
+                    this.settings = res.data?.data || [];
+                }
+                this.syncLogoFromSettings();
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        async switchViewMode(mode) {
+            this.viewMode = mode;
+            this.tab = mode === 'platform' ? 'saas' : 'umum';
+            if (mode === 'tenant') {
+                await this.loadSettingsForGudang();
+            } else {
+                await this.loadSettingsForPlatform();
+            }
+        },
+
         formatNumberDot(val) {
             if (val === undefined || val === null || val === '') return '0';
             const num = parseInt(String(val).replace(/\D/g, '')) || 0;
             return num.toLocaleString('id-ID');
+        },
+
+        get availableRoles() {
+            if (['super_admin', 'saas_owner'].includes(this.user.role)) {
+                return [
+                    { value: 'super_admin', label: 'Super Admin' },
+                    { value: 'saas_owner', label: 'SaaS Owner' },
+                    { value: 'bos', label: 'Bos (Executive Owner)' },
+                    { value: 'admin', label: 'Admin Gudang' },
+                    { value: 'checker', label: 'Checker Lapangan' },
+                ];
+            }
+            return [
+                { value: 'admin', label: 'Admin Gudang' },
+                { value: 'checker', label: 'Checker Lapangan' },
+            ];
         },
 
         isToggle(kunci) {
@@ -668,8 +1008,15 @@ function settingsPage() {
         async saveSetting(setting) {
             try {
                 const token = localStorage.getItem('token');
-                await axios.put('/peace_seafood/api/settings/' + setting.kunci, { nilai: setting.nilai }, { headers: { Authorization: 'Bearer ' + token } });
+                const headers = { Authorization: 'Bearer ' + token };
+                // If editing a specific gudang as platform user, pass id_gudang param
+                const params = {};
+                if (this.viewMode === 'tenant' && this.selectedGudangId) params.id_gudang = this.selectedGudangId;
+                await axios.put('/peace_seafood/api/settings/' + setting.kunci + (Object.keys(params).length ? '?id_gudang=' + params.id_gudang : ''), { nilai: setting.nilai }, { headers });
                 iziToast.success({ title: 'Berhasil', message: 'Setting disimpan', position: 'topRight' });
+                // Reload only settings (not all lists) to reflect canonical server values
+                if (this.viewMode === 'tenant' && this.selectedGudangId) await this.loadSettingsForGudang();
+                else await this.loadSettingsForPlatform();
             } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal simpan', position: 'topRight' }); }
         },
 
@@ -803,6 +1150,130 @@ function settingsPage() {
                 iziToast.error({ title: 'Error', message: 'Gagal membuat backup database', position: 'topRight' });
             }
             this.backingUp = false;
+        },
+
+        /* ── SaaS Developer Methods ── */
+        async runPreApprove() {
+            this.preApproving = true;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.post('/peace_seafood/api/settings/pre-approve', this.preApproveForm, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                iziToast.success({ title: 'Berhasil', message: res.data?.message || 'Email Bos sukses disetujui!', position: 'topRight' });
+                this.preApproveForm = { name: '', email: '', trial_days: '14' };
+                await this.loadAll();
+            } catch (e) {
+                const msg = e.response?.data?.message || 'Gagal pra-persetujuan.';
+                iziToast.error({ title: 'Gagal', message: msg, position: 'topRight' });
+            } finally {
+                this.preApproving = false;
+            }
+        },
+
+        async saveDevWhatsapp() {
+            this.savingWa = true;
+            try {
+                const token = localStorage.getItem('token');
+                await axios.put('/peace_seafood/api/settings/platform_developer_whatsapp', {
+                    nilai: this.devWhatsappNumber
+                }, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                iziToast.success({ title: 'Berhasil', message: 'No. WhatsApp Developer diperbarui!', position: 'topRight' });
+                await this.loadAll();
+            } catch (e) {
+                iziToast.error({ title: 'Gagal', message: 'Gagal memperbarui WhatsApp Developer.', position: 'topRight' });
+            } finally {
+                this.savingWa = false;
+            }
+        },
+
+        getBosEmail(idBos) {
+            const u = this.users.find(x => x.id === idBos);
+            return u ? u.email : '';
+        },
+
+        getRemainingDaysText(expiryStr) {
+            if (!expiryStr) return '(Trial Belum Dimulai)';
+            const diffTime = new Date(expiryStr) - new Date();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return '(Masa Aktif Habis)';
+            return `(${diffDays} hari tersisa)`;
+        },
+
+        getRemainingDaysNum(expiryStr) {
+            if (!expiryStr) return 999; // belum dimulai → tampil normal (tidak expired)
+            const diffTime = new Date(expiryStr) - new Date();
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        },
+
+        async updateGudangSubscription(gudangObj, newDate) {
+            try {
+                const token = localStorage.getItem('token');
+                await axios.put('/peace_seafood/api/settings/gudang/' + gudangObj.id, {
+                    nama: gudangObj.nama,
+                    id_bos: gudangObj.id_bos,
+                    alamat: gudangObj.alamat,
+                    kota: gudangObj.kota,
+                    telpon: gudangObj.telpon,
+                    is_active: gudangObj.is_active,
+                    subscription_until: newDate,
+                    status_langganan: gudangObj.status_langganan
+                }, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                iziToast.success({ title: 'Berhasil', message: 'Masa aktif sewa diperbarui!', position: 'topRight' });
+                gudangObj.subscription_until = newDate;
+            } catch (e) {
+                iziToast.error({ title: 'Gagal', message: 'Gagal memperbarui masa aktif.', position: 'topRight' });
+            }
+        },
+
+        async updateGudangStatus(gudangObj, newStatus) {
+            try {
+                const token = localStorage.getItem('token');
+                await axios.put('/peace_seafood/api/settings/gudang/' + gudangObj.id, {
+                    nama: gudangObj.nama,
+                    id_bos: gudangObj.id_bos,
+                    alamat: gudangObj.alamat,
+                    kota: gudangObj.kota,
+                    telpon: gudangObj.telpon,
+                    is_active: gudangObj.is_active,
+                    subscription_until: gudangObj.subscription_until,
+                    status_langganan: newStatus
+                }, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                iziToast.success({ title: 'Berhasil', message: 'Status sewa gudang diperbarui!', position: 'topRight' });
+                gudangObj.status_langganan = newStatus;
+            } catch (e) {
+                iziToast.error({ title: 'Gagal', message: 'Gagal memperbarui status sewa.', position: 'topRight' });
+            }
+        },
+
+        async impersonateUser(idBos) {
+            if (!idBos) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.post('/peace_seafood/api/auth/impersonate', {
+                    user_id: idBos
+                }, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                const data = res.data?.data;
+                if (data?.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    iziToast.success({ title: 'Sukses', message: 'Impersonating Bos, mengalihkan...', position: 'topRight' });
+                    setTimeout(() => {
+                        window.location.href = '/peace_seafood/dashboard';
+                    }, 1000);
+                }
+            } catch (e) {
+                const msg = e.response?.data?.message || 'Gagal impersonate.';
+                iziToast.error({ title: 'Gagal', message: msg, position: 'topRight' });
+            }
         },
 
         /* ── Premium Logo Cropper Methods ── */

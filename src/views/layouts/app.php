@@ -148,6 +148,7 @@ $baseUrl  = '/peace_seafood';
     <link rel="stylesheet" href="<?= $baseUrl ?>/css/variables.css">
     <link rel="stylesheet" href="<?= $baseUrl ?>/css/dark-mode.css">
     <link rel="stylesheet" href="<?= $baseUrl ?>/css/custom.css">
+    <link rel="stylesheet" href="<?= $baseUrl ?>/css/ui-theme.css">
 
     <!-- PWA -->
     <link rel="manifest" href="<?= $baseUrl ?>/manifest.json">
@@ -175,8 +176,14 @@ $baseUrl  = '/peace_seafood';
     </script>
 
     <style>
+        /* Alpine.js FOUC prevention — wajib ada di atas semua style lain */
+        [x-cloak] {
+            display: none !important;
+        }
+
         :root {
             --color-primary: #2563eb;
+
             --color-primary-light: #dbeafe;
             --color-primary-dark: #1e40af;
             --color-success: #10b981;
@@ -934,7 +941,7 @@ $baseUrl  = '/peace_seafood';
             </a>
 
             <!-- Stok -->
-            <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary)">Operasional</div>
+            <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary)" x-show="currentUser.role !== 'saas_owner'">Operasional</div>
 
             <a href="/peace_seafood/stok"
                 class="nav-link <?= ($activeMenu ?? '') === 'stok' ? 'active' : '' ?>"
@@ -950,6 +957,17 @@ $baseUrl  = '/peace_seafood';
                 Penjualan
             </a>
 
+            <!-- Checker: tombol kirim draft nota — menonjol dengan badge -->
+            <a href="/peace_seafood/checker/draft-penjualan"
+                class="nav-link <?= ($activeMenu ?? '') === 'checker-draft' ? 'active' : '' ?>"
+                x-show="currentUser.role === 'checker'"
+                style="position:relative">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                Kirim Draft Nota
+                <span class="ml-auto px-1.5 py-0.5 rounded-full text-xs font-bold"
+                    style="background:var(--color-primary);color:#fff;font-size:10px">BARU</span>
+            </a>
+
             <a href="/peace_seafood/keuangan"
                 class="nav-link <?= ($activeMenu ?? '') === 'keuangan' ? 'active' : '' ?>"
                 x-show="['super_admin','bos','admin'].includes(currentUser.role)">
@@ -958,10 +976,11 @@ $baseUrl  = '/peace_seafood';
             </a>
 
             <!-- Master & Laporan -->
-            <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary)">Data & Laporan</div>
+            <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary)" x-show="currentUser.role !== 'saas_owner'">Data & Laporan</div>
 
             <a href="/peace_seafood/master-data"
-                class="nav-link <?= ($activeMenu ?? '') === 'master-data' ? 'active' : '' ?>">
+                class="nav-link <?= ($activeMenu ?? '') === 'master-data' ? 'active' : '' ?>"
+                x-show="['super_admin','bos','admin'].includes(currentUser.role)">
                 <i data-lucide="database" class="w-4 h-4"></i>
                 Master Data
             </a>
@@ -974,13 +993,14 @@ $baseUrl  = '/peace_seafood';
             </a>
 
             <a href="/peace_seafood/laporan"
-                class="nav-link <?= ($activeMenu ?? '') === 'laporan' ? 'active' : '' ?>">
+                class="nav-link <?= ($activeMenu ?? '') === 'laporan' ? 'active' : '' ?>"
+                x-show="['super_admin','bos','admin'].includes(currentUser.role)">
                 <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
                 Laporan
             </a>
 
             <!-- Fitur jarang dipakai -->
-            <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary)">Fitur Tambahan</div>
+            <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary)" x-show="currentUser.role !== 'saas_owner'">Fitur Tambahan</div>
 
             <a href="/peace_seafood/penitipan"
                 class="nav-link <?= ($activeMenu ?? '') === 'penitipan' ? 'active' : '' ?>"
@@ -1017,14 +1037,14 @@ $baseUrl  = '/peace_seafood';
                 Activity Log
             </a>
 
-            <!-- Settings (Super Admin Only) -->
+            <!-- Settings -->
             <div class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wider"
                 style="color: var(--text-secondary)"
-                x-show="currentUser.role === 'super_admin'">Pengaturan</div>
+                x-show="['super_admin', 'saas_owner', 'bos'].includes(currentUser.role)">Pengaturan</div>
 
             <a href="/peace_seafood/settings"
                 class="nav-link <?= ($activeMenu ?? '') === 'settings' ? 'active' : '' ?>"
-                x-show="currentUser.role === 'super_admin'">
+                x-show="['super_admin', 'saas_owner', 'bos'].includes(currentUser.role)">
                 <i data-lucide="settings" class="w-4 h-4"></i>
                 Settings
             </a>
@@ -1232,16 +1252,76 @@ $baseUrl  = '/peace_seafood';
     <script src="<?= $baseUrl ?>/js/api-client.js"></script>
     <script src="<?= $baseUrl ?>/js/utils.js"></script>
     <script src="<?= $baseUrl ?>/js/chart-config.js"></script>
+    <script src="<?= $baseUrl ?>/js/ui-theme.js"></script>
 
     <script>
         function appLayout() {
             return {
                 sidebarOpen: false,
                 theme: localStorage.getItem('theme') || 'light',
-                currentUser: JSON.parse(localStorage.getItem('user') || '{}'),
+                currentUser: (() => {
+                    let u = {};
+                    try {
+                        u = JSON.parse(localStorage.getItem('user') || '{}') || {};
+                    } catch (e) {
+                        u = {};
+                    }
+                    if (u && u.role) u.role = u.role.toLowerCase();
+                    return u;
+                })(),
                 notifList: [],
                 unreadCount: 0,
                 notifTab: 'unread',
+
+                // SaaS States
+                showFirstLoginModal: false,
+                firstLoginPass: '',
+                firstLoginPassConfirm: '',
+                forceLoginLoading: false,
+
+                showOnboardingWizard: false,
+                onboardingStep: 1,
+                onboardingCompleted: true, // Default true to avoid visual flash
+                activeMenu: '<?= $activeMenu ?? '' ?>',
+                onboardingForm: {
+                    nama_gudang: '',
+                    alamat: '',
+                    kota: '',
+                    logo_base64: '',
+                    ikan_pilihan: [],
+                    mapper: {
+                        tanggal: 'Tanggal',
+                        jenis_ikan: 'Jenis Ikan',
+                        berat: 'Qty (kg)',
+                        harga: 'Harga',
+                        pembeli: 'Pembeli'
+                    }
+                },
+                excelUploaded: false,
+                excelFileName: '',
+                excelRawText: '',
+                excelColumns: ['Tanggal', 'Jenis Ikan', 'Qty (kg)', 'Harga', 'Pembeli', 'Supplier', 'Total'],
+                availableFishes: ['Cakalang', 'DEHO', 'Baby Tuna', 'Bandeng', 'Salem', 'Layang', 'Kembung Banjar', 'Cucut', 'Tenggiri'],
+
+                saasLocked: false,
+                saasLockReason: '',
+                developerWhatsapp: '628123456789',
+
+                get forcePasswordChecks() {
+                    const pass = this.firstLoginPass || '';
+                    return {
+                        length: pass.length >= 8,
+                        upper: /[A-Z]/.test(pass),
+                        lower: /[a-z]/.test(pass),
+                        number: /[0-9]/.test(pass),
+                        special: /[^a-zA-Z0-9]/.test(pass)
+                    };
+                },
+
+                get isForcePasswordStrong() {
+                    const c = this.forcePasswordChecks;
+                    return c.length && c.upper && c.lower && c.number && c.special;
+                },
 
                 init() {
                     // Apply saved theme
@@ -1259,6 +1339,30 @@ $baseUrl  = '/peace_seafood';
 
                     // Setup axios auth header
                     window.API_TOKEN = token;
+
+                    // Listen to global SaaS billing and bypass lock events
+                    window.addEventListener('saas-payment-required', (e) => {
+                        this.saasLocked = true;
+                        this.saasLockReason = e.detail || 'Masa aktif uji coba gratis atau sewa bulanan Anda telah berakhir.';
+                    });
+
+                    window.addEventListener('saas-password-change-required', () => {
+                        this.showFirstLoginModal = true;
+                    });
+
+                    window.addEventListener('open-onboarding-wizard', () => {
+                        this.showOnboardingWizard = true;
+                        this.onboardingStep = 1;
+                    });
+
+                    // Fetch settings to update Developer WhatsApp support and onboarding status
+                    this.fetchDeveloperWhatsapp();
+
+                    if (this.currentUser.is_first_login === 1) {
+                        this.showFirstLoginModal = true;
+                    } else if (['bos', 'admin', 'checker'].includes(this.currentUser.role)) {
+                        this.checkOnboardingStatus();
+                    }
 
                     // Load unread count
                     this.loadUnreadCount();
@@ -1286,6 +1390,7 @@ $baseUrl  = '/peace_seafood';
                     this.theme = this.theme === 'light' ? 'dark' : 'light';
                     localStorage.setItem('theme', this.theme);
                     document.documentElement.setAttribute('data-theme', this.theme);
+                    if (window.PSTheme && typeof window.PSTheme.set === 'function') window.PSTheme.set(this.theme);
                     if (window.lucide) lucide.createIcons();
                 },
 
@@ -1425,6 +1530,9 @@ $baseUrl  = '/peace_seafood';
                     }
                     if (n.tipe === 'hutang_jatuh_tempo') {
                         return `/peace_seafood/keuangan?highlight=debt-${n.reference_id}`;
+                    }
+                    if (n.tipe === 'draft_penjualan') {
+                        return `/peace_seafood/penjualan?highlight=nota-${n.reference_id}&filter=draft`;
                     }
                     return null;
                 },
@@ -1619,6 +1727,276 @@ $baseUrl  = '/peace_seafood';
                         return `${d.getDate()} ${months[d.getMonth()]}, ${hours}:${mins}`;
                     } catch (e) {
                         return dateStr;
+                    }
+                },
+
+                async checkOnboardingStatus() {
+                    // Wizard onboarding HANYA untuk bos, admin, checker — saas_owner tidak perlu setup gudang
+                    if (this.currentUser.role === 'saas_owner') {
+                        this.onboardingCompleted = true;
+                        return;
+                    }
+                    try {
+                        const res = await apiClient.get('/settings');
+                        const settings = res.data.data || [];
+                        const onboarding = settings.find(s => s.kunci === 'onboarding_completed');
+                        if (!onboarding || onboarding.nilai !== '1') {
+                            this.onboardingCompleted = false;
+                            if (this.currentUser.role === 'bos') {
+                                this.showOnboardingWizard = true;
+                            }
+                        } else {
+                            this.onboardingCompleted = true;
+                        }
+                    } catch (e) {
+                        console.error('Failed to check onboarding status:', e);
+                        this.onboardingCompleted = true; // Fallback so we don't lock on API error
+                    }
+                },
+
+                async fetchDeveloperWhatsapp() {
+                    try {
+                        const res = await apiClient.get('/settings');
+                        const settings = res.data.data || [];
+                        const wa = settings.find(s => s.kunci === 'platform_developer_whatsapp');
+                        if (wa && wa.nilai) {
+                            this.developerWhatsapp = wa.nilai;
+                        }
+                    } catch (e) {
+                        // Fallback is safe
+                    }
+                },
+
+                async forceChangePassword() {
+                    if (!this.isForcePasswordStrong || this.firstLoginPass !== this.firstLoginPassConfirm) return;
+                    this.forceLoginLoading = true;
+                    try {
+                        await apiClient.post('/auth/change-password', {
+                            password: this.firstLoginPass
+                        });
+                        this.showFirstLoginModal = false;
+
+                        // Update currentUser
+                        this.currentUser.is_first_login = 0;
+                        localStorage.setItem('user', JSON.stringify(this.currentUser));
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Password Diperbarui!',
+                            text: 'Sandi aman baru Anda berhasil dipasang.',
+                            customClass: {
+                                popup: 'swal2-glassmorphic',
+                                confirmButton: 'swal2-confirm-btn'
+                            },
+                            buttonsStyling: false
+                        }).then(() => {
+                            if (this.currentUser.role === 'bos') {
+                                this.checkOnboardingStatus();
+                            }
+                        });
+                    } catch (e) {
+                        const msg = e.response?.data?.message || 'Gagal mengubah password.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Ubah Sandi Gagal',
+                            text: msg,
+                            customClass: {
+                                popup: 'swal2-glassmorphic',
+                                confirmButton: 'swal2-confirm-btn'
+                            },
+                            buttonsStyling: false
+                        });
+                    } finally {
+                        this.forceLoginLoading = false;
+                    }
+                },
+
+                handleLogoUpload(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        this.onboardingForm.logo_base64 = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                handleExcelUpload(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    this.excelFileName = file.name;
+                    this.excelUploaded = true;
+                    if (file.name.endsWith('.csv')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const text = event.target.result || '';
+                            this.excelRawText = text;
+                            const firstLine = text.split('\n')[0] || '';
+                            if (firstLine.includes(',')) {
+                                this.excelColumns = firstLine.split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+                            } else if (firstLine.includes(';')) {
+                                this.excelColumns = firstLine.split(';').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                },
+
+                handleOnboardingNext() {
+                    if (this.onboardingStep < 3) {
+                        this.onboardingStep++;
+                        this.$nextTick(() => {
+                            if (window.lucide) lucide.createIcons();
+                        });
+                    } else {
+                        this.submitOnboarding();
+                    }
+                },
+
+                async submitOnboarding() {
+                    Swal.fire({
+                        title: 'Memproses Setup...',
+                        html: 'Sedang menyiapkan basis data dan mengimpor rekapan historis Anda.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    try {
+                        let transactions = [];
+                        if (this.excelUploaded && this.excelRawText) {
+                            const text = this.excelRawText;
+                            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                            if (lines.length > 1) {
+                                const delimiter = text.includes(';') ? ';' : ',';
+                                const headers = lines[0].split(delimiter).map(s => s.trim().replace(/^["']|["']$/g, ''));
+
+                                const colMap = this.onboardingForm.mapper;
+                                const idxTanggal = headers.indexOf(colMap.tanggal);
+                                const idxJenisIkan = headers.indexOf(colMap.jenis_ikan);
+                                const idxBerat = headers.indexOf(colMap.berat);
+                                const idxHarga = headers.indexOf(colMap.harga);
+                                const idxPembeli = headers.indexOf(colMap.pembeli);
+
+                                for (let i = 1; i < lines.length; i++) {
+                                    const line = lines[i];
+                                    let cols = [];
+                                    let inQuotes = false;
+                                    let currentVal = '';
+                                    for (let c = 0; c < line.length; c++) {
+                                        const char = line[c];
+                                        if (char === '"') {
+                                            inQuotes = !inQuotes;
+                                        } else if (char === delimiter && !inQuotes) {
+                                            cols.push(currentVal.trim().replace(/^["']|["']$/g, ''));
+                                            currentVal = '';
+                                        } else {
+                                            currentVal += char;
+                                        }
+                                    }
+                                    cols.push(currentVal.trim().replace(/^["']|["']$/g, ''));
+
+                                    if (cols.length <= Math.max(idxTanggal, idxJenisIkan, idxBerat, idxHarga)) continue;
+
+                                    const rawTanggal = cols[idxTanggal] || '';
+                                    const rawJenisIkan = cols[idxJenisIkan] || '';
+                                    const rawBerat = parseFloat(cols[idxBerat]) || 0;
+                                    const rawHarga = parseFloat(cols[idxHarga]) || 0;
+                                    const rawPembeli = idxPembeli !== -1 ? (cols[idxPembeli] || 'Umum') : 'Umum';
+
+                                    if (!rawTanggal || !rawJenisIkan || rawBerat <= 0 || rawHarga <= 0) continue;
+
+                                    // Normalize Date format to YYYY-MM-DD
+                                    let formattedDate = rawTanggal;
+                                    if (rawTanggal.includes('/') || rawTanggal.includes('-')) {
+                                        const sep = rawTanggal.includes('/') ? '/' : '-';
+                                        const parts = rawTanggal.split(sep);
+                                        if (parts.length === 3) {
+                                            if (parts[0].length === 4) {
+                                                formattedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                                            } else if (parts[2].length === 4) {
+                                                formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                            }
+                                        }
+                                    }
+
+                                    transactions.push({
+                                        tanggal: formattedDate,
+                                        pembeli: rawPembeli,
+                                        no_nota: 'NOTA-OB-' + Math.floor(100000 + Math.random() * 900000),
+                                        produk: rawJenisIkan,
+                                        qty: rawBerat,
+                                        harga_jual: rawHarga,
+                                        subtotal: rawBerat * rawHarga,
+                                        diskon: 0,
+                                        total: rawBerat * rawHarga,
+                                        pembayaran: 'cash',
+                                        catatan: 'Migrasi onboarding data rekapan lama'
+                                    });
+                                }
+
+                                // Sort chronologically by date
+                                transactions.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+                            }
+                        }
+
+                        // 1. Post to import historical data if present
+                        if (transactions.length > 0) {
+                            await apiClient.post('/migrasi/excel/import', {
+                                data: {
+                                    pembeli: [],
+                                    supplier: [],
+                                    stok: [],
+                                    penjualan: transactions
+                                }
+                            });
+                        }
+
+                        // 2. Finalize onboarding via complete
+                        const res = await apiClient.post('/onboarding/complete', {
+                            nama_gudang: this.onboardingForm.nama_gudang,
+                            alamat: this.onboardingForm.alamat,
+                            kota: this.onboardingForm.kota,
+                            ikan_pilihan: this.onboardingForm.ikan_pilihan
+                        });
+
+                        // 3. Save logo if uploaded
+                        if (this.onboardingForm.logo_base64) {
+                            await apiClient.put('/settings/company_logo_base64', {
+                                nilai: this.onboardingForm.logo_base64
+                            });
+                        }
+                        await apiClient.put('/settings/company_name', {
+                            nilai: this.onboardingForm.nama_gudang
+                        });
+
+                        this.showOnboardingWizard = false;
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Setup Berhasil!',
+                            text: res.data.message || 'Masa uji coba gratis Anda resmi dimulai sekarang!',
+                            customClass: {
+                                popup: 'swal2-glassmorphic',
+                                confirmButton: 'swal2-confirm-btn'
+                            },
+                            buttonsStyling: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } catch (e) {
+                        const msg = e.response?.data?.message || 'Gagal menyelesaikan onboarding.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Setup Gagal',
+                            text: msg,
+                            customClass: {
+                                popup: 'swal2-glassmorphic',
+                                confirmButton: 'swal2-confirm-btn'
+                            },
+                            buttonsStyling: false
+                        });
                     }
                 },
 
@@ -2066,6 +2444,414 @@ $baseUrl  = '/peace_seafood';
             }
         });
     </script>
+
+    <!-- =========================================================================
+         🔒 SAAS BYPASS GUARD & SUBSCRIPTION SYSTEM OVERLAYS
+         ========================================================================= -->
+
+    <!-- 🔒 1. FORCE CHANGE PASSWORD OVERLAY (FIRST LOGIN SANITY GUARD) -->
+    <div class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-[9999] flex items-center justify-center p-4"
+        x-show="showFirstLoginModal"
+        x-cloak
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100">
+        <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+            <!-- Ocean sparkle bg effects -->
+            <div class="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-cyan-500/10 blur-3xl animate-pulse"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl animate-pulse"></div>
+
+            <div class="relative text-center mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-cyan-400 to-sky-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-sky-500/20">
+                    <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-white tracking-tight">Ganti Password Default</h3>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Demi keamanan sistem, Anda wajib mengubah sandi sementara Anda sekarang sebelum menggunakan dashboard operasional.</p>
+            </div>
+
+            <form @submit.prevent="forceChangePassword()" class="space-y-4 relative">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Password Baru</label>
+                    <div class="relative">
+                        <input type="password" x-model="firstLoginPass" class="w-full h-11 bg-slate-950 border border-slate-800 rounded-xl px-4 text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20" placeholder="Masukkan password baru">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Konfirmasi Password Baru</label>
+                    <div class="relative">
+                        <input type="password" x-model="firstLoginPassConfirm" class="w-full h-11 bg-slate-950 border border-slate-800 rounded-xl px-4 text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20" placeholder="Ulangi password baru">
+                    </div>
+                </div>
+
+                <!-- Password Strength List -->
+                <div class="space-y-1.5 p-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-left">
+                    <span class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Kekuatan Sandi Baru:</span>
+                    <div class="flex items-center gap-2 text-xs" :class="forcePasswordChecks.length ? 'text-emerald-400 font-medium' : 'text-slate-500'">
+                        <i data-lucide="check" class="w-4 h-4"></i> Minimal 8 karakter
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" :class="forcePasswordChecks.upper ? 'text-emerald-400 font-medium' : 'text-slate-500'">
+                        <i data-lucide="check" class="w-4 h-4"></i> Huruf besar (A-Z)
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" :class="forcePasswordChecks.lower ? 'text-emerald-400 font-medium' : 'text-slate-500'">
+                        <i data-lucide="check" class="w-4 h-4"></i> Huruf kecil (a-z)
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" :class="forcePasswordChecks.number ? 'text-emerald-400 font-medium' : 'text-slate-500'">
+                        <i data-lucide="check" class="w-4 h-4"></i> Angka (0-9)
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" :class="forcePasswordChecks.special ? 'text-emerald-400 font-medium' : 'text-slate-500'">
+                        <i data-lucide="check" class="w-4 h-4"></i> Karakter khusus (@, #, $, dll)
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full h-11 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 hover:opacity-95 transition-all text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :disabled="!isForcePasswordStrong || firstLoginPass !== firstLoginPassConfirm || forceLoginLoading">
+                    <span x-show="!forceLoginLoading" class="flex items-center gap-2">
+                        Aktifkan Akun Sekarang
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </span>
+                    <span x-show="forceLoginLoading" class="flex items-center gap-2">
+                        <span class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                        Mengaktifkan...
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🏢 2. ONBOARDING WIZARD 3 LANGKAH (SMART TRIAL ACTIVATOR) -->
+    <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-[9990] flex items-center justify-center p-4 overflow-y-auto"
+        x-show="showOnboardingWizard"
+        x-cloak>
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col my-8 max-h-[90vh]">
+            <!-- Header & Steps tracker -->
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center font-bold">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 dark:text-white leading-tight">Konfigurasi Gudang Baru</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Selesaikan setup singkat untuk mulai trial gratis.</p>
+                    </div>
+                </div>
+
+                <!-- Steps badges + tombol tutup -->
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold transition-colors" :class="onboardingStep === 1 ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'">1</span>
+                    <span class="w-4 h-0.5 bg-slate-200 dark:bg-slate-700"></span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold transition-colors" :class="onboardingStep === 2 ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'">2</span>
+                    <span class="w-4 h-0.5 bg-slate-200 dark:bg-slate-700"></span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold transition-colors" :class="onboardingStep === 3 ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'">3</span>
+                    <!-- Tombol tutup wizard -->
+                    <button type="button"
+                        @click="showOnboardingWizard = false"
+                        class="ml-3 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
+                        title="Tutup wizard (isi nanti)">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Steps Body -->
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar-thin text-left">
+
+                <!-- STEP 1: IDENTITAS GUDANG -->
+                <div x-show="onboardingStep === 1" class="space-y-5">
+                    <div class="text-center max-w-md mx-auto mb-6">
+                        <h4 class="text-base font-bold text-slate-800 dark:text-white">Langkah 1: Profil Gudang Ikan Anda</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan data identitas gudang Anda untuk dicantumkan pada cetak struk nota kasir thermal.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label text-slate-700 dark:text-slate-300">Nama Gudang / Perusahaan</label>
+                            <input type="text" x-model="onboardingForm.nama_gudang" class="form-input" placeholder="Contoh: Gudang Hasil Bahari">
+                        </div>
+                        <div>
+                            <label class="form-label text-slate-700 dark:text-slate-300">Kota Lokasi Gudang</label>
+                            <input type="text" x-model="onboardingForm.kota" class="form-input" placeholder="Contoh: Manado">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label text-slate-700 dark:text-slate-300">Alamat Lengkap Gudang</label>
+                        <textarea x-model="onboardingForm.alamat" rows="2" class="form-input py-2" placeholder="Tulis alamat operasional lengkap..."></textarea>
+                    </div>
+
+                    <!-- Company Logo Uploader -->
+                    <div>
+                        <label class="form-label text-slate-700 dark:text-slate-300">Logo Perusahaan (Optional)</label>
+                        <div class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-950/20 transition-all hover:border-blue-400 cursor-pointer relative">
+                            <input type="file" @change="handleLogoUpload($event)" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*">
+                            <template x-if="onboardingForm.logo_base64">
+                                <div class="flex items-center gap-3">
+                                    <img :src="onboardingForm.logo_base64" class="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-800">
+                                    <div class="text-left">
+                                        <p class="text-xs font-bold text-emerald-500">Logo Berhasil Dipasang</p>
+                                        <p class="text-[10px] text-slate-500">Klik untuk mengganti gambar</p>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="!onboardingForm.logo_base64">
+                                <div class="text-center">
+                                    <i data-lucide="image" class="w-6 h-6 text-slate-400 mx-auto mb-1.5"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-400">Pilih / Drag foto logo (.png/.jpg)</p>
+                                    <p class="text-[9px] text-slate-500 mt-0.5">Maksimal resolusi persegi 500x500px</p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: CHECKLIST IKAN PILIHAN -->
+                <div x-show="onboardingStep === 2" class="space-y-5">
+                    <div class="text-center max-w-md mx-auto mb-6">
+                        <h4 class="text-base font-bold text-slate-800 dark:text-white">Langkah 2: Jenis Ikan yang Anda Kelola</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Pilih ikan laut/tawar lokal yang akan otomatis dimasukkan sebagai basis Master Data Anda.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <template x-for="fish in availableFishes" :key="fish">
+                            <label class="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 cursor-pointer transition-all hover:bg-blue-50/20 hover:border-blue-400/50">
+                                <input type="checkbox" :value="fish" x-model="onboardingForm.ikan_pilihan" class="rounded border-slate-300 text-blue-500 focus:ring-blue-500 w-4 h-4">
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="fish"></span>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- STEP 3: EXCEL COLUMNS MAPPER -->
+                <div x-show="onboardingStep === 3" class="space-y-5">
+                    <div class="text-center max-w-md mx-auto mb-4">
+                        <h4 class="text-base font-bold text-slate-800 dark:text-white">Langkah 3: Integrasi Excel Column Mapper</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Uji pemetaan kolom Excel Anda ke format sistem gudang agar migrasi data transaksional masa lalu berjalan instan.</p>
+                    </div>
+
+                    <!-- Drag & Drop Uploader -->
+                    <div class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-950/20 transition-all hover:border-blue-400 cursor-pointer relative">
+                        <input type="file" @change="handleExcelUpload($event)" class="absolute inset-0 opacity-0 cursor-pointer" accept=".xlsx,.xls,.csv">
+                        <div class="text-center" x-show="!excelUploaded">
+                            <i data-lucide="file-spreadsheet" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
+                            <p class="text-xs font-bold text-slate-700 dark:text-white">Upload File Excel Penjualan / Stok Anda</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Mendukung format .xlsx, .xls, atau .csv</p>
+                        </div>
+                        <div class="text-center flex items-center gap-3" x-show="excelUploaded" x-cloak>
+                            <div class="w-10 h-10 bg-emerald-500/10 text-emerald-500 rounded-lg flex items-center justify-center">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xs font-bold text-emerald-500" x-text="excelFileName"></p>
+                                <p class="text-[10px] text-slate-500">Berhasil diunggah! Kolom terbaca otomatis.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic columns mapper UI -->
+                    <div class="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-left">
+                        <span class="block text-xs font-bold text-slate-700 dark:text-white mb-3">Petakan Kolom Excel Anda:</span>
+
+                        <div class="space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/50 dark:border-slate-800/40">
+                                <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    <span class="text-red-500">*</span> Kolom Tanggal Transaksi:
+                                </div>
+                                <select x-model="onboardingForm.mapper.tanggal" class="form-input sm:w-48 py-1 text-xs">
+                                    <template x-for="col in excelColumns" :key="col">
+                                        <option :value="col" x-text="col"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/50 dark:border-slate-800/40">
+                                <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    <span class="text-red-500">*</span> Kolom Nama Jenis Ikan:
+                                </div>
+                                <select x-model="onboardingForm.mapper.jenis_ikan" class="form-input sm:w-48 py-1 text-xs">
+                                    <template x-for="col in excelColumns" :key="col">
+                                        <option :value="col" x-text="col"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/50 dark:border-slate-800/40">
+                                <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    <span class="text-red-500">*</span> Kolom Volume / Berat (kg):
+                                </div>
+                                <select x-model="onboardingForm.mapper.berat" class="form-input sm:w-48 py-1 text-xs">
+                                    <template x-for="col in excelColumns" :key="col">
+                                        <option :value="col" x-text="col"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/50 dark:border-slate-800/40">
+                                <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    <span class="text-red-500">*</span> Kolom Harga Satuan (Rp):
+                                </div>
+                                <select x-model="onboardingForm.mapper.harga" class="form-input sm:w-48 py-1 text-xs">
+                                    <template x-for="col in excelColumns" :key="col">
+                                        <option :value="col" x-text="col"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    Kolom Nama Pembeli / Supplier:
+                                </div>
+                                <select x-model="onboardingForm.mapper.pembeli" class="form-input sm:w-48 py-1 text-xs">
+                                    <template x-for="col in excelColumns" :key="col">
+                                        <option :value="col" x-text="col"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
+                <!-- Kiri: Kembali (step > 1) atau Lewati (step 1) -->
+                <div>
+                    <button type="button"
+                        class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800"
+                        @click="onboardingStep = Math.max(1, onboardingStep - 1)"
+                        x-show="onboardingStep > 1"
+                        x-cloak>
+                        ← Kembali
+                    </button>
+                    <button type="button"
+                        class="px-5 py-2.5 rounded-xl border border-amber-200 dark:border-amber-900/40 text-amber-600 dark:text-amber-400 font-semibold text-xs transition-all hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                        @click="showOnboardingWizard = false"
+                        x-show="onboardingStep === 1"
+                        x-cloak>
+                        Lewati, isi nanti →
+                    </button>
+                </div>
+
+                <!-- Kanan: Lanjutkan / Selesai -->
+                <button type="button"
+                    class="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 transition-all text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :disabled="onboardingStep === 1 && !onboardingForm.nama_gudang"
+                    @click="handleOnboardingNext()">
+                    <span x-text="onboardingStep === 3 ? 'Selesai & Aktifkan Trial' : 'Lanjutkan'"></span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔒 2.5. ONBOARDING LOCK SCREEN FOR WMS PAGES (EXCEPT DASHBOARD) -->
+    <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-[9990] flex items-center justify-center p-4 select-none"
+        x-show="onboardingCompleted === false && currentUser.role !== 'saas_owner' && activeMenu !== 'dashboard'"
+        x-cloak>
+        <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative text-center space-y-6">
+            <!-- Ocean sparkle bg effects -->
+            <div class="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-blue-500/10 blur-3xl animate-pulse"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-indigo-500/10 blur-3xl animate-pulse"></div>
+
+            <div class="relative">
+                <div class="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/5">
+                    <i data-lucide="lock" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Akses Fitur Terkunci</h3>
+
+                <!-- Message for Bos -->
+                <template x-if="currentUser.role === 'bos'">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                        Gudang Anda belum dikonfigurasi. Anda harus menyelesaikan setup singkat di Dashboard terlebih dahulu sebelum dapat menggunakan fitur ini.
+                    </p>
+                </template>
+
+                <!-- Message for Admin/Checker -->
+                <template x-if="['admin', 'checker'].includes(currentUser.role)">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                        Akses gudang ini dibatasi karena konfigurasi awal belum diselesaikan oleh pemilik gudang (Bos). Silakan hubungi pemilik gudang Anda untuk menyelesaikan setup.
+                    </p>
+                </template>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-2 relative">
+                <!-- Action for Bos -->
+                <template x-if="currentUser.role === 'bos'">
+                    <a href="/peace_seafood/dashboard"
+                        class="w-full h-11 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.01] text-decoration-none" style="text-decoration:none">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        Ke Dashboard &amp; Setup Sekarang
+                    </a>
+                </template>
+
+                <button @click="logout()"
+                    class="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Keluar Sesi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔒 3. PREMIUM SAAS BILLING SUSPEND & SUBSCRIPTION LOCK SCREEN (402 OVERLAY) -->
+    <div class="fixed inset-0 bg-[#020617]/97 backdrop-blur-2xl z-[99999] flex items-center justify-center p-4 select-none"
+        x-show="saasLocked"
+        x-cloak>
+        <div class="w-full max-w-lg text-center space-y-8 p-6">
+
+            <!-- Lock icon with premium red & gold glow effects -->
+            <div class="relative w-24 h-24 mx-auto">
+                <div class="absolute inset-0 bg-gradient-to-tr from-red-600 to-amber-500 rounded-full blur-2xl opacity-60 animate-pulse"></div>
+                <div class="relative w-24 h-24 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center border border-white/20 shadow-xl">
+                    <i data-lucide="lock" class="w-11 h-11 text-white animate-[bounce_2s_infinite]"></i>
+                </div>
+            </div>
+
+            <!-- Headline -->
+            <div class="space-y-3">
+                <span class="px-4 py-1.5 rounded-full bg-red-500/10 text-red-400 font-extrabold text-[10px] uppercase tracking-widest border border-red-500/20 inline-block">Akses Gudang Dikunci</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Masa Sewa / Trial Berakhir</h2>
+                <p class="text-xs md:text-sm text-slate-400 max-w-md mx-auto leading-relaxed" x-text="saasLockReason"></p>
+            </div>
+
+            <!-- Benefits Checklist of commercial platform WMS -->
+            <div class="max-w-sm mx-auto p-4 rounded-2xl border border-slate-800 bg-slate-900/40 text-left space-y-2.5">
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Fitur Pro yang Terkunci:</span>
+                <div class="flex items-center gap-2.5 text-xs text-slate-300">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                    Notifikasi Limit Stok Minimum &amp; Jatuh Tempo
+                </div>
+                <div class="flex items-center gap-2.5 text-xs text-slate-300">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                    Struk Thermal &amp; Integrasi Kasir Bahari
+                </div>
+                <div class="flex items-center gap-2.5 text-xs text-slate-300">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                    Export Laporan PDF/Excel &amp; Excel Mapper
+                </div>
+                <div class="flex items-center gap-2.5 text-xs text-slate-300">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                    Multi-Gudang &amp; God-Mode Impersonate
+                </div>
+            </div>
+
+            <!-- Call to Actions -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto pt-2">
+                <a :href="'https://wa.me/' + developerWhatsapp + '?text=Halo%20Developer%20Peace%20Seafood,%20saya%20tertarik%20untuk%20mengaktifkan%20sewa/perpanjang%20masa%20aktif%20WMS%20gudang%20saya.'"
+                    target="_blank"
+                    class="w-full sm:flex-1 h-12 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02]">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    Hubungi Developer (WA)
+                </a>
+
+                <button @click="logout()"
+                    class="w-full sm:w-auto px-6 h-12 border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Keluar Sesi
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

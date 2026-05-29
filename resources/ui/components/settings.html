@@ -1,0 +1,45 @@
+<!-- resources/ui/components/settings.html - example -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="/public/css/ui-theme.css" />
+    <title>Settings Example</title>
+  </head>
+  <body>
+    <div class="container">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        "
+      >
+        <h1 class="h1">Settings</h1>
+        <button class="btn" id="themeToggle">Toggle Theme</button>
+      </div>
+
+      <div class="card">
+        <div class="h1">Platform Settings (saas_owner)</div>
+        <p class="muted">Company-wide settings, billing, global features.</p>
+        <button class="btn">Manage Plans</button>
+      </div>
+
+      <div class="card">
+        <div class="h1">Tenant Settings (bos)</div>
+        <p class="muted">
+          Gudang, bank accounts, operational settings for this tenant.
+        </p>
+        <button class="btn">Manage Gudang</button>
+      </div>
+    </div>
+    <script src="/public/js/ui-theme.js"></script>
+    <script>
+      document
+        .getElementById("themeToggle")
+        .addEventListener("click", () => window.PSTheme.toggle());
+    </script>
+  </body>
+</html>

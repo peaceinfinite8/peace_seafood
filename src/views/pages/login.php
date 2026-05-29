@@ -1056,11 +1056,11 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                             <?php endif; ?>
                         </div>
                         <h2 class="text-xl font-bold tracking-tight" :class="isDarkTheme ? 'text-white' : 'text-slate-900'"><?= htmlspecialchars($appName) ?></h2>
-                        <p class="text-xs mt-1" :class="isDarkTheme ? 'text-slate-400' : 'text-slate-600'">Sistem Manajemen Gudang Ikan</p>
+                        <p class="text-xs mt-1 font-semibold transition-all duration-300" :class="isDarkTheme ? 'text-cyan-400' : 'text-cyan-600'" x-text="mode === 'login' ? 'Sistem Manajemen Gudang Ikan' : (mode === 'signup' ? 'Aktivasi Trial Baru' : (mode === 'forgot' ? 'Pemulihan Sandi' : 'Atur Ulang Kata Sandi'))"></p>
                     </div>
 
-                    <!-- Auth Form -->
-                    <form @submit.prevent="doLogin()" novalidate class="space-y-5">
+                    <!-- Auth Login Form -->
+                    <form x-show="mode === 'login'" @submit.prevent="doLogin()" novalidate class="space-y-5" x-transition.fade.duration.400ms>
 
                         <!-- Email Input -->
                         <div>
@@ -1112,9 +1112,8 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                                 </div>
                                 <span class="text-xs select-none" :class="isDarkTheme ? 'text-slate-300' : 'text-slate-600'">Ingat saya</span>
                             </label>
-                            <a href="#" class="text-xs font-semibold hover:opacity-80 transition-opacity" :class="isDarkTheme ? 'text-cyan-400' : 'text-cyan-600'">Lupa password?</a>
+                            <a href="#" @click.prevent="mode = 'forgot'" class="text-xs font-semibold hover:opacity-80 transition-opacity" :class="isDarkTheme ? 'text-cyan-400' : 'text-cyan-600'">Lupa password?</a>
                         </div>
-
 
                         <!-- Submit Button -->
                         <button type="submit" class="btn-login" :disabled="loading">
@@ -1127,6 +1126,165 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                             <span x-show="loading" class="flex items-center gap-2" x-cloak>
                                 <span class="spinner"></span>
                                 Memverifikasi...
+                            </span>
+                        </button>
+
+                        <div class="text-center pt-2">
+                            <span class="text-xs" :class="isDarkTheme ? 'text-slate-400' : 'text-slate-600'">Tertarik dengan platform ini? </span>
+                            <a href="#" @click.prevent="mode = 'signup'" class="text-xs font-bold hover:underline" :class="isDarkTheme ? 'text-cyan-400' : 'text-cyan-600'">Daftar Trial Baru</a>
+                        </div>
+                    </form>
+
+                    <!-- Sign Up (Trial Activation) Form -->
+                    <form x-show="mode === 'signup'" @submit.prevent="doSignup()" novalidate class="space-y-5" x-cloak x-transition.fade.duration.400ms>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider mb-2" :class="isDarkTheme ? 'text-slate-300' : 'text-slate-700'">
+                                Email Pendaftaran
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="email" x-model="form.email" class="input-field"
+                                    placeholder="Masukkan email Gmail Anda">
+                                <svg class="input-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                                </svg>
+                            </div>
+                            <div class="mt-2.5 p-3 rounded-xl border flex items-start gap-2.5" :class="isDarkTheme ? 'bg-sky-950/20 border-sky-900/40 text-slate-300' : 'bg-sky-50 border-sky-100 text-slate-700'">
+                                <svg class="w-5 h-5 text-sky-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="text-xs leading-relaxed">
+                                    Email Anda harus sudah disetujui pre-approval oleh Developer. Kata sandi default akan dikirimkan otomatis ke inbox Gmail Anda.
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-login" :disabled="loading">
+                            <span x-show="!loading" class="flex items-center gap-2">
+                                Aktivasi Akun Trial
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                            </span>
+                            <span x-show="loading" class="flex items-center gap-2" x-cloak>
+                                <span class="spinner"></span>
+                                Memproses Aktivasi...
+                            </span>
+                        </button>
+
+                        <div class="text-center pt-2">
+                            <a href="#" @click.prevent="mode = 'login'" class="text-xs font-semibold hover:opacity-80 transition-opacity" :class="isDarkTheme ? 'text-cyan-400' : 'text-cyan-600'">Kembali ke Login</a>
+                        </div>
+                    </form>
+
+                    <!-- Forgot Password Form -->
+                    <form x-show="mode === 'forgot'" @submit.prevent="doForgotPassword()" novalidate class="space-y-5" x-cloak x-transition.fade.duration.400ms>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider mb-2" :class="isDarkTheme ? 'text-slate-300' : 'text-slate-700'">
+                                Email Terdaftar
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="email" x-model="form.email" class="input-field"
+                                    placeholder="Masukkan email terdaftar">
+                                <svg class="input-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-login" :disabled="loading">
+                            <span x-show="!loading" class="flex items-center gap-2">
+                                Kirim Link Reset Password
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                            </span>
+                            <span x-show="loading" class="flex items-center gap-2" x-cloak>
+                                <span class="spinner"></span>
+                                Mengirim Link...
+                            </span>
+                        </button>
+
+                        <div class="text-center pt-2">
+                            <a href="#" @click.prevent="mode = 'login'" class="text-xs font-semibold hover:opacity-80 transition-opacity" :class="isDarkTheme ? 'text-cyan-400' : 'text-cyan-600'">Kembali ke Login</a>
+                        </div>
+                    </form>
+
+                    <!-- Reset Password Form -->
+                    <form x-show="mode === 'reset'" @submit.prevent="doResetPassword()" novalidate class="space-y-4" x-cloak x-transition.fade.duration.400ms>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider mb-2" :class="isDarkTheme ? 'text-slate-300' : 'text-slate-700'">
+                                Password Baru
+                            </label>
+                            <div class="input-wrapper">
+                                <input :type="showPass ? 'text' : 'password'" x-model="form.password" class="input-field"
+                                    placeholder="Password Baru">
+                                <svg class="input-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider mb-2" :class="isDarkTheme ? 'text-slate-300' : 'text-slate-700'">
+                                Konfirmasi Password Baru
+                            </label>
+                            <div class="input-wrapper">
+                                <input :type="showPass ? 'text' : 'password'" x-model="form.password_confirm" class="input-field"
+                                    placeholder="Konfirmasi Password Baru">
+                                <svg class="input-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Smart Strength Indicators -->
+                        <div class="space-y-1.5 p-3 rounded-xl border text-left" :class="isDarkTheme ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'">
+                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Kekuatan Sandi Baru:</span>
+                            <div class="flex items-center gap-2 text-xs" :class="passwordChecks.length ? 'text-emerald-400 font-medium' : 'text-slate-400'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" :d="passwordChecks.length ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'" />
+                                </svg>
+                                Minimal 8 karakter
+                            </div>
+                            <div class="flex items-center gap-2 text-xs" :class="passwordChecks.upper ? 'text-emerald-400 font-medium' : 'text-slate-400'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" :d="passwordChecks.upper ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'" />
+                                </svg>
+                                Huruf besar (A-Z)
+                            </div>
+                            <div class="flex items-center gap-2 text-xs" :class="passwordChecks.lower ? 'text-emerald-400 font-medium' : 'text-slate-400'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" :d="passwordChecks.lower ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'" />
+                                </svg>
+                                Huruf kecil (a-z)
+                            </div>
+                            <div class="flex items-center gap-2 text-xs" :class="passwordChecks.number ? 'text-emerald-400 font-medium' : 'text-slate-400'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" :d="passwordChecks.number ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'" />
+                                </svg>
+                                Angka (0-9)
+                            </div>
+                            <div class="flex items-center gap-2 text-xs" :class="passwordChecks.special ? 'text-emerald-400 font-medium' : 'text-slate-400'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" :d="passwordChecks.special ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'" />
+                                </svg>
+                                Karakter khusus (@, #, $, dll)
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-login" :disabled="loading || !isPasswordStrong || form.password !== form.password_confirm">
+                            <span x-show="!loading" class="flex items-center gap-2">
+                                Perbarui Password
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </span>
+                            <span x-show="loading" class="flex items-center gap-2" x-cloak>
+                                <span class="spinner"></span>
+                                Memperbarui...
                             </span>
                         </button>
                     </form>
@@ -1145,9 +1303,12 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
     <script>
         function loginPage() {
             return {
+                mode: 'login', // login | signup | forgot | reset
                 form: {
                     email: '',
-                    password: ''
+                    password: '',
+                    password_confirm: '',
+                    resetToken: ''
                 },
                 errors: {},
                 errorMsg: '',
@@ -1170,11 +1331,35 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                 waveGain: null,
                 waveInterval: null,
 
+                // Password strength checkers
+                get passwordChecks() {
+                    const pass = this.form.password || '';
+                    return {
+                        length: pass.length >= 8,
+                        upper: /[A-Z]/.test(pass),
+                        lower: /[a-z]/.test(pass),
+                        number: /[0-9]/.test(pass),
+                        special: /[^a-zA-Z0-9]/.test(pass)
+                    };
+                },
+
+                get isPasswordStrong() {
+                    const checks = this.passwordChecks;
+                    return checks.length && checks.upper && checks.lower && checks.number && checks.special;
+                },
+
                 init() {
                     const token = localStorage.getItem('token');
                     if (token) {
                         window.location.href = '/peace_seafood/dashboard';
                         return;
+                    }
+
+                    // Check URL query parameters for reset token
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('token')) {
+                        this.mode = 'reset';
+                        this.form.resetToken = urlParams.get('token');
                     }
 
                     // Set Initial Time Theme
@@ -1267,6 +1452,74 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                         }
                         const msg = e.response?.data?.message || 'Email atau password salah';
                         this.showSweetAlert('Gagal Masuk', msg, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async doSignup() {
+                    if (!this.form.email.trim()) {
+                        this.errors.email = 'Email wajib diisi';
+                        return;
+                    }
+                    this.loading = true;
+                    this.errors = {};
+                    try {
+                        const response = await axios.post('/peace_seafood/api/auth/signup', {
+                            email: this.form.email
+                        });
+                        this.showSweetAlert('Sukses', response.data?.message || 'Registrasi berhasil, password telah dikirim!', 'success');
+                        this.mode = 'login';
+                    } catch (e) {
+                        const msg = e.response?.data?.message || 'Pendaftaran gagal. Pastikan email Anda sudah disetujui Developer.';
+                        this.showSweetAlert('Gagal Pendaftaran', msg, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async doForgotPassword() {
+                    if (!this.form.email.trim()) {
+                        this.errors.email = 'Email wajib diisi';
+                        return;
+                    }
+                    this.loading = true;
+                    this.errors = {};
+                    try {
+                        const response = await axios.post('/peace_seafood/api/auth/forgot-password', {
+                            email: this.form.email
+                        });
+                        this.showSweetAlert('Sukses', response.data?.message || 'Instruksi reset sandi telah dikirim ke email Anda.', 'success');
+                        this.mode = 'login';
+                    } catch (e) {
+                        const msg = e.response?.data?.message || 'Gagal mengirim email reset password.';
+                        this.showSweetAlert('Gagal Kirim', msg, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async doResetPassword() {
+                    if (!this.isPasswordStrong) {
+                        this.showSweetAlert('Gagal', 'Password Anda belum memenuhi kriteria keamanan!', 'error');
+                        return;
+                    }
+                    if (this.form.password !== this.form.password_confirm) {
+                        this.showSweetAlert('Gagal', 'Konfirmasi password tidak cocok!', 'error');
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        const response = await axios.post('/peace_seafood/api/auth/reset-password', {
+                            token: this.form.resetToken,
+                            password: this.form.password
+                        });
+                        this.showSweetAlert('Sukses', response.data?.message || 'Password berhasil diperbarui!', 'success');
+                        this.mode = 'login';
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } catch (e) {
+                        const msg = e.response?.data?.message || 'Token tidak valid atau sudah kedaluwarsa.';
+                        this.showSweetAlert('Gagal Reset', msg, 'error');
                     } finally {
                         this.loading = false;
                     }

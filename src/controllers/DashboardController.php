@@ -18,8 +18,64 @@ class DashboardController
         RoleMiddleware::requirePermission('dashboard.view');
         $user     = AuthMiddleware::getAuthUser();
         $userRole = strtolower($user['role'] ?? '');
+
+        if ($userRole === 'saas_owner') {
+            $totalGudang = (int)(\App\Utils\Database::fetchOne("SELECT COUNT(*) as cnt FROM gudang")['cnt'] ?? 0);
+            $todayStr = date('Y-m-d');
+            // Aktif: masa sewa masih berlaku DAN status aktif
+            $activeGudang = (int)(\App\Utils\Database::fetchOne(
+                "SELECT COUNT(*) as cnt FROM gudang WHERE subscription_until >= ? AND status_langganan = 'aktif'",
+                [$todayStr]
+            )['cnt'] ?? 0);
+            // Expired: masa sewa habis (bukan NULL) ATAU di-suspend
+            $expiredGudang = (int)(\App\Utils\Database::fetchOne(
+                "SELECT COUNT(*) as cnt FROM gudang WHERE (subscription_until IS NOT NULL AND subscription_until < ?) OR status_langganan = 'suspend'",
+                [$todayStr]
+            )['cnt'] ?? 0);
+            // Belum onboarding: subscription_until masih NULL dan status aktif
+            $pendingOnboarding = (int)(\App\Utils\Database::fetchOne(
+                "SELECT COUNT(*) as cnt FROM gudang WHERE subscription_until IS NULL AND status_langganan = 'aktif'"
+            )['cnt'] ?? 0);
+            
+            $totalUsers = (int)(\App\Utils\Database::fetchOne("SELECT COUNT(*) as cnt FROM users")['cnt'] ?? 0);
+            $pendingInvites = (int)(\App\Utils\Database::fetchOne("SELECT COUNT(*) as cnt FROM users WHERE registration_status = 'pending_signup'")['cnt'] ?? 0);
+            
+            $totalSalesAll = (float)(\App\Utils\Database::fetchOne("SELECT SUM(total) as tot FROM nota WHERE status = 'final'")['tot'] ?? 0);
+            $totalSalesCount = (int)(\App\Utils\Database::fetchOne("SELECT COUNT(*) as cnt FROM nota WHERE status = 'final'")['cnt'] ?? 0);
+
+            // Fetch tenants list
+            $tenants = \App\Utils\Database::fetchAll("
+                SELECT g.id, g.nama as nama_gudang, g.kota, g.subscription_until, g.status_langganan,
+                       (SELECT name FROM users WHERE id_gudang = g.id AND role = 'bos' LIMIT 1) as nama_bos,
+                       (SELECT email FROM users WHERE id_gudang = g.id AND role = 'bos' LIMIT 1) as email_bos,
+                       (SELECT COUNT(*) FROM users WHERE id_gudang = g.id) as user_count,
+                       (SELECT COUNT(*) FROM nota WHERE id_gudang = g.id) as sales_count
+                FROM gudang g
+                ORDER BY g.id DESC
+            ");
+
+            // Fetch platform setting
+            $wa = \App\Utils\Database::fetchOne("SELECT nilai FROM settings WHERE kunci = 'platform_developer_whatsapp' LIMIT 1");
+            $whatsapp = $wa ? $wa['nilai'] : '628123456789';
+
+            \App\Utils\Response::success([
+                'is_saas_dashboard'   => true,
+                'total_gudang'         => $totalGudang,
+                'active_gudang'        => $activeGudang,
+                'expired_gudang'       => $expiredGudang,
+                'pending_onboarding'   => $pendingOnboarding,
+                'total_users'          => $totalUsers,
+                'pending_invites'      => $pendingInvites,
+                'total_sales_all'      => $totalSalesAll,
+                'total_sales_count'    => $totalSalesCount,
+                'tenants'              => $tenants,
+                'developer_whatsapp'   => $whatsapp
+            ]);
+            return;
+        }
+
         $idGudang = $this->resolveGudang($user);
-        $isBos    = in_array($userRole, ['bos', 'super_admin'], true);
+        $isBos    = in_array($userRole, ['bos', 'super_admin', 'saas_owner'], true);
 
         $stokService     = new StokService();
         $keuanganService = new KeuanganService();
@@ -168,6 +224,19 @@ class DashboardController
             }
         }
 
+        // Draft nota dari Checker yang belum difinalisasi
+        if ($isBos && $idGudang === 0) {
+            $draftPendingRow = Database::fetchOne(
+                "SELECT COUNT(*) as cnt FROM nota WHERE status = 'draft' AND catatan LIKE '%[Draft oleh Checker%'"
+            );
+        } else {
+            $draftPendingRow = Database::fetchOne(
+                "SELECT COUNT(*) as cnt FROM nota WHERE id_gudang = ? AND status = 'draft' AND catatan LIKE '%[Draft oleh Checker%'",
+                [$idGudang]
+            );
+        }
+        $draftPendingCount = (int)($draftPendingRow['cnt'] ?? 0);
+
         Response::success([
             'total_produk'         => $totalProduk,
             'total_stok_value'     => $totalStokValue,
@@ -192,13 +261,14 @@ class DashboardController
             ],
             'latest_logs'          => $latestLogs,
             'cold_storage_capacity'=> $coldStorageCapacity,
+            'draft_pending_count'  => $draftPendingCount,
         ]);
     }
 
     private function resolveGudang(array $user): int
     {
         $role = strtolower($user['role'] ?? '');
-        if (in_array($role, ['bos', 'super_admin'], true)) {
+        if (in_array($role, ['bos', 'super_admin', 'saas_owner'], true)) {
             return !empty($_GET['id_gudang']) ? (int)$_GET['id_gudang'] : 0;
         }
         return (int)($user['id_gudang'] ?? 0);

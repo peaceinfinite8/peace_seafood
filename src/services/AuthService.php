@@ -124,23 +124,38 @@ class AuthService
         return Database::update('users', ['is_active' => 0], 'id = ?', [$userId]);
     }
 
-    /**
-     * Get all users (for BOZ admin)
-     */
-    public function getAllUsers(?int $idGudang = null): array
+    public function getAllUsers(array $requester): array
     {
-        if ($idGudang) {
+        $role = $requester['role'] ?? '';
+
+        if ($role === 'super_admin' || $role === 'saas_owner') {
             return Database::fetchAll(
                 "SELECT u.id, u.name, u.email, u.role, u.id_gudang, u.is_active, g.nama as nama_gudang
                  FROM users u LEFT JOIN gudang g ON u.id_gudang = g.id
-                 WHERE u.id_gudang = ? ORDER BY u.name",
-                [$idGudang]
+                 ORDER BY u.role, u.name"
             );
         }
+
+        if ($role === 'bos') {
+            $bosId = (int)$requester['id'];
+            return Database::fetchAll(
+                "SELECT u.id, u.name, u.email, u.role, u.id_gudang, u.is_active, g.nama as nama_gudang
+                 FROM users u 
+                 LEFT JOIN gudang g ON u.id_gudang = g.id
+                 WHERE (u.id_gudang IN (SELECT id FROM gudang WHERE id_bos = ?) OR u.id = ?)
+                   AND u.role NOT IN ('super_admin', 'saas_owner')
+                 ORDER BY u.role, u.name",
+                [$bosId, $bosId]
+            );
+        }
+
+        $idGudang = (int)($requester['id_gudang'] ?? 0);
         return Database::fetchAll(
             "SELECT u.id, u.name, u.email, u.role, u.id_gudang, u.is_active, g.nama as nama_gudang
              FROM users u LEFT JOIN gudang g ON u.id_gudang = g.id
-             ORDER BY u.role, u.name"
+             WHERE u.id_gudang = ? AND u.role NOT IN ('super_admin', 'saas_owner')
+             ORDER BY u.name",
+            [$idGudang]
         );
     }
 }

@@ -25,6 +25,13 @@ class RoleMiddleware
 
         $roles = (array) $roles;
 
+        // Bypass strictly for verified super_admin and saas_owner roles from database session
+        // NOTE: admin no longer bypasses permission checks to avoid unintended privilege escalation.
+        $currentRole = $user['role'] ?? '';
+        if ($currentRole === 'super_admin' || $currentRole === 'saas_owner') {
+            return;
+        }
+
         if (!in_array($user['role'], $roles, true)) {
             Response::forbidden(
                 'Role ' . strtoupper($user['role']) . ' tidak memiliki akses ke resource ini.'
@@ -39,6 +46,12 @@ class RoleMiddleware
     {
         $user = AuthMiddleware::user();
         if (empty($user)) return false;
+
+        // Bypass strictly for verified super_admin and saas_owner roles from database session
+        $currentRole = $user['role'] ?? '';
+        if ($currentRole === 'super_admin' || $currentRole === 'saas_owner') {
+            return true;
+        }
 
         $permissions = require __DIR__ . '/../../config/roles.php';
         $rolePerms   = $permissions[$user['role']] ?? [];

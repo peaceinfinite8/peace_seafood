@@ -99,6 +99,9 @@
                                     <span class="badge"
                                         :class="{'badge-success':nota.status==='final','badge-warning':nota.status==='draft','badge-gray':nota.status==='cancelled'}"
                                         x-text="nota.status?.toUpperCase()"></span>
+                                    <template x-if="nota.status === 'draft' && nota.catatan && nota.catatan.includes('[Draft oleh Checker')">
+                                        <span class="badge badge-warning ml-1" style="background: rgba(245,158,11,0.15); color: var(--color-warning); border: 1px solid rgba(245,158,11,0.3);" title="Dikirim oleh Checker">Dari Checker</span>
+                                    </template>
                                 </td>
                                 <td>
                                     <div class="flex gap-2">
@@ -106,9 +109,11 @@
                                             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                         </button>
                                         <button x-show="nota.status === 'draft' && ['admin','super_admin'].includes(user.role)"
-                                            @click="finalizeNota(nota.id)"
-                                            class="btn btn-success p-1.5" title="Finalize">
-                                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                            @click="openFinalizeModal(nota)"
+                                            class="btn btn-success px-2.5 py-1.5 text-xs flex items-center gap-1 font-semibold"
+                                            title="Finalisasi Transaksi">
+                                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                            Finalisasi Transaksi
                                         </button>
                                         <button x-show="nota.status === 'final' && (nota.pembayaran || nota.jenis_pembayaran) === 'hutang' && nota.status_pembayaran !== 'lunas' && ['admin','super_admin'].includes(user.role)"
                                             @click="openBayarDirect(nota)"
@@ -219,9 +224,14 @@
                                     <option value="a4">A4 (Nota Kantor)</option>
                                     <option value="a5">A5 (Nota Tradisional)</option>
                                     <option value="thermal">Thermal 80mm</option>
+                                    <option value="thermal58">Thermal 58mm</option>
                                 </select>
                             </div>
                             <div class="flex gap-2">
+                                <a :href="getWhatsAppShareLink()" target="_blank" class="btn btn-success btn-sm flex items-center gap-1.5" style="background:#25D366; color:white;" x-show="detail">
+                                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                    Kirim via WhatsApp
+                                </a>
                                 <button @click="printInvoice()" class="btn btn-primary btn-sm flex items-center gap-1.5">
                                     <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                                     Cetak Nota
@@ -271,6 +281,98 @@
                 </div>
             </div>
         </div>
+
+        <!-- Finalize Modal (Modal Finalisasi Transaksi dengan Pembayaran) -->
+        <div class="modal-overlay" x-show="showFinalizeModal" @click.self="showFinalizeModal = false" x-cloak>
+            <div class="modal-box max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg flex items-center gap-2" style="color: var(--text-primary)">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
+                        Finalisasi Transaksi Penjualan
+                    </h3>
+                    <button @click="showFinalizeModal = false" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div x-show="finalizeNotaData" class="mb-4 space-y-1.5 p-4 rounded-xl shadow-inner bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div class="flex justify-between text-sm">
+                        <span style="color: var(--text-secondary)">No. Nota:</span>
+                        <strong class="font-mono" x-text="finalizeNotaData?.no_nota"></strong>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span style="color: var(--text-secondary)">Pembeli:</span>
+                        <strong x-text="finalizeNotaData?.nama_pembeli || 'Umum'"></strong>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 mt-2 border-t text-base font-bold" style="border-color: var(--border-color)">
+                        <span style="color: var(--text-primary)">Total Tagihan:</span>
+                        <span style="color: var(--color-success)" x-text="'Rp ' + parseFloat(finalizeNotaData?.total || 0).toLocaleString('id-ID')"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="form-group">
+                        <label class="form-label block text-sm font-semibold mb-1">Metode Pembayaran <span class="text-red-500">*</span></label>
+                        <select x-model="finalizeForm.jenis_pembayaran" class="form-input w-full" @change="onFinalizePaymentChange()">
+                            <option value="cash">CASH (TUNAI)</option>
+                            <option value="hutang">HUTANG (TEMPO)</option>
+                            <option value="transfer">TRANSFER BANK</option>
+                        </select>
+                    </div>
+
+                    <!-- Bank Account Dropdown (Visible only when TRANSFER is chosen) -->
+                    <div class="form-group" x-show="finalizeForm.jenis_pembayaran === 'transfer'">
+                        <label class="form-label block text-sm font-semibold mb-1">Bank Tujuan <span class="text-red-500">*</span></label>
+                        <select x-model="finalizeForm.bank_account_id" class="form-input w-full">
+                            <option value="">-- Pilih Rekening --</option>
+                            <template x-for="b in bankAccounts" :key="b.id">
+                                <option :value="b.id" x-text="b.bank_name + ' - ' + b.account_name"></option>
+                            </template>
+                        </select>
+                        <p class="text-xs mt-1.5" style="color: var(--text-secondary)" x-show="selectedBank">
+                            No. Rek: <span class="font-semibold" x-text="selectedBank?.account_number"></span> |
+                            Pemilik: <span class="font-semibold" x-text="selectedBank?.account_name"></span>
+                        </p>
+                    </div>
+
+                    <!-- Credit Limit Warning Box (Visible only when HUTANG is chosen) -->
+                    <div class="form-group" x-show="finalizeForm.jenis_pembayaran === 'hutang' && creditInfo">
+                        <div class="p-3 rounded-lg border text-xs" :class="creditInfo?.is_over ? 'border-red-400 bg-red-50 dark:bg-red-950/20' : 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20'">
+                            <p class="font-bold" :style="creditInfo?.is_over ? 'color:#dc2626' : 'color:#059669'">
+                                <span x-text="creditInfo?.is_over ? 'Peringatan Kredit Terlampaui!' : 'Sisa Kredit Tersedia' "></span>
+                            </p>
+                            <p class="mt-1" :style="creditInfo?.is_over ? 'color:#b91c1c' : 'color:#047857'">
+                                Limit Kredit: <span class="font-semibold" x-text="formatRupiah(creditInfo?.kredit_limit || 0)"></span> <br>
+                                Outstanding: <span class="font-semibold" x-text="formatRupiah(creditInfo?.outstanding || 0)"></span> <br>
+                                Sisa Tersedia: <span class="font-semibold" x-text="formatRupiah(creditInfo?.available || 0)"></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label block text-sm font-semibold mb-1">Catatan Transaksi</label>
+                        <input type="text" x-model="finalizeForm.catatan" class="form-input w-full" placeholder="Catatan internal kasir...">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button @click="submitFinalizeDraft()" class="btn btn-success flex-1 font-semibold flex items-center justify-center gap-1.5" :disabled="submittingFinalize">
+                        <template x-if="!submittingFinalize">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                Konfirmasi & Finalisasi
+                            </span>
+                        </template>
+                        <template x-if="submittingFinalize">
+                            <span class="flex items-center gap-1.5">
+                                <div class="animate-spin w-4 h-4 rounded-full border-2 border-white" style="border-top-color: transparent"></div>
+                                Memproses...
+                            </span>
+                        </template>
+                    </button>
+                    <button @click="showFinalizeModal = false" class="btn btn-secondary flex-1 font-semibold">Batal</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Printable Invoice Template -->
@@ -278,7 +380,7 @@
         <template x-if="detail">
             <div>
                 <!-- A4 & A5 Layouts -->
-                <div x-show="printLayout !== 'thermal'">
+                <div x-show="printLayout === 'a4' || printLayout === 'a5'">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 10px;">
                         <div>
                             <h1 style="font-size: 20px; font-weight: bold; margin: 0; text-transform: uppercase; color: #111;">PEACE SEAFOOD</h1>
@@ -402,8 +504,8 @@
                     </div>
                 </div>
 
-                <!-- Thermal 80mm Layout -->
-                <div x-show="printLayout === 'thermal'" style="font-family: 'Courier New', Courier, monospace;">
+                <!-- Thermal 80mm & 58mm Layouts -->
+                <div x-show="printLayout === 'thermal' || printLayout === 'thermal58'" style="font-family: 'Courier New', Courier, monospace;">
                     <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
                         <h1 style="font-size: 14px; font-weight: bold; margin: 0 0 2px 0;">PEACE SEAFOOD</h1>
                         <p style="margin: 0; font-size: 9px;">Gudang: <span x-text="detail.nama_gudang || '-'"></span></p>
@@ -510,7 +612,11 @@ function ensureLucide(cb) {
 
 function penjualanPage() {
     return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
+        user: (() => {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            if (u && u.role) u.role = u.role.toLowerCase();
+            return u;
+        })(),
         loading: true,
         notaList: [],
         search: '',
@@ -523,6 +629,12 @@ function penjualanPage() {
         showBayarModal: false,
         selectedNota: null,
         bayarForm: { id_hutang_piutang: '', nominal_bayar: '', tanggal_bayar: new Date().toISOString().split('T')[0], catatan: '' },
+        showFinalizeModal: false,
+        finalizeNotaData: null,
+        finalizeForm: { jenis_pembayaran: 'cash', bank_account_id: '', catatan: '' },
+        submittingFinalize: false,
+        creditInfo: null,
+        bankAccounts: [],
 
         get filteredNota() {
             const q = this.search.toLowerCase();
@@ -532,16 +644,114 @@ function penjualanPage() {
             );
         },
 
+        get selectedBank() {
+            return this.bankAccounts.find(b => String(b.id) === String(this.finalizeForm.bank_account_id)) || null;
+        },
+
         async init() {
             if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
                 window.location.href = '/peace_seafood/dashboard';
                 return;
             }
             await this.loadData();
+            await this.loadBankAccounts();
+
+            // Check for deep-linked invoice detail & print
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('highlight');
+            if (highlightId && highlightId.startsWith('nota-')) {
+                const id = highlightId.replace('nota-', '');
+                await this.showDetail(id);
+                if (urlParams.get('print') === 'true') {
+                    this.printLayout = 'thermal';
+                    this.$nextTick(() => {
+                        this.printInvoice();
+                    });
+                }
+            }
+
             this.$nextTick(() => {
                 ensureLucide(() => window.lucide.createIcons());
                 this.initDatePickers();
             });
+        },
+
+        async loadBankAccounts() {
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: 'Bearer ' + token };
+                const res = await axios.get('/peace_seafood/api/settings/bank-accounts', { headers });
+                this.bankAccounts = res.data?.data || [];
+            } catch(e) { console.error(e); }
+        },
+
+        openFinalizeModal(nota) {
+            this.finalizeNotaData = nota;
+            this.finalizeForm = {
+                jenis_pembayaran: (nota.pembayaran || nota.jenis_pembayaran) === 'hutang' ? 'hutang' : 'cash',
+                bank_account_id: nota.bank_account_id || '',
+                catatan: nota.catatan || ''
+            };
+            this.creditInfo = null;
+            this.showFinalizeModal = true;
+            this.onFinalizePaymentChange();
+            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+
+        async onFinalizePaymentChange() {
+            if (this.finalizeForm.jenis_pembayaran === 'hutang') {
+                await this.loadCreditStatus();
+            } else {
+                this.creditInfo = null;
+            }
+        },
+
+        async loadCreditStatus() {
+            this.creditInfo = null;
+            if (!this.finalizeNotaData || !this.finalizeNotaData.id_pembeli || isNaN(Number(this.finalizeNotaData.id_pembeli)) || this.finalizeForm.jenis_pembayaran !== 'hutang') return;
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: 'Bearer ' + token };
+                const res = await axios.get('/peace_seafood/api/master/pembeli/' + this.finalizeNotaData.id_pembeli + '/credit-status', { headers });
+                this.creditInfo = res.data?.data || null;
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        async submitFinalizeDraft() {
+            if (this.finalizeForm.jenis_pembayaran === 'transfer' && !this.finalizeForm.bank_account_id) {
+                iziToast.warning({ title: 'Peringatan', message: 'Rekening bank wajib dipilih', position: 'topRight' });
+                return;
+            }
+            if (this.finalizeForm.jenis_pembayaran === 'hutang' && this.creditInfo && this.creditInfo.is_over) {
+                iziToast.warning({ title: 'Peringatan', message: 'Limit kredit terlampaui!', position: 'topRight' });
+                return;
+            }
+            this.submittingFinalize = true;
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: 'Bearer ' + token };
+                const payload = {
+                    jenis_pembayaran: this.finalizeForm.jenis_pembayaran,
+                    bank_account_id: this.finalizeForm.bank_account_id ? parseInt(this.finalizeForm.bank_account_id) : null,
+                    catatan: this.finalizeForm.catatan
+                };
+                
+                // 1. Update draft payment details
+                await axios.put('/peace_seafood/api/penjualan/' + this.finalizeNotaData.id, payload, { headers });
+                
+                // 2. Finalize draft sale
+                await axios.post('/peace_seafood/api/penjualan/' + this.finalizeNotaData.id + '/finalize', {}, { headers });
+                
+                iziToast.success({ title: 'Berhasil', message: 'Nota berhasil difinalisasi!', position: 'topRight' });
+                this.showFinalizeModal = false;
+                await this.loadData();
+            } catch(e) {
+                iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal finalisasi nota', position: 'topRight' });
+            } finally {
+                this.submittingFinalize = false;
+            }
         },
 
         initDatePickers() {
@@ -696,6 +906,41 @@ function penjualanPage() {
         formatRupiah(n) {
             let val = parseFloat(n || 0);
             return 'Rp ' + val.toLocaleString('id-ID');
+        },
+        getWhatsAppShareLink() {
+            if (!this.detail) return '#';
+            const phone = this.detail.telepon_pembeli ? this.detail.telepon_pembeli.replace(/[^0-9]/g, '') : '';
+            let formattedPhone = phone;
+            if (formattedPhone.startsWith('0')) {
+                formattedPhone = '62' + formattedPhone.slice(1);
+            }
+            
+            const companyName = this.detail.nama_gudang || 'Peace Seafood';
+            let msg = `Halo *${this.detail.nama_pembeli || 'Umum'}*,\n\n`;
+            msg += `Berikut adalah nota pembelian Anda dari *${companyName}*:\n\n`;
+            msg += `📄 *No Nota:* ${this.detail.no_nota}\n`;
+            msg += `📅 *Tanggal:* ${this.formatDate(this.detail.tanggal_nota)}\n\n`;
+            
+            msg += `*Rincian Belanja:*\n`;
+            if (this.detail.items && this.detail.items.length > 0) {
+                this.detail.items.forEach(item => {
+                    msg += `- *${item.nama_produk}*: ${this.formatWeight(item.qty, item.satuan)} x ${this.formatRupiah(item.harga_jual)} = ${this.formatRupiah(item.subtotal)}\n`;
+                });
+            }
+            msg += `\n`;
+            
+            msg += `💵 *Subtotal:* ${this.formatRupiah(this.detail.subtotal)}\n`;
+            if (parseFloat(this.detail.diskon_nominal || 0) > 0) {
+                msg += `✂️ *Diskon:* -${this.formatRupiah(this.detail.diskon_nominal)}\n`;
+            }
+            if (parseFloat(this.detail.pajak || 0) > 0) {
+                msg += `➕ *Pajak:* +${this.formatRupiah(this.detail.pajak)}\n`;
+            }
+            msg += `💰 *TOTAL TAGIHAN:* *${this.formatRupiah(this.detail.total)}*\n\n`;
+            msg += `💳 *Metode Bayar:* ${(this.detail.pembayaran || '').toUpperCase()} (${(this.detail.status_pembayaran || '').toUpperCase()})\n\n`;
+            msg += `Terima kasih atas kepercayaan Anda kepada kami! 🐟✨`;
+            
+            return 'https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(msg);
         },
         printInvoice() {
             this.$nextTick(() => {
