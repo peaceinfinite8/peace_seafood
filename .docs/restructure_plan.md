@@ -14,18 +14,24 @@ Reduce duplicate files and tighten the project structure without breaking runtim
   - Duplicate source copy: [public/manifest.json](../public/manifest.json)
   - Generated build manifest: [public/build/manifest.json](../public/build/manifest.json)
 
+### Recent actions
+
+- Removed redundant root `check.php` copy; `public/check.php` remains the web-root placeholder.
+- Deleted tracked `public/manifest.json`; `scripts/build-assets.mjs` now copies the canonical root `manifest.json` into `public/manifest.json` during builds.
+- Updated `.docs/merge_prepare.md` to reflect current duplicates.
+
 ## Step-by-Step Execution Checklist
 
 ### Phase 1: Confirm source of truth
 
-- [ ] Keep [manifest.json](../manifest.json) as the canonical PWA manifest.
-- [ ] Decide whether [public/manifest.json](../public/manifest.json) should be removed or converted into a deployment-specific copy.
-- [ ] Keep [public/build/manifest.json](../public/build/manifest.json) as a generated build artifact.
+- [x] Keep [manifest.json](../manifest.json) as the canonical PWA manifest.
+- [x] Decide whether [public/manifest.json](../public/manifest.json) should be removed or converted into a deployment-specific copy.
+- [x] Keep [public/build/manifest.json](../public/build/manifest.json) as a generated build artifact.
 
 ### Phase 2: Remove only true duplicates
 
-- [ ] Keep [public/check.php](../public/check.php) as the surviving security placeholder.
-- [ ] Do not reintroduce the deleted root-level `check.php` copy.
+- [x] Keep [public/check.php](../public/check.php) as the surviving security placeholder.
+- [x] Do not reintroduce the deleted root-level `check.php` copy.
 - [ ] Leave `.gitkeep` files in place unless directory ownership changes.
 
 ### Phase 3: Review same-name groups

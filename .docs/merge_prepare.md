@@ -1,5 +1,7 @@
 ﻿# merge_prepare.md - duplicate scan
-Generated: 2026-05-30T02:20:15.5925681+07:00
+Generated: 2026-05-30T10:00:00.0000000+07:00
+
+Recent actions: removed tracked `public/manifest.json`; build script now copies root `manifest.json` into `public/` during asset build.
 
 ## Duplicates by filename
 ### .htaccess (count: 2)
