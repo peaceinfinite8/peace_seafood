@@ -62,9 +62,9 @@ $routes = [
     // Master Data
     '/master-data'         => ['master-data/index', 'Master Data', 'master-data'],
     '/master-data/supplier'    => ['master-data/supplier', 'Data Supplier', 'master-data'],
-    '/master-data/pembeli'     => ['master-data/pembeli', 'Data Pembeli', 'master-data'],
+    '/master-data/pembeli'     => ['master-data/pembeli.view', 'Data Pembeli', 'master-data'],
     '/master-data/jenis-ikan'  => ['master-data/jenis-ikan', 'Jenis Ikan', 'master-data'],
-    '/master-data/produk'      => ['master-data/produk', 'Data Produk', 'master-data'],
+    '/master-data/produk'      => ['master-data/produk.view', 'Data Produk', 'master-data'],
     '/migrasi'                 => ['master-data/migrasi', 'Pusat Migrasi Data Bahari', 'migrasi'],
 
     // Stok Lanjutan
