@@ -1,7 +1,5 @@
 ﻿# merge_prepare.md - duplicate scan
-Generated: 2026-05-30T10:00:00.0000000+07:00
-
-Recent actions: removed tracked `public/manifest.json`; build script now copies root `manifest.json` into `public/` during asset build.
+Generated: 2026-05-30T05:01:09.8897258+07:00
 
 ## Duplicates by filename
 ### .htaccess (count: 2)
@@ -44,14 +42,6 @@ Recent actions: removed tracked `public/manifest.json`; build script now copies 
 - C:\xampp\htdocs\peace_seafood\storage\exports\pdf\.gitkeep
 - C:\xampp\htdocs\peace_seafood\storage\logs\.gitkeep
 - C:\xampp\htdocs\peace_seafood\storage\uploads\.gitkeep
-
-### Pembeli.php (count: 2)
-- C:\xampp\htdocs\peace_seafood\src\models\Pembeli.php
-- C:\xampp\htdocs\peace_seafood\src\views\master-data\pembeli.php
-
-### Produk.php (count: 2)
-- C:\xampp\htdocs\peace_seafood\src\models\Produk.php
-- C:\xampp\htdocs\peace_seafood\src\views\master-data\produk.php
 
 ### Supplier.php (count: 2)
 - C:\xampp\htdocs\peace_seafood\src\models\Supplier.php
