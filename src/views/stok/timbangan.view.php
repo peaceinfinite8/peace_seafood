@@ -59,18 +59,18 @@
 
                 <form @submit.prevent="submitTimbangan()">
                     <div class="form-group">
-                        <label class="form-label">Qty Actual (kg) <span class="text-red-500">*</span></label>
+                        <label class="form-label">Qty Actual (kg) <span style="color: var(--color-danger)">*</span></label>
                         <input type="number" x-model="form.qty_actual" class="form-input"
                             min="0" step="0.01" @input="calcSusut()" required>
                     </div>
 
                     <!-- Susut indicator -->
                     <div class="p-3 rounded-lg mb-4"
-                        :style="susut < 0 ? 'background: rgba(239,68,68,0.1)' : 'background: rgba(16,185,129,0.1)'"
+                        :style="susut > 0 ? 'background-color: rgba(220,38,38,0.1); border-left: 4px solid var(--color-danger)' : 'background-color: rgba(22,163,74,0.1); border-left: 4px solid var(--color-success)'"
                         x-show="form.qty_actual">
                         <div class="flex justify-between text-sm">
                             <span>Susut:</span>
-                            <span :class="susut > 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold'"
+                            <span :style="susut > 0 ? 'color: var(--color-danger); font-weight: bold;' : 'color: var(--color-success); font-weight: bold;'"
                                 x-text="(susut > 0 ? '-' : '') + formatKg(Math.abs(susut), 2) + ' (' + susutPersen.toFixed(1) + '%)'"></span>
                         </div>
                     </div>

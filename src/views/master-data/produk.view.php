@@ -39,7 +39,7 @@
                             <td class="text-sm font-medium" style="color:var(--color-primary)" x-text="'Rp ' + parseFloat(p.harga_jual||0).toLocaleString('id-ID')"></td>
                             <td class="text-sm" x-text="formatQty(p.stok_minimum, p.satuan)"></td>
                             <td>
-                                <span class="font-semibold text-sm" :class="parseFloat(p.stok_qty||0) < parseFloat(p.stok_minimum||0) ? 'text-red-500' : 'text-green-500'"
+                                <span class="font-semibold text-sm" :style="parseFloat(p.stok_qty||0) < parseFloat(p.stok_minimum||0) ? 'color: var(--color-danger)' : 'color: var(--color-success)'"
                                     x-text="formatQty(p.stok_qty, p.satuan)"></span>
                             </td>
                             <td>

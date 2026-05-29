@@ -68,7 +68,7 @@
             </div>
             <form @submit.prevent="save()">
                 <div class="form-group">
-                    <label class="form-label">Nama <span class="text-red-500">*</span></label>
+                    <label class="form-label">Nama <span style="color: var(--color-danger)">*</span></label>
                     <input type="text" x-model="form.nama" class="form-input" required>
                 </div>
                 <div class="form-group">
