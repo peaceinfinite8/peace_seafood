@@ -21,11 +21,12 @@ class LaporanController
     public function stok(): void
     {
         RoleMiddleware::requirePermission('laporan.view');
-        $user     = AuthMiddleware::getAuthUser();
-        $idGudang = AuthMiddleware::resolveGudang();
-        $filters  = ['dari' => $_GET['dari'] ?? null, 'sampai' => $_GET['sampai'] ?? null];
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
+        $filters = ['dari' => $_GET['dari'] ?? null, 'sampai' => $_GET['sampai'] ?? null];
 
-        $data = (new StokService())->getHistory($idGudang, $filters, AuthMiddleware::isAllGudang());
+        $data = (new StokService())->getHistory($idGudang, $filters, $allGudang);
         Response::success($data);
     }
 
@@ -35,14 +36,16 @@ class LaporanController
     public function penjualan(): void
     {
         RoleMiddleware::requirePermission('laporan.view');
-        $idGudang = AuthMiddleware::resolveGudang();
-        $filters  = [
-            'dari'   => $_GET['dari']   ?? null,
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
+        $filters = [
+            'dari' => $_GET['dari'] ?? null,
             'sampai' => $_GET['sampai'] ?? null,
             'status' => $_GET['status'] ?? null,
         ];
 
-        $data = (new PenjualanService())->getNotaList($idGudang, $filters, AuthMiddleware::isAllGudang());
+        $data = (new PenjualanService())->getNotaList($idGudang, $filters, $allGudang);
         Response::success($data);
     }
 
@@ -52,8 +55,10 @@ class LaporanController
     public function keuangan(): void
     {
         RoleMiddleware::requirePermission('laporan.view');
-        $idGudang = AuthMiddleware::resolveGudang();
-        $summary  = (new KeuanganService())->getSummary($idGudang, AuthMiddleware::isAllGudang());
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
+        $summary = (new KeuanganService())->getSummary($idGudang, $allGudang);
         Response::success($summary);
     }
 
@@ -63,8 +68,10 @@ class LaporanController
     public function hutangAging(): void
     {
         RoleMiddleware::requirePermission('laporan.view');
-        $idGudang = AuthMiddleware::resolveGudang();
-        $data     = (new KeuanganService())->getHutangAging($idGudang, AuthMiddleware::isAllGudang());
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
+        $data = (new KeuanganService())->getHutangAging($idGudang, $allGudang);
         Response::success($data);
     }
 
@@ -74,13 +81,13 @@ class LaporanController
     public function exportPdf(): void
     {
         RoleMiddleware::requirePermission('laporan.export');
-        $user      = AuthMiddleware::getAuthUser();
-        $idGudang  = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
 
-        $tipe      = $_GET['tab'] ?? $_GET['tipe'] ?? 'penjualan';
-        $dari      = $_GET['dari'] ?? '';
-        $sampai    = $_GET['sampai'] ?? '';
+        $tipe = $_GET['tab'] ?? $_GET['tipe'] ?? 'penjualan';
+        $dari = $_GET['dari'] ?? '';
+        $sampai = $_GET['sampai'] ?? '';
 
         $exportService = new ExportService();
 
@@ -102,13 +109,13 @@ class LaporanController
     public function exportExcel(): void
     {
         RoleMiddleware::requirePermission('laporan.export');
-        $user      = AuthMiddleware::getAuthUser();
-        $idGudang  = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
 
-        $tipe      = $_GET['tab'] ?? $_GET['tipe'] ?? 'penjualan';
-        $dari      = $_GET['dari'] ?? '';
-        $sampai    = $_GET['sampai'] ?? '';
+        $tipe = $_GET['tab'] ?? $_GET['tipe'] ?? 'penjualan';
+        $dari = $_GET['dari'] ?? '';
+        $sampai = $_GET['sampai'] ?? '';
 
         $exportService = new ExportService();
 
@@ -129,5 +136,13 @@ class LaporanController
         } catch (\Exception $e) {
             Response::error($e->getMessage(), 500);
         }
+    }
+
+    private function resolveGudangContext(): array
+    {
+        return [
+            'id_gudang' => AuthMiddleware::resolveGudang(),
+            'all_gudang' => AuthMiddleware::isAllGudang(),
+        ];
     }
 }

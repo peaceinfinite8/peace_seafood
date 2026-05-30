@@ -192,9 +192,9 @@ class MasterDataController
 
     public function produkIndex(): void
     {
-        $user = AuthMiddleware::getAuthUser();
-        $idGudang = !empty($_GET['id_gudang']) ? (int) $_GET['id_gudang'] : (int) ($user['id_gudang'] ?? 0);
-        $data = Produk::findWithJenis($idGudang, AuthMiddleware::isAllGudang());
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $data = Produk::findWithJenis($idGudang, $gudangContext['all_gudang']);
         Response::success($data);
     }
 
@@ -263,9 +263,9 @@ class MasterDataController
 
     public function pembeliCreditStatus(string $id): void
     {
-        $user = AuthMiddleware::getAuthUser();
-        $idGudang = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
 
         $pembeli = Database::fetchOne(
             "SELECT id, nama, kredit_limit FROM pembeli WHERE id = ? AND is_active = 1",
@@ -297,6 +297,14 @@ class MasterDataController
             'available' => max(0, $kreditLimit - $outstanding),
             'is_over' => $kreditLimit > 0 ? ($outstanding >= $kreditLimit) : false,
         ]);
+    }
+
+    private function resolveGudangContext(): array
+    {
+        return [
+            'id_gudang' => AuthMiddleware::resolveGudang(),
+            'all_gudang' => AuthMiddleware::isAllGudang(),
+        ];
     }
 
     // ── Harga ─────────────────────────────────────────────────

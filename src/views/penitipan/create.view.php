@@ -2,7 +2,7 @@
 <div x-data="penitipanCreate()" x-init="init()">
 
     <div class="flex items-center gap-4 mb-6">
-        <a href="/peace_seafood/penitipan" class="btn btn-secondary p-2">
+        <a href="${window.APP_BASE_URL}/penitipan" class="btn btn-secondary p-2">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
         </a>
         <div>
@@ -102,7 +102,7 @@
 
             <!-- Actions -->
             <div class="flex gap-3 pt-2">
-                <a href="/peace_seafood/penitipan" class="btn btn-secondary flex-1 justify-center">
+                <a href="${window.APP_BASE_URL}/penitipan" class="btn btn-secondary flex-1 justify-center">
                     Batal
                 </a>
                 <button type="submit" class="btn btn-primary flex-1 justify-center" :disabled="submitting">
@@ -141,7 +141,7 @@ function penitipanCreate() {
         async loadSuppliers() {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/master/supplier', { headers: { Authorization: 'Bearer '+token } });
+                const res = await axios.get(`${window.API_BASE_URL}/master/supplier`, { headers: { Authorization: 'Bearer '+token } });
                 this.suppliers = res.data?.data || [];
             } catch(e) { console.error(e); }
         },
@@ -149,7 +149,7 @@ function penitipanCreate() {
         async loadProduk() {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/master/produk', { headers: { Authorization: 'Bearer '+token } });
+                const res = await axios.get(`${window.API_BASE_URL}/master/produk`, { headers: { Authorization: 'Bearer '+token } });
                 this.produkList = res.data?.data || [];
             } catch(e) { console.error(e); }
         },
@@ -162,9 +162,9 @@ function penitipanCreate() {
             this.submitting = true;
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/penitipan', this.form, { headers: { Authorization: 'Bearer '+token } });
+                await axios.post(`${window.API_BASE_URL}/penitipan`, this.form, { headers: { Authorization: 'Bearer '+token } });
                 iziToast.success({ title: 'Berhasil', message: 'Titipan berhasil disimpan!', position: 'topRight' });
-                setTimeout(() => { window.location.href = '/peace_seafood/penitipan'; }, 1000);
+                setTimeout(() => { window.location.href = `${window.APP_BASE_URL}/penitipan`; }, 1000);
             } catch(e) {
                 const msg = e.response?.data?.message || 'Gagal menyimpan';
                 iziToast.error({ title: 'Error', message: msg, position: 'topRight' });

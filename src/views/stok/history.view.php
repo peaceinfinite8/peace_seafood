@@ -4,27 +4,33 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">History Stok</h2>
-            <p class="text-sm" style="color: var(--text-secondary)">Riwayat seluruh pergerakan stok masuk & timbangan</p>
+            <p class="text-sm" style="color: var(--text-secondary)">Riwayat seluruh pergerakan stok masuk & timbangan
+            </p>
         </div>
-        <a href="/peace_seafood/stok" class="btn btn-secondary">
+        <a href="${window.APP_BASE_URL}/stok"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
             Kembali ke Stok
         </a>
     </div>
 
     <!-- Filter -->
-    <div class="card p-4 mb-6">
+    <div class="rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800 p-4 mb-6">
         <div class="flex flex-wrap gap-3">
             <input type="text" x-model="search" placeholder="Cari produk / supplier..."
-                class="form-input flex-1 min-w-48">
-            <input type="date" x-model="filterDari" class="form-input w-auto">
-            <input type="date" x-model="filterSampai" class="form-input w-auto">
-            <select x-model="filterStatus" class="form-input w-auto">
+                class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white flex-1 min-w-48">
+            <input type="date" x-model="filterDari"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white w-auto">
+            <input type="date" x-model="filterSampai"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white w-auto">
+            <select x-model="filterStatus"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white w-auto">
                 <option value="">Semua Status</option>
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
             </select>
-            <button @click="loadData()" class="btn btn-primary">
+            <button @click="loadData()"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 dark:bg-blue-700">
                 <i data-lucide="search" class="w-4 h-4"></i> Cari
             </button>
         </div>
@@ -32,94 +38,124 @@
 
     <!-- Stat Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" x-show="!loading" x-cloak>
-        <div class="stat-card">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Total Masuk</p>
             <p class="text-2xl font-bold" x-text="list.length"></p>
         </div>
-        <div class="stat-card">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Total Qty Masuk</p>
             <p class="text-lg font-bold" style="color: var(--color-primary)"
-                x-text="formatKg(list.filter(i=>i.status==='confirmed').reduce((s,i)=>s+parseFloat(i.qty_actual||i.qty||0),0), 1)"></p>
+                x-text="formatKg(list.filter(i=>i.status==='confirmed').reduce((s,i)=>s+parseFloat(i.qty_actual||i.qty||0),0), 1)">
+            </p>
         </div>
-        <div class="stat-card">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Pending</p>
-            <p class="text-2xl font-bold text-yellow-500"
-                x-text="list.filter(i=>i.status==='pending').length"></p>
+            <p class="text-2xl font-bold text-yellow-500" x-text="list.filter(i=>i.status==='pending').length"></p>
         </div>
-        <div class="stat-card">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Confirmed</p>
-            <p class="text-2xl font-bold text-green-500"
-                x-text="list.filter(i=>i.status==='confirmed').length"></p>
+            <p class="text-2xl font-bold text-green-500" x-text="list.filter(i=>i.status==='confirmed').length"></p>
         </div>
     </div>
 
     <!-- Loading -->
-    <div x-show="loading" class="card p-12 text-center" style="color: var(--text-secondary)">
+    <div x-show="loading"
+        class="rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800 p-12 text-center"
+        style="color: var(--text-secondary)">
         <p class="text-sm">Memuat history...</p>
     </div>
 
     <!-- Table -->
-    <div class="card" x-show="!loading" x-cloak>
+    <div class="rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800" x-show="!loading"
+        x-cloak>
         <div class="overflow-x-auto">
-            <table class="table">
-                <thead>
+            <table class="w-full border-collapse">
+                <thead class="bg-slate-100 dark:bg-slate-700">
                     <tr>
-                        <th>Tanggal</th>
-                        <th>Produk</th>
-                        <th>Supplier</th>
-                        <th>Qty Input</th>
-                        <th>Qty Aktual</th>
-                        <th>Susut</th>
-                        <th>Harga Beli</th>
-                        <th>Total</th>
-                        <th>Penanggung Jawab</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Tanggal</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Produk</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Supplier</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Qty Input</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Qty Aktual</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Susut</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Harga Beli</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Total</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Penanggung Jawab</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Status</th>
+                        <th
+                            class="border-b border-slate-200 dark:border-slate-600 px-4 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
                         <tr>
-                            <td colspan="11" class="text-center py-10" style="color:var(--text-secondary)">
+                            <td colspan="11" class="text-center py-10 px-4" style="color:var(--text-secondary)">
                                 Tidak ada history stok
                             </td>
                         </tr>
                     </template>
                     <template x-for="item in filtered" :key="item.id">
-                        <tr>
-                            <td><span class="text-sm" x-text="formatDate(item.tanggal_masuk || item.created_at)"></span></td>
-                            <td><span class="font-medium text-sm" x-text="item.nama_produk || '-'"></span></td>
-                            <td><span class="text-sm" x-text="item.nama_supplier || '-'"></span></td>
-                            <td>
+                        <tr
+                            class="border-b border-slate-200 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700/40">
+                            <td class="px-4 py-2"><span class="text-sm"
+                                    x-text="formatDate(item.tanggal_masuk || item.created_at)"></span></td>
+                            <td class="px-4 py-2"><span class="font-medium text-sm"
+                                    x-text="item.nama_produk || '-'"></span></td>
+                            <td class="px-4 py-2"><span class="text-sm" x-text="item.nama_supplier || '-'"></span></td>
+                            <td class="px-4 py-2">
                                 <span class="text-sm" x-text="formatKg(item.qty||0, 1)"></span>
                             </td>
-                            <td>
+                            <td class="px-4 py-2">
                                 <span class="text-sm font-semibold"
                                     :style="item.qty_actual ? 'color:var(--color-success)' : 'color:var(--text-secondary)'"
                                     x-text="item.qty_actual ? formatKg(item.qty_actual,1) : '-'"></span>
                             </td>
-                            <td>
-                                <span class="text-sm"
-                                    :class="item.susut > 0 ? 'text-red-500' : 'text-gray-400'"
+                            <td class="px-4 py-2">
+                                <span class="text-sm" :class="item.susut > 0 ? 'text-red-500' : 'text-gray-400'"
                                     x-text="item.susut ? formatKg(item.susut,1) : '-'"></span>
                             </td>
-                            <td>
-                                <span class="text-sm" x-text="'Rp '+parseFloat(item.harga_beli||0).toLocaleString('id-ID')"></span>
+                            <td class="px-4 py-2">
+                                <span class="text-sm"
+                                    x-text="'Rp '+parseFloat(item.harga_beli||0).toLocaleString('id-ID')"></span>
                             </td>
-                            <td>
+                            <td class="px-4 py-2">
                                 <span class="text-sm font-semibold" style="color:var(--color-primary)"
                                     x-text="'Rp '+(parseFloat(item.qty_actual||item.qty||0)*parseFloat(item.harga_beli||0)).toLocaleString('id-ID')"></span>
                             </td>
-                            <td>
+                            <td class="px-4 py-2">
                                 <span class="text-sm" x-text="item.nama_user || '-' "></span>
                             </td>
-                            <td>
-                                <span class="badge"
-                                    :class="item.status==='confirmed' ? 'badge-success' : 'badge-warning'"
+                            <td class="px-4 py-2">
+                                <span
+                                    class="inline-flex items-center rounded-full bg-slate-200 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                                    :class="item.status==='confirmed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-700/30 dark:text-amber-400'"
                                     x-text="item.status?.toUpperCase()"></span>
                             </td>
-                            <td>
-                                <button @click="openDetail(item)" class="btn btn-secondary p-1.5" title="Detail">
+                            <td class="px-4 py-2">
+                                <button @click="openDetail(item)"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 p-1.5"
+                                    title="Detail">
                                     <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                 </button>
                             </td>
@@ -158,7 +194,8 @@
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Qty Aktual (Timbang)</p>
-                            <p class="font-semibold text-green-600" x-text="selected.qty_actual ? formatKg(selected.qty_actual,1) : 'Belum ditimbang'"></p>
+                            <p class="font-semibold text-green-600"
+                                x-text="selected.qty_actual ? formatKg(selected.qty_actual,1) : 'Belum ditimbang'"></p>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Susut</p>
@@ -167,12 +204,14 @@
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Harga Beli</p>
-                            <p class="font-semibold" x-text="'Rp '+parseFloat(selected.harga_beli||0).toLocaleString('id-ID')"></p>
+                            <p class="font-semibold"
+                                x-text="'Rp '+parseFloat(selected.harga_beli||0).toLocaleString('id-ID')"></p>
                         </div>
                         <div class="p-3 rounded-lg col-span-2" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Total Nilai</p>
                             <p class="font-bold text-lg" style="color:var(--color-primary)"
-                                x-text="'Rp '+(parseFloat(selected.qty_actual||selected.qty||0)*parseFloat(selected.harga_beli||0)).toLocaleString('id-ID')"></p>
+                                x-text="'Rp '+(parseFloat(selected.qty_actual||selected.qty||0)*parseFloat(selected.harga_beli||0)).toLocaleString('id-ID')">
+                            </p>
                         </div>
                     </div>
                     <div x-show="selected.alasan_susut" class="p-3 rounded-lg" style="background:var(--bg-gray)">
@@ -190,7 +229,8 @@
                                 x-text="selected.status?.toUpperCase()"></span>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs" style="color:var(--text-secondary)" x-text="formatDate(selected.tanggal_masuk||selected.created_at)"></p>
+                            <p class="text-xs" style="color:var(--text-secondary)"
+                                x-text="formatDate(selected.tanggal_masuk||selected.created_at)"></p>
                         </div>
                     </div>
                     <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
@@ -229,7 +269,7 @@ function stokHistory() {
 
         async init() {
             if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
+                window.location.href = `${window.APP_BASE_URL}/dashboard`;
                 return;
             }
             await this.loadData();
@@ -240,7 +280,7 @@ function stokHistory() {
             this.loading = true;
             try {
                 const token = localStorage.getItem('token');
-                let url = '/peace_seafood/api/stok/history?per_page=200';
+                let url = `${window.API_BASE_URL}/stok/history?per_page=200`;
                 if (this.filterDari)   url += '&dari='    + this.filterDari;
                 if (this.filterSampai) url += '&sampai='  + this.filterSampai;
                 const res = await axios.get(url, { headers: { Authorization: 'Bearer '+token } });

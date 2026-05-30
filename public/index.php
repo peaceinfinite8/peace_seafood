@@ -30,7 +30,8 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Strip base path
 // Root .htaccess rewrites /peace_seafood/... -> public/...
 // tapi REQUEST_URI tetap /peace_seafood/...
-$basePath = '/peace_seafood';
+$config = require __DIR__ . '/../config/app.php';
+$basePath = $config['base_path'];
 $uri = preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri);
 // Juga strip /public jika request lewat langsung ke public/
 $uri = preg_replace('#^/public#', '', $uri);

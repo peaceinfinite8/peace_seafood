@@ -25,8 +25,9 @@ class StokTransferController
     public function index(): void
     {
         RoleMiddleware::requirePermission('stok.view');
-        $idGudang  = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
 
         $data = $this->service->getTransferList($idGudang, $allGudang);
         Response::success($data);
@@ -38,12 +39,12 @@ class StokTransferController
     public function create(): void
     {
         RoleMiddleware::requirePermission('stok.create');
-        $user     = AuthMiddleware::getAuthUser();
+        $user = AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
-        $body     = Helper::getRequestBody();
+        $body = Helper::getRequestBody();
 
         if (in_array($user['role'], ['bos', 'super_admin'], true) && $idGudang === 0 && !empty($body['gudang_asal_id'])) {
-            $idGudang = (int)$body['gudang_asal_id'];
+            $idGudang = (int) $body['gudang_asal_id'];
         }
 
         if ($idGudang === 0) {
@@ -55,13 +56,13 @@ class StokTransferController
         }
 
         // Prevent selecting same source and destination warehouse
-        $gudangTujuan = (int)($body['gudang_tujuan_id'] ?? 0);
+        $gudangTujuan = (int) ($body['gudang_tujuan_id'] ?? 0);
         if ($gudangTujuan === $idGudang) {
             Response::error('Gudang asal dan gudang tujuan tidak boleh sama', 422);
         }
 
         try {
-            $idTransfer = $this->service->createTransfer($body, (int)$user['id'], $idGudang);
+            $idTransfer = $this->service->createTransfer($body, (int) $user['id'], $idGudang);
             Response::created(['id' => $idTransfer], 'Transaksi transfer berhasil didaftarkan (Pending)');
         } catch (\Throwable $e) {
             Response::error($e->getMessage(), 422);
@@ -74,24 +75,32 @@ class StokTransferController
     public function updateStatus(string $id): void
     {
         RoleMiddleware::requirePermission('stok.create'); // Checker / Admin / Bos
-        $user     = AuthMiddleware::getAuthUser();
+        $user = AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
-        $body     = Helper::getRequestBody();
+        $body = Helper::getRequestBody();
 
         if (empty($body['status'])) {
             Response::error('Status baru wajib ditentukan', 422);
         }
 
-        $newStatus = (string)$body['status'];
+        $newStatus = (string) $body['status'];
         if (!in_array($newStatus, ['sent', 'received'], true)) {
             Response::error('Status tidak valid', 422);
         }
 
-        $ok = $this->service->updateStatus((int)$id, $newStatus, (int)$user['id'], $idGudang);
+        $ok = $this->service->updateStatus((int) $id, $newStatus, (int) $user['id'], $idGudang);
         if (!$ok) {
             Response::error('Gagal memperbarui status transfer. Pastikan urutan transisi status atau stok mencukupi.', 422);
         }
 
         Response::success(null, 'Status transfer berhasil diperbarui.');
+    }
+
+    private function resolveGudangContext(): array
+    {
+        return [
+            'id_gudang' => AuthMiddleware::resolveGudang(),
+            'all_gudang' => AuthMiddleware::isAllGudang(),
+        ];
     }
 }

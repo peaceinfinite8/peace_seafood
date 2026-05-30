@@ -431,7 +431,7 @@ function activityLogPage() {
             this.detailLog = null;
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/activity-log?limit=' + this.limit, {
+                const res = await axios.get(`${window.API_BASE_URL}/activity-log?limit=` + this.limit, {
                     headers: { Authorization: 'Bearer ' + token }
                 });
                 this.logs = res.data?.data || res.data || [];

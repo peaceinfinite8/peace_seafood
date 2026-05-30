@@ -90,7 +90,7 @@ class FileUpload
      */
     public function getUrl(string $filename, string $subDir = ''): string
     {
-        $base = $_ENV['APP_URL'] ?? 'http://localhost';
+        $base = $_ENV['APP_URL'] ?? 'http://localhost:8080';
         $path = '/uploads/' . ($subDir ? $subDir . '/' : '') . $filename;
         return $base . $path;
     }

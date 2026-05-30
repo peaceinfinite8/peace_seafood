@@ -167,7 +167,7 @@ function keuanganPage() {
 
         async init() {
             if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
+                window.location.href = `${window.APP_BASE_URL}/dashboard`;
                 return;
             }
             await this.loadData();
@@ -180,8 +180,8 @@ function keuanganPage() {
                 const token = localStorage.getItem('token');
                 const headers = { Authorization: 'Bearer ' + token };
                 const [listRes, agingRes] = await Promise.all([
-                    axios.get('/peace_seafood/api/keuangan/hutang-piutang', { headers }),
-                    axios.get('/peace_seafood/api/laporan/keuangan', { headers }),
+                    axios.get(`${window.API_BASE_URL}/keuangan/hutang-piutang`, { headers }),
+                    axios.get(`${window.API_BASE_URL}/laporan/keuangan`, { headers }),
                 ]);
                 this.list = listRes.data?.data || [];
                 const keuData = agingRes.data?.data || {};
@@ -236,7 +236,7 @@ function keuanganPage() {
                     ...this.bayarForm,
                     nominal_bayar: parsedNominal
                 };
-                await axios.post('/peace_seafood/api/keuangan/bayar', payload, { headers: { Authorization: 'Bearer ' + token } });
+                await axios.post(`${window.API_BASE_URL}/keuangan/bayar`, payload, { headers: { Authorization: 'Bearer ' + token } });
                 iziToast.success({ title: 'Berhasil', message: 'Pembayaran tersimpan!', position: 'topRight' });
                 this.showBayarModal = false;
                 await this.loadData();

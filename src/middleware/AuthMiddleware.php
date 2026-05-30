@@ -49,7 +49,7 @@ class AuthMiddleware
         $requestUri = rtrim($requestUri, '/') ?: '/';
 
         $allowedUris = ['/auth/change-password', '/auth/logout', '/auth/profile'];
-        if ((int)$user['is_first_login'] === 1 && !in_array($requestUri, $allowedUris, true)) {
+        if ((int) $user['is_first_login'] === 1 && !in_array($requestUri, $allowedUris, true)) {
             Response::error('Silakan ganti password default Anda terlebih dahulu.', 412);
         }
 
@@ -80,7 +80,7 @@ class AuthMiddleware
      */
     public static function getAuthUserId(): int
     {
-        return (int)(self::user()['id'] ?? 0);
+        return (int) (self::user()['id'] ?? 0);
     }
 
     /**
@@ -97,9 +97,9 @@ class AuthMiddleware
         $gudangId = 0;
 
         if (in_array($user['role'], ['saas_owner', 'super_admin', 'bos'], true)) {
-            $gudangId = !empty($_GET['id_gudang']) ? (int)$_GET['id_gudang'] : 0;
+            $gudangId = !empty($_GET['id_gudang']) ? (int) $_GET['id_gudang'] : 0;
         } else {
-            $gudangId = (int)($user['id_gudang'] ?? 0);
+            $gudangId = (int) ($user['id_gudang'] ?? 0);
         }
 
         // Strict IDOR and Trial Expiration checks
@@ -114,7 +114,7 @@ class AuthMiddleware
             }
 
             // IDOR Check: Bos can only view/operate on their own warehouses
-            if ($user['role'] === 'bos' && (int)$gudang['id_bos'] !== (int)$user['id']) {
+            if ($user['role'] === 'bos' && (int) $gudang['id_bos'] !== (int) $user['id']) {
                 Response::forbidden('Anda tidak memiliki akses ke data gudang ini.');
             }
 

@@ -185,7 +185,9 @@ class AuthController
         ], 'id = ?', [$user['id']]);
 
         // Send Link via Email
-        $resetLink = "http://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/peace_seafood/reset-password?token=" . $token;
+        $config = require __DIR__ . '/../../config/app.php';
+        $basePath = $config['base_path'];
+        $resetLink = "http://" . ($_SERVER['HTTP_HOST'] ?? 'localhost:8080') . "{$basePath}/reset-password?token=" . $token;
         $emailBody = "Halo " . $user['name'] . ",\n\n" .
                      "Kami menerima permintaan untuk mereset password akun Peace Seafood Anda.\n" .
                      "Silakan klik link di bawah ini untuk mengatur ulang sandi Anda:\n\n" .

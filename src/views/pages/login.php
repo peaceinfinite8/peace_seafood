@@ -20,7 +20,7 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — <?= htmlspecialchars($appName) ?></title>
-    <script src="/peace_seafood/js/tailwindcss.js"></script>
+    <script src=`${window.APP_BASE_URL}/js/tailwindcss.js`></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -1351,7 +1351,7 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                 init() {
                     const token = localStorage.getItem('token');
                     if (token) {
-                        window.location.href = '/peace_seafood/dashboard';
+                        window.location.href = `${window.APP_BASE_URL}/dashboard`;
                         return;
                     }
 
@@ -1426,7 +1426,7 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                     this.errorMsg = '';
                     try {
                         const response = await axios.post(
-                            '/peace_seafood/api/auth/login', {
+                            `${window.API_BASE_URL}/auth/login`, {
                                 email: this.form.email,
                                 password: this.form.password
                             }, {
@@ -1441,13 +1441,13 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                             localStorage.setItem('user', JSON.stringify(data.user));
 
                             // Trigger Premium Full-Screen Transition Loader
-                            this.triggerSuccessTransition('/peace_seafood/dashboard');
+                            this.triggerSuccessTransition(`${window.APP_BASE_URL}/dashboard`);
                             return;
                         }
                         this.showSweetAlert('Gagal Masuk', response.data?.message || 'Response tidak valid dari server', 'error');
                     } catch (e) {
                         if (localStorage.getItem('token')) {
-                            this.triggerSuccessTransition('/peace_seafood/dashboard');
+                            this.triggerSuccessTransition(`${window.APP_BASE_URL}/dashboard`);
                             return;
                         }
                         const msg = e.response?.data?.message || 'Email atau password salah';
@@ -1465,7 +1465,7 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                     this.loading = true;
                     this.errors = {};
                     try {
-                        const response = await axios.post('/peace_seafood/api/auth/signup', {
+                        const response = await axios.post(`${window.API_BASE_URL}/auth/signup`, {
                             email: this.form.email
                         });
                         this.showSweetAlert('Sukses', response.data?.message || 'Registrasi berhasil, password telah dikirim!', 'success');
@@ -1486,7 +1486,7 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                     this.loading = true;
                     this.errors = {};
                     try {
-                        const response = await axios.post('/peace_seafood/api/auth/forgot-password', {
+                        const response = await axios.post(`${window.API_BASE_URL}/auth/forgot-password`, {
                             email: this.form.email
                         });
                         this.showSweetAlert('Sukses', response.data?.message || 'Instruksi reset sandi telah dikirim ke email Anda.', 'success');
@@ -1510,7 +1510,7 @@ $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
                     }
                     this.loading = true;
                     try {
-                        const response = await axios.post('/peace_seafood/api/auth/reset-password', {
+                        const response = await axios.post(`${window.API_BASE_URL}/auth/reset-password`, {
                             token: this.form.resetToken,
                             password: this.form.password
                         });

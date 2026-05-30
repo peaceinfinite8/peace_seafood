@@ -34,29 +34,31 @@ class ActivityLogController
             $log['after_value']  = $log['after_value'] ? json_decode($log['after_value'], true) : null;
 
             // Build a reference URL so UI can link to the related resource
+            $basePath = require __DIR__ . '/../../config/app.php';
+            $basePath = $basePath['base_path'];
             $refUrl = null;
             $id = (int)($log['record_id'] ?? 0);
             switch ($log['table_name']) {
                 case 'nota':
-                    $refUrl = "/peace_seafood/penjualan?id={$id}";
+                    $refUrl = "{$basePath}/penjualan?id={$id}";
                     break;
                 case 'stok_masuk':
-                    $refUrl = "/peace_seafood/stok/masuk?id={$id}";
+                    $refUrl = "{$basePath}/stok/masuk?id={$id}";
                     break;
                 case 'timbangan':
-                    $refUrl = "/peace_seafood/stok/timbangan?id={$id}";
+                    $refUrl = "{$basePath}/stok/timbangan?id={$id}";
                     break;
                 case 'stok_transfer':
-                    $refUrl = "/peace_seafood/stok/transfer?id={$id}";
+                    $refUrl = "{$basePath}/stok/transfer?id={$id}";
                     break;
                 case 'titipan':
-                    $refUrl = "/peace_seafood/penitipan?id={$id}";
+                    $refUrl = "{$basePath}/penitipan?id={$id}";
                     break;
                 case 'retur':
-                    $refUrl = "/peace_seafood/retur?id={$id}";
+                    $refUrl = "{$basePath}/retur?id={$id}";
                     break;
                 default:
-                    $refUrl = $id > 0 ? "/peace_seafood/?id={$id}" : null;
+                    $refUrl = $id > 0 ? "{$basePath}/?id={$id}" : null;
             }
 
             $log['ref'] = $refUrl ? ['url' => $refUrl, 'id' => $id] : null;

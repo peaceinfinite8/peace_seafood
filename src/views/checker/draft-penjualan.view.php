@@ -271,7 +271,7 @@
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Buat Draft Baru
             </button>
-            <a href="/peace_seafood/dashboard" class="btn btn-secondary px-6">Dashboard</a>
+            <a href="${window.APP_BASE_URL}/dashboard" class="btn btn-secondary px-6">Dashboard</a>
         </div>
     </div>
 
@@ -303,7 +303,7 @@ function checkerDraftPage() {
 
         async init() {
             if (this.user.role !== 'checker') {
-                window.location.href = '/peace_seafood/dashboard';
+                window.location.href = `${window.APP_BASE_URL}/dashboard`;
                 return;
             }
             await this.loadProduk();
@@ -314,7 +314,7 @@ function checkerDraftPage() {
             this.loadingProduk = true;
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/master/produk', {
+                const res = await axios.get(`${window.API_BASE_URL}/master/produk`, {
                     headers: { Authorization: 'Bearer ' + token }
                 });
                 this.produkList = (res.data?.data || []).filter(p => p.is_active && parseFloat(p.stok_qty || 0) > 0);
@@ -389,7 +389,7 @@ function checkerDraftPage() {
                         harga_jual: parseFloat(i.harga_jual),
                     })),
                 };
-                const res = await axios.post('/peace_seafood/api/penjualan/draft', payload, {
+                const res = await axios.post(`${window.API_BASE_URL}/penjualan/draft`, payload, {
                     headers: { Authorization: 'Bearer ' + token }
                 });
                 this.sentNoNota = res.data?.data?.no_nota || '—';

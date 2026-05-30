@@ -6,8 +6,7 @@
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">Retur</h2>
             <p class="text-sm" style="color: var(--text-secondary)">Kelola retur stok & retur piutang</p>
         </div>
-        <a href="/peace_seafood/retur/create"
-            class="btn btn-primary"
+        <a href="${window.APP_BASE_URL}/retur/create" class="btn btn-primary"
             x-show="['bos','admin','checker'].includes(user.role)">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Buat Retur
@@ -15,21 +14,24 @@
     </div>
 
     <!-- Filter -->
-    <div class="card p-4 mb-6">
+    <div class="mb-6 rounded-2xl border border-[color:var(--border-color)] bg-[color:var(--bg-light)] p-4 shadow-sm">
         <div class="flex flex-wrap gap-3">
-            <select x-model="filterTipe" class="form-input w-auto">
+            <select x-model="filterTipe"
+                class="w-auto rounded-lg border border-[color:var(--border-color)] bg-[color:var(--bg-light)] px-3 py-2 text-sm text-[color:var(--text-primary)] outline-none transition focus:border-[color:var(--color-primary)] focus:ring-2 focus:ring-[color:var(--color-primary-light)]">
                 <option value="">Semua Tipe</option>
                 <option value="stok">Retur Stok</option>
                 <option value="piutang">Retur Piutang</option>
             </select>
-            <select x-model="filterStatus" class="form-input w-auto">
+            <select x-model="filterStatus"
+                class="w-auto rounded-lg border border-[color:var(--border-color)] bg-[color:var(--bg-light)] px-3 py-2 text-sm text-[color:var(--text-primary)] outline-none transition focus:border-[color:var(--color-primary)] focus:ring-2 focus:ring-[color:var(--color-primary-light)]">
                 <option value="">Semua Status</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
                 <option value="posted">Posted</option>
             </select>
-            <button @click="loadData()" class="btn btn-primary">
+            <button @click="loadData()"
+                class="inline-flex items-center gap-2 rounded-lg bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95">
                 <i data-lucide="search" class="w-4 h-4"></i> Filter
             </button>
         </div>
@@ -90,8 +92,7 @@
                     <template x-for="r in filtered" :key="r.id">
                         <tr>
                             <td>
-                                <span class="badge"
-                                    :class="r.tipe === 'stok' ? 'badge-info' : 'badge-warning'"
+                                <span class="badge" :class="r.tipe === 'stok' ? 'badge-info' : 'badge-warning'"
                                     x-text="r.tipe === 'stok' ? 'Stok' : 'Piutang'"></span>
                             </td>
                             <td>
@@ -99,8 +100,7 @@
                                     x-text="r.nama_produk || r.nama_supplier || r.nama_pembeli || '-'"></span>
                             </td>
                             <td>
-                                <span class="text-sm font-semibold"
-                                    x-text="r.tipe === 'stok'
+                                <span class="text-sm font-semibold" x-text="r.tipe === 'stok'
                                         ? (parseFloat(r.qty||0).toFixed(1) + ' kg')
                                         : ('Rp ' + parseFloat(r.nominal||0).toLocaleString('id-ID'))">
                                 </span>
@@ -111,14 +111,12 @@
                             <td><span class="text-sm" x-text="r.nama_user || '-'"></span></td>
                             <td><span class="text-sm" x-text="formatDate(r.created_at)"></span></td>
                             <td>
-                                <span class="badge"
-                                    :class="{
+                                <span class="badge" :class="{
                                         'badge-warning': r.status === 'pending',
                                         'badge-success': r.status === 'approved' || r.status === 'posted',
                                         'badge-danger':  r.status === 'rejected',
                                         'badge-gray':    r.status === 'posted',
-                                      }"
-                                    x-text="r.status?.toUpperCase()"></span>
+                                      }" x-text="r.status?.toUpperCase()"></span>
                             </td>
                             <td>
                                 <div class="flex gap-1.5">
@@ -126,12 +124,10 @@
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                     </button>
                                     <button x-show="r.status === 'pending' && user.role === 'bos'"
-                                        @click="approve(r.id)"
-                                        class="btn btn-success p-1.5" title="Approve">
+                                        @click="approve(r.id)" class="btn btn-success p-1.5" title="Approve">
                                         <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                     </button>
-                                    <button x-show="r.status === 'pending' && user.role === 'bos'"
-                                        @click="reject(r.id)"
+                                    <button x-show="r.status === 'pending' && user.role === 'bos'" @click="reject(r.id)"
                                         class="btn btn-danger p-1.5" title="Reject">
                                         <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                     </button>
@@ -167,12 +163,15 @@
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Produk / Pihak</p>
-                            <p class="font-semibold" x-text="detail.nama_produk || detail.nama_supplier || detail.nama_pembeli || '-'"></p>
+                            <p class="font-semibold"
+                                x-text="detail.nama_produk || detail.nama_supplier || detail.nama_pembeli || '-'"></p>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
-                            <p class="text-xs mb-1" x-text="detail.tipe==='stok' ? 'Qty' : 'Nominal'" style="color:var(--text-secondary)"></p>
+                            <p class="text-xs mb-1" x-text="detail.tipe==='stok' ? 'Qty' : 'Nominal'"
+                                style="color:var(--text-secondary)"></p>
                             <p class="font-semibold"
-                                x-text="detail.tipe==='stok' ? (parseFloat(detail.qty||0).toFixed(1)+' kg') : ('Rp '+parseFloat(detail.nominal||0).toLocaleString('id-ID'))"></p>
+                                x-text="detail.tipe==='stok' ? (parseFloat(detail.qty||0).toFixed(1)+' kg') : ('Rp '+parseFloat(detail.nominal||0).toLocaleString('id-ID'))">
+                            </p>
                         </div>
                         <div class="p-3 rounded-lg col-span-2" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Alasan</p>
@@ -187,9 +186,11 @@
                             <p class="font-semibold" x-text="formatDate(detail.created_at)"></p>
                         </div>
                     </div>
-                    <div x-show="detail.approved_by_nama" class="p-3 rounded-lg text-sm" style="background:var(--bg-gray)">
+                    <div x-show="detail.approved_by_nama" class="p-3 rounded-lg text-sm"
+                        style="background:var(--bg-gray)">
                         <p class="text-xs mb-1" style="color:var(--text-secondary)">Diproses Oleh</p>
-                        <p class="font-semibold" x-text="detail.approved_by_nama + ' — ' + formatDate(detail.approved_at)"></p>
+                        <p class="font-semibold"
+                            x-text="detail.approved_by_nama + ' — ' + formatDate(detail.approved_at)"></p>
                     </div>
                 </div>
             </template>
@@ -219,7 +220,7 @@ function returPage() {
 
         async init() {
             if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
+                window.location.href = `${window.APP_BASE_URL}/dashboard`;
                 return;
             }
             await this.loadData();
@@ -230,7 +231,7 @@ function returPage() {
             this.loading = true;
             try {
                 const token = localStorage.getItem('token');
-                let url = '/peace_seafood/api/retur?per_page=100';
+                let url = `${window.API_BASE_URL}/retur?per_page=100`;
                 if (this.filterTipe)   url += '&tipe='   + this.filterTipe;
                 if (this.filterStatus) url += '&status=' + this.filterStatus;
                 const res = await axios.get(url, { headers: { Authorization: 'Bearer '+token } });
@@ -243,7 +244,7 @@ function returPage() {
         async openDetail(id) {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/retur/' + id, { headers: { Authorization: 'Bearer '+token } });
+                const res = await axios.get(`${window.API_BASE_URL}/retur/` + id, { headers: { Authorization: 'Bearer '+token } });
                 this.detail = res.data?.data;
                 this.showModal = true;
                 this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
@@ -255,7 +256,7 @@ function returPage() {
             if (notes === null) return;
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/retur/' + id + '/approve', { notes }, { headers: { Authorization: 'Bearer '+token } });
+                await axios.post(`${window.API_BASE_URL}/retur/` + id + '/approve', { notes }, { headers: { Authorization: 'Bearer '+token } });
                 iziToast.success({ title: 'Berhasil', message: 'Retur disetujui!', position: 'topRight' });
                 await this.loadData();
             } catch(e) { iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal', position: 'topRight' }); }
@@ -266,7 +267,7 @@ function returPage() {
             if (!alasan) { iziToast.warning({ title: 'Perhatian', message: 'Alasan wajib diisi', position: 'topRight' }); return; }
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/retur/' + id + '/reject', { alasan_reject: alasan }, { headers: { Authorization: 'Bearer '+token } });
+                await axios.post(`${window.API_BASE_URL}/retur/` + id + '/reject', { alasan_reject: alasan }, { headers: { Authorization: 'Bearer '+token } });
                 iziToast.success({ title: 'Berhasil', message: 'Retur ditolak', position: 'topRight' });
                 await this.loadData();
             } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal', position: 'topRight' }); }

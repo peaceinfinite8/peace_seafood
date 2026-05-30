@@ -23,27 +23,29 @@ class PenjualanController
     public function index(): void
     {
         RoleMiddleware::requirePermission('penjualan.view');
-        $idGudang = AuthMiddleware::resolveGudang();
-        $filters  = [
-            'status'     => $_GET['status']     ?? null,
-            'dari'       => $_GET['dari']        ?? null,
-            'sampai'     => $_GET['sampai']      ?? null,
-            'id_pembeli' => $_GET['id_pembeli']  ?? null,
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
+        $filters = [
+            'status' => $_GET['status'] ?? null,
+            'dari' => $_GET['dari'] ?? null,
+            'sampai' => $_GET['sampai'] ?? null,
+            'id_pembeli' => $_GET['id_pembeli'] ?? null,
         ];
-        $data = $this->service->getNotaList($idGudang, $filters, AuthMiddleware::isAllGudang());
+        $data = $this->service->getNotaList($idGudang, $filters, $allGudang);
         Response::success($data);
     }
 
     public function create(): void
     {
         RoleMiddleware::requirePermission('penjualan.create');
-        $user     = AuthMiddleware::getAuthUser();
+        $user = AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
-        $body     = Helper::getRequestBody();
+        $body = Helper::getRequestBody();
 
         // Allow BOS and Super Admin to pass id_gudang in request when resolveGudang returned 0
         if (in_array($user['role'], ['bos', 'super_admin'], true) && $idGudang === 0 && !empty($body['id_gudang'])) {
-            $idGudang = (int)$body['id_gudang'];
+            $idGudang = (int) $body['id_gudang'];
         }
 
         if (empty($body['items']) || !is_array($body['items'])) {
@@ -60,22 +62,24 @@ class PenjualanController
             }
             $g = Database::fetchOne("SELECT id_bos FROM gudang WHERE id = ?", [$idGudang]);
             $idBos = $g['id_bos'] ?? null;
-            $acct = Database::fetchOne("SELECT * FROM bank_account WHERE id = ? AND id_user = ? AND is_active = 1", [(int)$body['bank_account_id'], $idBos]);
+            $acct = Database::fetchOne("SELECT * FROM bank_account WHERE id = ? AND id_user = ? AND is_active = 1", [(int) $body['bank_account_id'], $idBos]);
             if (!$acct) {
                 Response::error('Rekening bank tidak ditemukan untuk gudang ini', 422);
             }
         }
 
-        $id = $this->service->createNota($body, (int)$user['id'], $idGudang);
+        $id = $this->service->createNota($body, (int) $user['id'], $idGudang);
         Response::created(['id' => $id, 'no_nota' => null], 'Nota berhasil dibuat');
     }
 
     public function show(string $id): void
     {
         RoleMiddleware::requirePermission('penjualan.view');
-        $idGudang = AuthMiddleware::resolveGudang();
-        $data     = $this->service->getNotaDetail((int)$id, $idGudang, AuthMiddleware::isAllGudang());
-        if (!$data) Response::notFound('Nota tidak ditemukan');
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $data = $this->service->getNotaDetail((int) $id, $idGudang, $gudangContext['all_gudang']);
+        if (!$data)
+            Response::notFound('Nota tidak ditemukan');
         Response::success($data);
     }
 
@@ -88,8 +92,8 @@ class PenjualanController
     {
         RoleMiddleware::requirePermission('penjualan.create_draft');
 
-        $user     = AuthMiddleware::getAuthUser();
-        $idGudang = (int)($user['id_gudang'] ?? 0);
+        $user = AuthMiddleware::getAuthUser();
+        $idGudang = (int) ($user['id_gudang'] ?? 0);
 
         if ($idGudang <= 0) {
             Response::error('Checker tidak memiliki gudang yang ditetapkan.', 422);
@@ -103,9 +107,9 @@ class PenjualanController
 
         // Paksa status draft dan jenis pembayaran default cash
         $body['jenis_pembayaran'] = $body['jenis_pembayaran'] ?? 'cash';
-        $body['catatan']          = ($body['catatan'] ?? '') . ' [Draft oleh Checker: ' . $user['name'] . ']';
+        $body['catatan'] = ($body['catatan'] ?? '') . ' [Draft oleh Checker: ' . $user['name'] . ']';
 
-        $idNota = $this->service->createNota($body, (int)$user['id'], $idGudang);
+        $idNota = $this->service->createNota($body, (int) $user['id'], $idGudang);
 
         // Ambil detail nota untuk notifikasi
         $nota = Database::fetchOne(
@@ -117,8 +121,8 @@ class PenjualanController
             [$idNota]
         );
 
-        $noNota   = $nota['no_nota'] ?? "#{$idNota}";
-        $totalFmt = 'Rp ' . number_format((float)($nota['total'] ?? 0), 0, ',', '.');
+        $noNota = $nota['no_nota'] ?? "#{$idNota}";
+        $totalFmt = 'Rp ' . number_format((float) ($nota['total'] ?? 0), 0, ',', '.');
 
         // Kirim notifikasi ke semua admin & super_admin di gudang ini
         $notifService = new \App\Services\NotificationService();
@@ -142,28 +146,30 @@ class PenjualanController
     {
         RoleMiddleware::requirePermission('penjualan.update');
         $idGudang = AuthMiddleware::resolveGudang();
-        $body     = Helper::getRequestBody();
-        
+        $body = Helper::getRequestBody();
+
         $updateData = [
-            'catatan'     => $body['catatan'] ?? null,
-            'pembayaran'  => in_array($body['jenis_pembayaran'] ?? 'cash', ['hutang']) ? 'hutang' : 'cash',
+            'catatan' => $body['catatan'] ?? null,
+            'pembayaran' => in_array($body['jenis_pembayaran'] ?? 'cash', ['hutang']) ? 'hutang' : 'cash',
         ];
-        
+
         if (array_key_exists('bank_account_id', $body)) {
-            $updateData['bank_account_id'] = $body['bank_account_id'] ? (int)$body['bank_account_id'] : null;
+            $updateData['bank_account_id'] = $body['bank_account_id'] ? (int) $body['bank_account_id'] : null;
         }
-        
-        \App\Utils\Database::update('nota', $updateData, 'id = ? AND id_gudang = ? AND status = ?', [(int)$id, $idGudang, 'draft']);
+
+        \App\Utils\Database::update('nota', $updateData, 'id = ? AND id_gudang = ? AND status = ?', [(int) $id, $idGudang, 'draft']);
         Response::success(null, 'Nota diperbarui');
     }
 
     public function finalize(string $id): void
     {
         RoleMiddleware::requirePermission('penjualan.update');
-        $idGudang   = AuthMiddleware::resolveGudang();
-        $allGudang  = AuthMiddleware::isAllGudang();
-        $ok         = $this->service->finalizeNota((int)$id, $idGudang, $allGudang);
-        if (!$ok) Response::error('Gagal finalize nota. Periksa stok, limit kredit, atau status nota.', 422);
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
+        $ok = $this->service->finalizeNota((int) $id, $idGudang, $allGudang);
+        if (!$ok)
+            Response::error('Gagal finalize nota. Periksa stok, limit kredit, atau status nota.', 422);
         Response::success(null, 'Nota berhasil difinalize');
     }
 
@@ -171,8 +177,9 @@ class PenjualanController
     {
         RoleMiddleware::requirePermission('penjualan.cancel');
         $idGudang = AuthMiddleware::resolveGudang();
-        $ok       = $this->service->cancelNota((int)$id, $idGudang);
-        if (!$ok) Response::error('Gagal batalkan nota', 422);
+        $ok = $this->service->cancelNota((int) $id, $idGudang);
+        if (!$ok)
+            Response::error('Gagal batalkan nota', 422);
         Response::success(null, 'Nota dibatalkan');
     }
 
@@ -182,11 +189,12 @@ class PenjualanController
     public function exportPdf(string $id): void
     {
         RoleMiddleware::requirePermission('penjualan.view');
-        $idGudang  = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
 
         $exportService = new \App\Services\ExportService();
-        $pdfOutput     = $exportService->exportNotaPdf((int)$id, $idGudang, $allGudang);
+        $pdfOutput = $exportService->exportNotaPdf((int) $id, $idGudang, $allGudang);
 
         if ($pdfOutput === null) {
             Response::error('Gagal men-generate PDF nota atau nota tidak ditemukan.', 404);
@@ -197,8 +205,16 @@ class PenjualanController
         header('Content-Disposition: attachment; filename="Nota_Penjualan_' . $id . '.pdf"');
         header('Cache-Control: private, max-age=0, must-revalidate');
         header('Pragma: public');
-        
+
         echo $pdfOutput;
         exit;
+    }
+
+    private function resolveGudangContext(): array
+    {
+        return [
+            'id_gudang' => AuthMiddleware::resolveGudang(),
+            'all_gudang' => AuthMiddleware::isAllGudang(),
+        ];
     }
 }

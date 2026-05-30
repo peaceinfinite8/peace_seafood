@@ -6,7 +6,7 @@
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">Penitipan</h2>
             <p class="text-sm" style="color: var(--text-secondary)">Kelola barang titipan (konsinyasi)</p>
         </div>
-        <a href="/peace_seafood/penitipan/create"
+        <a href="${window.APP_BASE_URL}/penitipan/create"
             class="btn btn-primary"
             x-show="['super_admin','admin'].includes(user.role)">
             <i data-lucide="plus" class="w-4 h-4"></i>
@@ -251,7 +251,7 @@ function penitipanPage() {
 
         async init() {
             if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
+                window.location.href = `${window.APP_BASE_URL}/dashboard`;
                 return;
             }
             await this.loadData();
@@ -262,7 +262,7 @@ function penitipanPage() {
             this.loading = true;
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/penitipan', { headers: { Authorization: 'Bearer '+token } });
+                const res = await axios.get(`${window.API_BASE_URL}/penitipan`, { headers: { Authorization: 'Bearer '+token } });
                 this.list = res.data?.data || [];
             } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal memuat data', position: 'topRight' }); }
             this.loading = false;
@@ -272,7 +272,7 @@ function penitipanPage() {
         async openDetail(id) {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/penitipan/' + id, { headers: { Authorization: 'Bearer '+token } });
+                const res = await axios.get(`${window.API_BASE_URL}/penitipan/` + id, { headers: { Authorization: 'Bearer '+token } });
                 this.detail = res.data?.data;
                 this.showDetailModal = true;
                 this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
@@ -290,7 +290,7 @@ function penitipanPage() {
             this.submitting = true;
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/penitipan/' + this.jualForm.titipan_id + '/jual', this.jualForm, { headers: { Authorization: 'Bearer '+token } });
+                await axios.post(`${window.API_BASE_URL}/penitipan/` + this.jualForm.titipan_id + '/jual', this.jualForm, { headers: { Authorization: 'Bearer '+token } });
                 iziToast.success({ title: 'Berhasil', message: 'Penjualan titipan dicatat!', position: 'topRight' });
                 this.showJual = false;
                 await this.loadData();
@@ -302,7 +302,7 @@ function penitipanPage() {
             if (!await confirm('Lakukan settlement untuk titipan ini?')) return;
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/penitipan/' + id + '/selesai', { titipan_id: id }, { headers: { Authorization: 'Bearer '+token } });
+                await axios.post(`${window.API_BASE_URL}/penitipan/` + id + '/selesai', { titipan_id: id }, { headers: { Authorization: 'Bearer '+token } });
                 iziToast.success({ title: 'Berhasil', message: 'Settlement selesai!', position: 'topRight' });
                 await this.loadData();
             } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal', position: 'topRight' }); }

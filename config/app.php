@@ -7,11 +7,12 @@ declare(strict_types=1);
  */
 
 return [
-    'name'     => $_ENV['APP_NAME']     ?? 'Peace Seafood',
-    'env'      => $_ENV['APP_ENV']      ?? 'local',
-    'debug'    => ($_ENV['APP_DEBUG']   ?? 'true') === 'true',
-    'url'      => $_ENV['APP_URL']      ?? 'http://localhost',
-    'timezone' => $_ENV['APP_TIMEZONE'] ?? 'Asia/Jakarta',
+    'name'      => $_ENV['APP_NAME']      ?? 'Peace Seafood',
+    'env'       => $_ENV['APP_ENV']       ?? 'local',
+    'debug'     => ($_ENV['APP_DEBUG']    ?? 'true') === 'true',
+    'url'       => $_ENV['APP_URL']       ?? 'http://localhost:8080',
+    'base_path' => $_ENV['APP_BASE_PATH'] ?? '/peace_seafood',
+    'timezone'  => $_ENV['APP_TIMEZONE']  ?? 'Asia/Jakarta',
 
     'jwt' => [
         'secret'     => $_ENV['JWT_SECRET']     ?? 'change-this-secret',
@@ -36,7 +37,7 @@ return [
     ],
 
     'cors' => [
-        'origin' => $_ENV['CORS_ORIGIN'] ?? 'http://localhost',
+        'origin' => $_ENV['CORS_ORIGIN'] ?? 'http://localhost:8080',
     ],
 
     'log' => [

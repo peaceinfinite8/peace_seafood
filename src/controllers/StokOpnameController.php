@@ -25,8 +25,9 @@ class StokOpnameController
     public function index(): void
     {
         RoleMiddleware::requirePermission('stok.view');
-        $idGudang  = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
+        $gudangContext = $this->resolveGudangContext();
+        $idGudang = $gudangContext['id_gudang'];
+        $allGudang = $gudangContext['all_gudang'];
 
         $data = $this->service->getOpnameList($idGudang, $allGudang);
         Response::success($data);
@@ -38,12 +39,12 @@ class StokOpnameController
     public function create(): void
     {
         RoleMiddleware::requirePermission('stok.create');
-        $user     = AuthMiddleware::getAuthUser();
+        $user = AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
-        $body     = Helper::getRequestBody();
+        $body = Helper::getRequestBody();
 
         if (in_array($user['role'], ['bos', 'super_admin'], true) && $idGudang === 0 && !empty($body['id_gudang'])) {
-            $idGudang = (int)$body['id_gudang'];
+            $idGudang = (int) $body['id_gudang'];
         }
 
         if ($idGudang === 0) {
@@ -54,7 +55,7 @@ class StokOpnameController
             Response::error('Item opname tidak boleh kosong', 422);
         }
 
-        $idOpname = $this->service->createOpname($body, (int)$user['id'], $idGudang);
+        $idOpname = $this->service->createOpname($body, (int) $user['id'], $idGudang);
         Response::created(['id' => $idOpname], 'Sesi stok opname berhasil dibuat (Draft)');
     }
 
@@ -66,7 +67,7 @@ class StokOpnameController
         RoleMiddleware::requirePermission('stok.view');
         $idGudang = AuthMiddleware::resolveGudang();
 
-        $data = $this->service->getOpnameDetail((int)$id, $idGudang);
+        $data = $this->service->getOpnameDetail((int) $id, $idGudang);
         if (!$data) {
             Response::notFound('Sesi stok opname tidak ditemukan');
         }
@@ -82,21 +83,29 @@ class StokOpnameController
         $idGudang = AuthMiddleware::resolveGudang();
 
         // Cari tahu gudang sesi opname ini
-        $so = \App\Utils\Database::fetchOne("SELECT id_gudang FROM stok_opname WHERE id = ?", [(int)$id]);
+        $so = \App\Utils\Database::fetchOne("SELECT id_gudang FROM stok_opname WHERE id = ?", [(int) $id]);
         if (!$so) {
             Response::notFound('Sesi stok opname tidak ditemukan');
         }
 
-        $soGudang = (int)$so['id_gudang'];
+        $soGudang = (int) $so['id_gudang'];
         if ($idGudang !== 0 && $idGudang !== $soGudang) {
             Response::error('Akses ditolak untuk gudang ini', 403);
         }
 
-        $ok = $this->service->finalizeOpname((int)$id, $soGudang);
+        $ok = $this->service->finalizeOpname((int) $id, $soGudang);
         if (!$ok) {
             Response::error('Gagal memfinalisasi opname. Pastikan statusnya masih draft.', 422);
         }
 
         Response::success(null, 'Stok opname berhasil difinalisasi. Stok produk telah disesuaikan.');
+    }
+
+    private function resolveGudangContext(): array
+    {
+        return [
+            'id_gudang' => AuthMiddleware::resolveGudang(),
+            'all_gudang' => AuthMiddleware::isAllGudang(),
+        ];
     }
 }

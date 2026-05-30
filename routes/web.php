@@ -36,25 +36,25 @@ $routes = [
     '/' => ['pages/login', 'Login'],
     '/login' => ['pages/login', 'Login'],
     '/reset-password' => ['pages/login', 'Reset Password'],
-    '/dashboard' => ['pages/dashboard', 'Dashboard', 'dashboard'],
+    '/dashboard' => ['pages/dashboard.view', 'Dashboard', 'dashboard'],
 
     // Stok
     '/stok' => ['stok/index.view', 'Stok & Inventory', 'stok'],
-    '/stok/masuk' => ['stok/masuk', 'Input Stok Masuk', 'stok'],
+    '/stok/masuk' => ['stok/masuk.view', 'Input Stok Masuk', 'stok'],
     '/stok/timbangan' => ['stok/timbangan.view', 'Timbangan & Susut', 'stok'],
-    '/stok/history' => ['stok/history', 'History Stok', 'stok'],
+    '/stok/history' => ['stok/history.view', 'History Stok', 'stok'],
 
     // Penjualan
     '/penjualan' => ['penjualan/index.view', 'Penjualan', 'penjualan'],
-    '/penjualan/create' => ['penjualan/create', 'Buat Nota Penjualan', 'penjualan'],
+    '/penjualan/create' => ['penjualan/create.view', 'Buat Nota Penjualan', 'penjualan'],
 
     // Penitipan
     '/penitipan' => ['penitipan/index.view', 'Penitipan', 'penitipan'],
-    '/penitipan/create' => ['penitipan/create', 'Terima Titipan', 'penitipan'],
+    '/penitipan/create' => ['penitipan/create.view', 'Terima Titipan', 'penitipan'],
 
     // Retur
     '/retur' => ['retur/index.view', 'Retur', 'retur'],
-    '/retur/create' => ['retur/create', 'Buat Retur', 'retur'],
+    '/retur/create' => ['retur/create.view', 'Buat Retur', 'retur'],
 
     // Keuangan
     '/keuangan' => ['keuangan/index.view', 'Keuangan', 'keuangan'],
@@ -63,16 +63,16 @@ $routes = [
     '/master-data' => ['master-data/index.view', 'Master Data', 'master-data'],
     '/master-data/supplier' => ['master-data/supplier.view', 'Data Supplier', 'master-data'],
     '/master-data/pembeli' => ['master-data/pembeli.view', 'Data Pembeli', 'master-data'],
-    '/master-data/jenis-ikan' => ['master-data/jenis-ikan', 'Jenis Ikan', 'master-data'],
+    '/master-data/jenis-ikan' => ['master-data/jenis-ikan.view', 'Jenis Ikan', 'master-data'],
     '/master-data/produk' => ['master-data/produk.view', 'Data Produk', 'master-data'],
-    '/migrasi' => ['master-data/migrasi', 'Pusat Migrasi Data Bahari', 'migrasi'],
+    '/migrasi' => ['master-data/migrasi.view', 'Pusat Migrasi Data Bahari', 'migrasi'],
 
     // Stok Lanjutan
-    '/stok-opname' => ['stok/opname', 'Stok Opname', 'stok-opname'],
-    '/stok-transfer' => ['stok/transfer', 'Stok Transfer', 'stok-transfer'],
+    '/stok-opname' => ['stok/opname.view', 'Stok Opname', 'stok-opname'],
+    '/stok-transfer' => ['stok/transfer.view', 'Stok Transfer', 'stok-transfer'],
 
     // Checker — Draft Penjualan
-    '/checker/draft-penjualan' => ['checker/draft-penjualan', 'Buat Draft Nota', 'checker-draft'],
+    '/checker/draft-penjualan' => ['checker/draft-penjualan.view', 'Buat Draft Nota', 'checker-draft'],
 
     // Audit Trail
     '/activity-log' => ['activity-log/index.view', 'Activity Log', 'activity-log'],
@@ -160,7 +160,9 @@ if (isset($routes[$uri])) {
 
             if ($userRole === null) {
                 // Tidak ada token atau token invalid → redirect ke login
-                header('Location: /peace_seafood/login');
+                $config = require BASE_PATH . '/config/app.php';
+                $basePath = $config['base_path'];
+                header("Location: {$basePath}/login");
                 exit;
             }
 

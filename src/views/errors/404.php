@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 — Halaman Tidak Ditemukan · Peace Seafood</title>
 
-    <script src="/peace_seafood/js/tailwindcss.js"></script>
-    <link rel="stylesheet" href="/peace_seafood/css/variables.css">
-    <link rel="stylesheet" href="/peace_seafood/css/dark-mode.css">
-    <link rel="stylesheet" href="/peace_seafood/css/custom.css">
+    <script src=`${window.APP_BASE_URL}/js/tailwindcss.js`></script>
+    <link rel="stylesheet" href="${window.APP_BASE_URL}/css/variables.css">
+    <link rel="stylesheet" href="${window.APP_BASE_URL}/css/dark-mode.css">
+    <link rel="stylesheet" href="${window.APP_BASE_URL}/css/custom.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" crossorigin="anonymous"></script>
 
     <style>
@@ -115,7 +115,7 @@
             Periksa kembali URL yang Anda masukkan.
         </p>
         <div class="btn-group">
-            <a href="/peace_seafood/dashboard" class="btn-primary-err">
+            <a href="${window.APP_BASE_URL}/dashboard" class="btn-primary-err">
                 <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
                 Kembali ke Dashboard
             </a>

@@ -7,7 +7,7 @@
                 <h2 class="text-xl font-bold" style="color: var(--text-primary)">Penjualan</h2>
                 <p class="text-sm" style="color: var(--text-secondary)">Kelola nota penjualan</p>
             </div>
-            <a href="/peace_seafood/penjualan/create"
+            <a href="${window.APP_BASE_URL}/penjualan/create"
                 class="btn btn-primary"
                 x-show="['admin','super_admin'].includes(user.role)">
                 <i data-lucide="file-plus" class="w-4 h-4"></i>
@@ -650,7 +650,7 @@ function penjualanPage() {
 
         async init() {
             if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
+                window.location.href = `${window.APP_BASE_URL}/dashboard`;
                 return;
             }
             await this.loadData();
@@ -680,7 +680,7 @@ function penjualanPage() {
             try {
                 const token = localStorage.getItem('token');
                 const headers = { Authorization: 'Bearer ' + token };
-                const res = await axios.get('/peace_seafood/api/settings/bank-accounts', { headers });
+                const res = await axios.get(`${window.API_BASE_URL}/settings/bank-accounts`, { headers });
                 this.bankAccounts = res.data?.data || [];
             } catch(e) { console.error(e); }
         },
@@ -712,7 +712,7 @@ function penjualanPage() {
             try {
                 const token = localStorage.getItem('token');
                 const headers = { Authorization: 'Bearer ' + token };
-                const res = await axios.get('/peace_seafood/api/master/pembeli/' + this.finalizeNotaData.id_pembeli + '/credit-status', { headers });
+                const res = await axios.get(`${window.API_BASE_URL}/master/pembeli/` + this.finalizeNotaData.id_pembeli + '/credit-status', { headers });
                 this.creditInfo = res.data?.data || null;
             } catch (e) {
                 console.error(e);
@@ -739,10 +739,10 @@ function penjualanPage() {
                 };
                 
                 // 1. Update draft payment details
-                await axios.put('/peace_seafood/api/penjualan/' + this.finalizeNotaData.id, payload, { headers });
+                await axios.put(`${window.API_BASE_URL}/penjualan/` + this.finalizeNotaData.id, payload, { headers });
                 
                 // 2. Finalize draft sale
-                await axios.post('/peace_seafood/api/penjualan/' + this.finalizeNotaData.id + '/finalize', {}, { headers });
+                await axios.post(`${window.API_BASE_URL}/penjualan/` + this.finalizeNotaData.id + '/finalize', {}, { headers });
                 
                 iziToast.success({ title: 'Berhasil', message: 'Nota berhasil difinalisasi!', position: 'topRight' });
                 this.showFinalizeModal = false;
@@ -792,7 +792,7 @@ function penjualanPage() {
             try {
                 const token   = localStorage.getItem('token');
                 const headers = { Authorization: 'Bearer ' + token };
-                let url = '/peace_seafood/api/penjualan?per_page=100';
+                let url = `${window.API_BASE_URL}/penjualan?per_page=100`;
                 if (this.filterDari)   url += '&dari=' + this.filterDari;
                 if (this.filterSampai) url += '&sampai=' + this.filterSampai;
                 const res = await axios.get(url, { headers });
@@ -805,7 +805,7 @@ function penjualanPage() {
         async showDetail(id) {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/penjualan/' + id, { headers: { Authorization: 'Bearer ' + token } });
+                const res = await axios.get(`${window.API_BASE_URL}/penjualan/` + id, { headers: { Authorization: 'Bearer ' + token } });
                 this.detail = res.data?.data;
                 this.showModal = true;
                 this.$nextTick(() => { ensureLucide(() => window.lucide.createIcons()); });
@@ -816,7 +816,7 @@ function penjualanPage() {
             if (!await confirm('Finalize nota ini? Stok akan dikurangi.')) return;
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/penjualan/' + id + '/finalize', {}, { headers: { Authorization: 'Bearer ' + token } });
+                await axios.post(`${window.API_BASE_URL}/penjualan/` + id + '/finalize', {}, { headers: { Authorization: 'Bearer ' + token } });
                 iziToast.success({ title: 'Berhasil', message: 'Nota difinalize!', position: 'topRight' });
                 await this.loadData();
             } catch(e) { iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal', position: 'topRight' }); }
@@ -826,7 +826,7 @@ function penjualanPage() {
             if (!await confirm('Batalkan nota ini?')) return;
             try {
                 const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/penjualan/' + id + '/cancel', {}, { headers: { Authorization: 'Bearer ' + token } });
+                await axios.post(`${window.API_BASE_URL}/penjualan/` + id + '/cancel', {}, { headers: { Authorization: 'Bearer ' + token } });
                 iziToast.success({ title: 'Berhasil', message: 'Nota dibatalkan', position: 'topRight' });
                 await this.loadData();
             } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal', position: 'topRight' }); }
@@ -880,7 +880,7 @@ function penjualanPage() {
                     ...this.bayarForm,
                     nominal_bayar: parsedNominal
                 };
-                await axios.post('/peace_seafood/api/keuangan/bayar', payload, { headers: { Authorization: 'Bearer ' + token } });
+                await axios.post(`${window.API_BASE_URL}/keuangan/bayar`, payload, { headers: { Authorization: 'Bearer ' + token } });
                 iziToast.success({ title: 'Berhasil', message: 'Pembayaran cicilan berhasil tersimpan!', position: 'topRight' });
                 this.showBayarModal = false;
                 await this.loadData();
