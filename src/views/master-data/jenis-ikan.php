@@ -15,8 +15,8 @@
     <!-- Search -->
     <div class="card p-4 mb-6">
         <div class="flex gap-3">
-            <input type="text" x-model="search" placeholder="Cari jenis ikan..."
-                   class="form-input flex-1" @input="filterList()">
+            <input type="text" x-model="search" placeholder="Cari jenis ikan..." class="form-input flex-1"
+                @input="filterList()">
             <div class="flex items-center gap-2 text-sm" style="color:var(--text-secondary)">
                 <span x-text="filtered.length + ' data'"></span>
             </div>
@@ -39,14 +39,14 @@
         <template x-for="jenis in filtered" :key="jenis.id">
             <div class="card p-4 text-center group hover:shadow-md transition-shadow">
                 <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"
-                     style="background: var(--color-primary-light)">
+                    style="background: var(--color-primary-light)">
                     🐟
                 </div>
                 <p class="font-semibold text-sm mb-1 truncate" x-text="jenis.nama"></p>
                 <p class="text-xs mb-3" style="color:var(--text-secondary)"
-                   x-text="jenis.deskripsi || 'Tidak ada deskripsi'"></p>
+                    x-text="jenis.deskripsi || 'Tidak ada deskripsi'"></p>
                 <div class="flex gap-1.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                     x-show="['super_admin','admin'].includes(user.role)">
+                    x-show="['super_admin','admin'].includes(user.role)">
                     <button @click="openEdit(jenis)" class="btn btn-secondary p-1.5" title="Edit">
                         <i data-lucide="pencil" class="w-3 h-3"></i>
                     </button>
@@ -77,7 +77,10 @@
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr><td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="(jenis, idx) in filtered" :key="jenis.id">
                         <tr>
@@ -88,7 +91,8 @@
                                     <span class="font-medium text-sm" x-text="jenis.nama"></span>
                                 </div>
                             </td>
-                            <td><span class="text-sm" style="color:var(--text-secondary)" x-text="jenis.deskripsi || '-'"></span></td>
+                            <td><span class="text-sm" style="color:var(--text-secondary)"
+                                    x-text="jenis.deskripsi || '-'"></span></td>
                             <td>
                                 <span class="badge badge-info" x-text="(jenis.jumlah_produk || 0) + ' produk'"></span>
                             </td>
@@ -120,28 +124,27 @@
                 <div class="form-group">
                     <label class="form-label">Nama Jenis Ikan <span class="text-red-500">*</span></label>
                     <input type="text" x-model="form.nama" class="form-input"
-                           placeholder="cth: Ikan Kerapu, Ikan Tuna, Udang Vannamei..."
-                           required autofocus>
+                        placeholder="cth: Ikan Kerapu, Ikan Tuna, Udang Vannamei..." required autofocus>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Deskripsi (opsional)</label>
                     <textarea x-model="form.deskripsi" class="form-input" rows="1"
-                              placeholder="Keterangan singkat..."></textarea>
+                        placeholder="Keterangan singkat..."></textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Master Atribut: Size (Pisahkan dengan koma)</label>
                     <input type="text" x-model="form.allowed_sizes" class="form-input"
-                           placeholder="cth: 200/300, 300/500, 1 Up, Size 10, Size 20, Polos">
+                        placeholder="cth: 200/300, 300/500, 1 Up, Size 10, Size 20, Polos">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Master Atribut: Grade (Pisahkan dengan koma)</label>
                     <input type="text" x-model="form.allowed_grades" class="form-input"
-                           placeholder="cth: Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC">
+                        placeholder="cth: Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Master Atribut: Asal Capture (Pisahkan dengan koma)</label>
                     <input type="text" x-model="form.allowed_origins" class="form-input"
-                           placeholder="cth: Bitung, Banda, Makassar, Ambon">
+                        placeholder="cth: Bitung, Banda, Makassar, Ambon">
                 </div>
                 <div class="flex gap-3 justify-end mt-6">
                     <button type="button" @click="showModal = false" class="btn btn-secondary">Batal</button>
@@ -156,102 +159,4 @@
 
 </div>
 
-<?php $scripts = <<<'JS'
-<script>
-function jenisIkanPage() {
-    return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        loading: true,
-        list: [],
-        filtered: [],
-        search: '',
-        showModal: false,
-        editMode: false,
-        submitting: false,
-        editId: null,
-        form: { nama: '', deskripsi: '' },
-
-        async init() {
-            await this.loadData();
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async loadData() {
-            this.loading = true;
-            try {
-                const token = localStorage.getItem('token');
-                const res = await axios.get('/peace_seafood/api/master/jenis-ikan', { headers: { Authorization: 'Bearer '+token } });
-                this.list = res.data?.data || [];
-                this.filterList();
-            } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal memuat data', position: 'topRight' }); }
-            this.loading = false;
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        filterList() {
-            const q = this.search.toLowerCase();
-            this.filtered = q ? this.list.filter(j => (j.nama||'').toLowerCase().includes(q)) : [...this.list];
-        },
-
-        openAdd() {
-            this.editMode = false;
-            this.editId = null;
-            this.form = { nama: '', deskripsi: '', allowed_sizes: '', allowed_grades: '', allowed_origins: '' };
-            this.showModal = true;
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        openEdit(jenis) {
-            this.editMode = true;
-            this.editId = jenis.id;
-            this.form = { 
-                nama: jenis.nama, 
-                deskripsi: jenis.deskripsi || '', 
-                allowed_sizes: jenis.allowed_sizes || '', 
-                allowed_grades: jenis.allowed_grades || '', 
-                allowed_origins: jenis.allowed_origins || '' 
-            };
-            this.showModal = true;
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async save() {
-            if (!this.form.nama.trim()) {
-                iziToast.warning({ title: 'Perhatian', message: 'Nama jenis ikan wajib diisi', position: 'topRight' });
-                return;
-            }
-            this.submitting = true;
-            try {
-                const token = localStorage.getItem('token');
-                const headers = { Authorization: 'Bearer '+token };
-                if (this.editMode) {
-                    await axios.put('/peace_seafood/api/master/jenis-ikan/' + this.editId, this.form, { headers });
-                    iziToast.success({ title: 'Berhasil', message: 'Jenis ikan diperbarui!', position: 'topRight' });
-                } else {
-                    await axios.post('/peace_seafood/api/master/jenis-ikan', this.form, { headers });
-                    iziToast.success({ title: 'Berhasil', message: 'Jenis ikan ditambahkan!', position: 'topRight' });
-                }
-                this.showModal = false;
-                await this.loadData();
-            } catch(e) {
-                iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal menyimpan', position: 'topRight' });
-            }
-            this.submitting = false;
-        },
-
-        async deleteJenis(id) {
-            if (!await confirm('Hapus jenis ikan ini? Data yang terkait mungkin terpengaruh.')) return;
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete('/peace_seafood/api/master/jenis-ikan/' + id, { headers: { Authorization: 'Bearer '+token } });
-                iziToast.success({ title: 'Berhasil', message: 'Jenis ikan dihapus', position: 'topRight' });
-                await this.loadData();
-            } catch(e) {
-                iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal menghapus', position: 'topRight' });
-            }
-        }
-    };
-}
-</script>
-JS;
-?>
+<?php $scripts = '<script src="/peace_seafood/inline-assets/js/master-data/jenis-ikan.js"></script>'; ?>

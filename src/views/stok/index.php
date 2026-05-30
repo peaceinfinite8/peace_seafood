@@ -27,9 +27,9 @@
     <div class="card p-4 mb-6">
         <div class="flex flex-wrap gap-3">
             <div class="relative flex-1 min-w-48">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style="color: var(--text-secondary)"></i>
-                <input type="text" x-model="search" placeholder="Cari produk..."
-                    class="form-input pl-10">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                    style="color: var(--text-secondary)"></i>
+                <input type="text" x-model="search" placeholder="Cari produk..." class="form-input pl-10">
             </div>
             <select x-model="filterJenis" class="form-input w-auto">
                 <option value="">Semua Jenis</option>
@@ -47,7 +47,8 @@
 
     <!-- Loading -->
     <div x-show="loading" class="flex justify-center py-20">
-        <div class="animate-spin w-8 h-8 rounded-full border-4 border-blue-200" style="border-top-color: var(--color-primary)"></div>
+        <div class="animate-spin w-8 h-8 rounded-full border-4 border-blue-200"
+            style="border-top-color: var(--color-primary)"></div>
     </div>
 
     <!-- Inventory Table -->
@@ -77,7 +78,8 @@
                     <template x-for="item in filteredItems" :key="item.id">
                         <tr>
                             <td>
-                                <p class="font-medium text-sm" style="color: var(--text-primary)" x-text="item.nama"></p>
+                                <p class="font-medium text-sm" style="color: var(--text-primary)" x-text="item.nama">
+                                </p>
                             </td>
                             <td>
                                 <span class="badge badge-info" x-text="item.nama_jenis"></span>
@@ -92,18 +94,19 @@
                                     x-text="formatWeight(item.stok_minimum || 0, item.satuan)"></span>
                             </td>
                             <td>
-                                <span class="text-sm" x-text="'Rp ' + parseFloat(item.harga_beli || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-sm"
+                                    x-text="'Rp ' + parseFloat(item.harga_beli || 0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-medium" style="color: var(--color-primary)"
                                     x-text="'Rp ' + parseFloat(item.harga_jual || 0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
-                                <span class="text-sm font-semibold" x-text="'Rp ' + parseFloat(item.stok_value || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-sm font-semibold"
+                                    x-text="'Rp ' + parseFloat(item.stok_value || 0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
-                                <span class="badge"
-                                    :class="item.is_low_stock ? 'badge-danger' : 'badge-success'"
+                                <span class="badge" :class="item.is_low_stock ? 'badge-danger' : 'badge-success'"
                                     x-text="item.is_low_stock ? 'MENIPIS' : 'AMAN'"></span>
                             </td>
                         </tr>
@@ -125,80 +128,11 @@
             </div>
             <div>
                 <span class="text-xs" style="color: var(--color-danger)">Stok Menipis: </span>
-                <span class="text-sm font-bold text-red-500" x-text="filteredItems.filter(i=>i.is_low_stock).length + ' produk'"></span>
+                <span class="text-sm font-bold text-red-500"
+                    x-text="filteredItems.filter(i=>i.is_low_stock).length + ' produk'"></span>
             </div>
         </div>
     </div>
 </div>
 
-<?php $scripts = <<<'JS'
-<script>
-function stokPage() {
-    return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        loading: true,
-        items: [],
-        jenisIkan: [],
-        search: '',
-        filterJenis: '',
-        filterStock: '',
-        pendingCount: 0,
-
-        formatWeight(qty, satuan = 'kg') {
-            let q = parseFloat(qty || 0);
-            if (!satuan || satuan.toLowerCase() === 'kg') {
-                if (q >= 10000) {
-                    return (q / 1000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ton';
-                } else if (q >= 100) {
-                    return (q / 100).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kintal';
-                } else {
-                    // use global helper for consistent kg formatting
-                    return formatKg(q, 2);
-                }
-            }
-            return q.toLocaleString('id-ID') + ' ' + satuan;
-        },
-
-
-        get filteredItems() {
-            return this.items.filter(i => {
-                const q = this.search.toLowerCase();
-                const matchSearch = !q || i.nama?.toLowerCase().includes(q) || i.nama_jenis?.toLowerCase().includes(q);
-                const matchJenis  = !this.filterJenis || i.id_jenis_ikan == this.filterJenis;
-                const matchStock  = !this.filterStock || 
-                    (this.filterStock === 'low' && i.is_low_stock) ||
-                    (this.filterStock === 'ok'  && !i.is_low_stock);
-                return matchSearch && matchJenis && matchStock;
-            });
-        },
-
-        async init() {
-            await this.loadData();
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async loadData() {
-            this.loading = true;
-            try {
-                const token   = localStorage.getItem('token');
-                const headers = { Authorization: 'Bearer ' + token };
-                const [stokRes, pendingRes, jenisRes] = await Promise.all([
-                    axios.get('/peace_seafood/api/stok', { headers }),
-                    axios.get('/peace_seafood/api/stok/pending-timbang', { headers }),
-                    axios.get('/peace_seafood/api/master/jenis-ikan', { headers }),
-                ]);
-                this.items        = stokRes.value?.data?.data || stokRes.data?.data || [];
-                this.pendingCount = pendingRes.value?.data?.data?.length || pendingRes.data?.data?.length || 0;
-                this.jenisIkan    = jenisRes.value?.data?.data || jenisRes.data?.data || [];
-            } catch(e) {
-                if (e.response?.status === 401) { localStorage.clear(); window.location.href = '/peace_seafood/login'; }
-                console.error(e);
-            } finally {
-                this.loading = false;
-            }
-        }
-    };
-}
-</script>
-JS;
-?>
+<?php $scripts = '<script src="/peace_seafood/inline-assets/js/stok/index.js"></script>'; ?>

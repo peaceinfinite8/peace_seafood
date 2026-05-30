@@ -4,7 +4,8 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">History Stok</h2>
-            <p class="text-sm" style="color: var(--text-secondary)">Riwayat seluruh pergerakan stok masuk & timbangan</p>
+            <p class="text-sm" style="color: var(--text-secondary)">Riwayat seluruh pergerakan stok masuk & timbangan
+            </p>
         </div>
         <a href="/peace_seafood/stok" class="btn btn-secondary">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
@@ -39,17 +40,16 @@
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Total Qty Masuk</p>
             <p class="text-lg font-bold" style="color: var(--color-primary)"
-                x-text="formatKg(list.filter(i=>i.status==='confirmed').reduce((s,i)=>s+parseFloat(i.qty_actual||i.qty||0),0), 1)"></p>
+                x-text="formatKg(list.filter(i=>i.status==='confirmed').reduce((s,i)=>s+parseFloat(i.qty_actual||i.qty||0),0), 1)">
+            </p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Pending</p>
-            <p class="text-2xl font-bold text-yellow-500"
-                x-text="list.filter(i=>i.status==='pending').length"></p>
+            <p class="text-2xl font-bold text-yellow-500" x-text="list.filter(i=>i.status==='pending').length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Confirmed</p>
-            <p class="text-2xl font-bold text-green-500"
-                x-text="list.filter(i=>i.status==='confirmed').length"></p>
+            <p class="text-2xl font-bold text-green-500" x-text="list.filter(i=>i.status==='confirmed').length"></p>
         </div>
     </div>
 
@@ -87,7 +87,8 @@
                     </template>
                     <template x-for="item in filtered" :key="item.id">
                         <tr>
-                            <td><span class="text-sm" x-text="formatDate(item.tanggal_masuk || item.created_at)"></span></td>
+                            <td><span class="text-sm" x-text="formatDate(item.tanggal_masuk || item.created_at)"></span>
+                            </td>
                             <td><span class="font-medium text-sm" x-text="item.nama_produk || '-'"></span></td>
                             <td><span class="text-sm" x-text="item.nama_supplier || '-'"></span></td>
                             <td>
@@ -99,12 +100,12 @@
                                     x-text="item.qty_actual ? formatKg(item.qty_actual,1) : '-'"></span>
                             </td>
                             <td>
-                                <span class="text-sm"
-                                    :class="item.susut > 0 ? 'text-red-500' : 'text-gray-400'"
+                                <span class="text-sm" :class="item.susut > 0 ? 'text-red-500' : 'text-gray-400'"
                                     x-text="item.susut ? formatKg(item.susut,1) : '-'"></span>
                             </td>
                             <td>
-                                <span class="text-sm" x-text="'Rp '+parseFloat(item.harga_beli||0).toLocaleString('id-ID')"></span>
+                                <span class="text-sm"
+                                    x-text="'Rp '+parseFloat(item.harga_beli||0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
                                 <span class="text-sm font-semibold" style="color:var(--color-primary)"
@@ -158,7 +159,8 @@
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Qty Aktual (Timbang)</p>
-                            <p class="font-semibold text-green-600" x-text="selected.qty_actual ? formatKg(selected.qty_actual,1) : 'Belum ditimbang'"></p>
+                            <p class="font-semibold text-green-600"
+                                x-text="selected.qty_actual ? formatKg(selected.qty_actual,1) : 'Belum ditimbang'"></p>
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Susut</p>
@@ -167,12 +169,14 @@
                         </div>
                         <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Harga Beli</p>
-                            <p class="font-semibold" x-text="'Rp '+parseFloat(selected.harga_beli||0).toLocaleString('id-ID')"></p>
+                            <p class="font-semibold"
+                                x-text="'Rp '+parseFloat(selected.harga_beli||0).toLocaleString('id-ID')"></p>
                         </div>
                         <div class="p-3 rounded-lg col-span-2" style="background:var(--bg-gray)">
                             <p class="text-xs mb-1" style="color:var(--text-secondary)">Total Nilai</p>
                             <p class="font-bold text-lg" style="color:var(--color-primary)"
-                                x-text="'Rp '+(parseFloat(selected.qty_actual||selected.qty||0)*parseFloat(selected.harga_beli||0)).toLocaleString('id-ID')"></p>
+                                x-text="'Rp '+(parseFloat(selected.qty_actual||selected.qty||0)*parseFloat(selected.harga_beli||0)).toLocaleString('id-ID')">
+                            </p>
                         </div>
                     </div>
                     <div x-show="selected.alasan_susut" class="p-3 rounded-lg" style="background:var(--bg-gray)">
@@ -190,7 +194,8 @@
                                 x-text="selected.status?.toUpperCase()"></span>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs" style="color:var(--text-secondary)" x-text="formatDate(selected.tanggal_masuk||selected.created_at)"></p>
+                            <p class="text-xs" style="color:var(--text-secondary)"
+                                x-text="formatDate(selected.tanggal_masuk||selected.created_at)"></p>
                         </div>
                     </div>
                     <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
@@ -204,61 +209,4 @@
 
 </div>
 
-<?php $scripts = <<<'JS'
-<script>
-function stokHistory() {
-    return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        loading: true,
-        list: [],
-        search: '',
-        filterDari: '',
-        filterSampai: '',
-        filterStatus: '',
-        showModal: false,
-        selected: null,
-
-        get filtered() {
-            const q = this.search.toLowerCase();
-            return this.list.filter(i =>
-                (!q || (i.nama_produk||'').toLowerCase().includes(q) ||
-                       (i.nama_supplier||'').toLowerCase().includes(q)) &&
-                (!this.filterStatus || i.status === this.filterStatus)
-            );
-        },
-
-        async init() {
-            if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
-                return;
-            }
-            await this.loadData();
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async loadData() {
-            this.loading = true;
-            try {
-                const token = localStorage.getItem('token');
-                let url = '/peace_seafood/api/stok/history?per_page=200';
-                if (this.filterDari)   url += '&dari='    + this.filterDari;
-                if (this.filterSampai) url += '&sampai='  + this.filterSampai;
-                const res = await axios.get(url, { headers: { Authorization: 'Bearer '+token } });
-                this.list = res.data?.data || [];
-            } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal memuat history', position: 'topRight' }); }
-            this.loading = false;
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        openDetail(item) {
-            this.selected = item;
-            this.showModal = true;
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        formatDate(d) { return d ? new Date(d).toLocaleDateString('id-ID') : '-'; }
-    };
-}
-</script>
-JS;
-?>
+<?php $scripts = '<script src="/peace_seafood/inline-assets/js/stok/history.js"></script>'; ?>

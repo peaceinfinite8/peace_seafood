@@ -17,36 +17,36 @@
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div class="stat-card">
             <p class="text-xs font-semibold uppercase" style="color: var(--text-secondary)">Total Hutang</p>
-            <p class="text-2xl font-bold text-red-500" x-text="'Rp ' + summary.total_hutang.toLocaleString('id-ID')"></p>
+            <p class="text-2xl font-bold text-red-500" x-text="'Rp ' + summary.total_hutang.toLocaleString('id-ID')">
+            </p>
             <p class="text-xs mt-1" style="color: var(--text-secondary)">ke supplier</p>
         </div>
         <div class="stat-card">
             <p class="text-xs font-semibold uppercase" style="color: var(--text-secondary)">Total Piutang</p>
-            <p class="text-2xl font-bold text-green-500" x-text="'Rp ' + summary.total_piutang.toLocaleString('id-ID')"></p>
+            <p class="text-2xl font-bold text-green-500" x-text="'Rp ' + summary.total_piutang.toLocaleString('id-ID')">
+            </p>
             <p class="text-xs mt-1" style="color: var(--text-secondary)">dari pembeli</p>
         </div>
         <div class="stat-card col-span-2 lg:col-span-1">
             <p class="text-xs font-semibold uppercase" style="color: var(--text-secondary)">Jatuh Tempo</p>
             <p class="text-2xl font-bold" :class="summary.overdue_count > 0 ? 'text-red-500' : 'text-green-500'"
                 x-text="summary.overdue_count + ' tagihan'"></p>
-            <p class="text-xs mt-1" style="color: var(--color-danger)" x-show="summary.overdue_count > 0">⚠ Perlu perhatian!</p>
+            <p class="text-xs mt-1" style="color: var(--color-danger)" x-show="summary.overdue_count > 0">⚠ Perlu
+                perhatian!</p>
         </div>
     </div>
 
     <!-- Tabs -->
     <div class="keu-tab-group mb-4">
-        <button @click="activeTab = 'semua'"
-            class="keu-tab"
+        <button @click="activeTab = 'semua'" class="keu-tab"
             :class="activeTab === 'semua' ? 'keu-tab--active keu-tab--semua' : 'keu-tab--idle'">
             Semua
         </button>
-        <button @click="activeTab = 'hutang'"
-            class="keu-tab"
+        <button @click="activeTab = 'hutang'" class="keu-tab"
             :class="activeTab === 'hutang' ? 'keu-tab--active keu-tab--hutang' : 'keu-tab--idle'">
             Hutang
         </button>
-        <button @click="activeTab = 'piutang'"
-            class="keu-tab"
+        <button @click="activeTab = 'piutang'" class="keu-tab"
             :class="activeTab === 'piutang' ? 'keu-tab--active keu-tab--piutang' : 'keu-tab--idle'">
             Piutang
         </button>
@@ -70,7 +70,8 @@
                 <tbody>
                     <template x-if="filteredList.length === 0">
                         <tr>
-                            <td colspan="7" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td>
+                            <td colspan="7" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
+                            </td>
                         </tr>
                     </template>
                     <template x-for="hp in filteredList" :key="hp.id">
@@ -80,10 +81,12 @@
                                     x-text="hp.jenis?.toUpperCase()"></span>
                             </td>
                             <td>
-                                <span class="text-sm font-medium" x-text="hp.nama_supplier || hp.nama_pembeli || '-'"></span>
+                                <span class="text-sm font-medium"
+                                    x-text="hp.nama_supplier || hp.nama_pembeli || '-'"></span>
                             </td>
                             <td>
-                                <span class="text-sm" x-text="'Rp ' + parseFloat(hp.nominal||0).toLocaleString('id-ID')"></span>
+                                <span class="text-sm"
+                                    x-text="'Rp ' + parseFloat(hp.nominal||0).toLocaleString('id-ID')"></span>
                             </td>
                             <td>
                                 <span class="font-semibold text-sm"
@@ -103,8 +106,7 @@
                             </td>
                             <td>
                                 <button x-show="hp.status !== 'lunas' && user.role === 'super_admin'"
-                                    @click="openBayar(hp)"
-                                    class="btn btn-success p-1.5" title="Input Pembayaran">
+                                    @click="openBayar(hp)" class="btn btn-success p-1.5" title="Input Pembayaran">
                                     <i data-lucide="credit-card" class="w-3.5 h-3.5"></i>
                                 </button>
                             </td>
@@ -120,21 +122,21 @@
         <div class="modal-box">
             <h3 class="font-bold text-lg mb-4">Input Pembayaran</h3>
             <div x-show="selectedHp">
-                <p class="text-sm mb-1"><span style="color:var(--text-secondary)">Pihak:</span> <strong x-text="selectedHp?.nama_supplier || selectedHp?.nama_pembeli"></strong></p>
-                <p class="text-sm mb-4"><span style="color:var(--text-secondary)">Sisa:</span> <strong class="text-red-500" x-text="'Rp ' + parseFloat(selectedHp?.sisa_hutang||0).toLocaleString('id-ID')"></strong></p>
+                <p class="text-sm mb-1"><span style="color:var(--text-secondary)">Pihak:</span> <strong
+                        x-text="selectedHp?.nama_supplier || selectedHp?.nama_pembeli"></strong></p>
+                <p class="text-sm mb-4"><span style="color:var(--text-secondary)">Sisa:</span> <strong
+                        class="text-red-500"
+                        x-text="'Rp ' + parseFloat(selectedHp?.sisa_hutang||0).toLocaleString('id-ID')"></strong></p>
             </div>
             <div class="form-group">
                 <label class="form-label">Nominal Bayar <span class="text-red-500">*</span></label>
-                <input type="text"
-                    :value="bayarForm.nominal_bayar"
-                    @input="formatBayarMoney($event)"
-                    class="form-input"
-                    inputmode="numeric"
-                    placeholder="Masukkan nominal...">
+                <input type="text" :value="bayarForm.nominal_bayar" @input="formatBayarMoney($event)" class="form-input"
+                    inputmode="numeric" placeholder="Masukkan nominal...">
             </div>
             <div class="form-group">
                 <label class="form-label">Tanggal Pembayaran</label>
-                <input type="date" x-model="bayarForm.tanggal_bayar" class="form-input" :value="new Date().toISOString().split('T')[0]">
+                <input type="date" x-model="bayarForm.tanggal_bayar" class="form-input"
+                    :value="new Date().toISOString().split('T')[0]">
             </div>
             <div class="form-group">
                 <label class="form-label">Catatan</label>
@@ -148,105 +150,4 @@
     </div>
 </div>
 
-<?php $scripts = <<<'JS'
-<script>
-function keuanganPage() {
-    return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        loading: true,
-        list: [],
-        summary: { total_hutang: 0, total_piutang: 0, overdue_count: 0 },
-        activeTab: 'semua',
-        showBayarModal: false,
-        showCreateModal: false,
-        selectedHp: null,
-        bayarForm: { id_hutang_piutang: '', nominal_bayar: '', tanggal_bayar: new Date().toISOString().split('T')[0], catatan: '' },
-
-        get filteredList() {
-            return this.list.filter(h => this.activeTab === 'semua' || h.jenis === this.activeTab);
-        },
-
-        async init() {
-            if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
-                return;
-            }
-            await this.loadData();
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async loadData() {
-            this.loading = true;
-            try {
-                const token = localStorage.getItem('token');
-                const headers = { Authorization: 'Bearer ' + token };
-                const [listRes, agingRes] = await Promise.all([
-                    axios.get('/peace_seafood/api/keuangan/hutang-piutang', { headers }),
-                    axios.get('/peace_seafood/api/laporan/keuangan', { headers }),
-                ]);
-                this.list = listRes.data?.data || [];
-                const keuData = agingRes.data?.data || {};
-                this.summary = {
-                    total_hutang:  parseFloat(keuData.total_hutang  || 0),
-                    total_piutang: parseFloat(keuData.total_piutang || 0),
-                    overdue_count: parseInt(keuData.overdue_count   || 0),
-                };
-            } catch(e) { console.error(e); }
-            this.loading = false;
-        },
-
-        parseMoney(value) {
-            if (value === null || value === undefined || value === '') return 0;
-            if (typeof value === 'number') return value;
-            const cleaned = String(value).replace(/[^0-9,-]/g, '').replace(/\./g, '').replace(/,/g, '.');
-            return parseFloat(cleaned) || 0;
-        },
-        formatMoney(value) {
-            if (value === '') return '';
-            const num = Math.round(this.parseMoney(value));
-            return num.toLocaleString('id-ID');
-        },
-        formatBayarMoney(event) {
-            const raw = event.target.value;
-            this.bayarForm.nominal_bayar = this.formatMoney(raw);
-            event.target.value = this.bayarForm.nominal_bayar;
-        },
-
-        openBayar(hp) {
-            this.selectedHp = hp;
-            this.bayarForm = { id_hutang_piutang: hp.id, nominal_bayar: '', tanggal_bayar: new Date().toISOString().split('T')[0], catatan: '' };
-            this.showBayarModal = true;
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async submitBayar() {
-            if (!this.bayarForm.nominal_bayar) return;
-            const parsedNominal = this.parseMoney(this.bayarForm.nominal_bayar);
-            if (parsedNominal <= 0) {
-                iziToast.warning({ title: 'Peringatan', message: 'Nominal bayar tidak valid', position: 'topRight' });
-                return;
-            }
-            const sisaHutang = parseFloat(this.selectedHp?.sisa_hutang || 0);
-            if (parsedNominal > sisaHutang) {
-                iziToast.warning({ title: 'Peringatan', message: 'Nominal bayar tidak boleh melebihi sisa utang (' + this.formatMoney(sisaHutang) + ')', position: 'topRight' });
-                return;
-            }
-            try {
-                const token = localStorage.getItem('token');
-                const payload = {
-                    ...this.bayarForm,
-                    nominal_bayar: parsedNominal
-                };
-                await axios.post('/peace_seafood/api/keuangan/bayar', payload, { headers: { Authorization: 'Bearer ' + token } });
-                iziToast.success({ title: 'Berhasil', message: 'Pembayaran tersimpan!', position: 'topRight' });
-                this.showBayarModal = false;
-                await this.loadData();
-            } catch(e) {
-                iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal', position: 'topRight' });
-            }
-        }
-    };
-}
-</script>
-JS;
-?>
+<?php $scripts = '<script src="/peace_seafood/inline-assets/js/keuangan/index.js"></script>'; ?>

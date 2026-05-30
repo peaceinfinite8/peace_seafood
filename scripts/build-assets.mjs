@@ -5,6 +5,9 @@ import * as esbuild from 'esbuild';
 
 const projectRoot = path.resolve(process.cwd());
 
+const themeCssSource = 'public/css/ui-theme.css';
+const themeJsSource = 'public/js/ui-theme.js';
+
 const jsInputs = [
   'public/js/api-client.js',
   'public/js/utils.js',
@@ -42,7 +45,9 @@ async function ensureOutDir() {
 async function buildOnce() {
   await ensureOutDir();
 
-  const [jsParts, cssParts] = await Promise.all([
+  const [themeCss, themeJs, jsParts, cssParts] = await Promise.all([
+    fs.readFile(path.join(projectRoot, themeCssSource), 'utf8'),
+    fs.readFile(path.join(projectRoot, themeJsSource), 'utf8'),
     readFiles(jsInputs),
     readFiles(cssInputs),
   ]);
@@ -77,6 +82,18 @@ async function buildOnce() {
 
   const manifest = {
     generated_at: new Date().toISOString(),
+    theme: {
+      css: {
+        file: '/css/ui-theme.css',
+        source: themeCssSource,
+        sha256: sha256(Buffer.from(themeCss, 'utf8')),
+      },
+      js: {
+        file: '/js/ui-theme.js',
+        source: themeJsSource,
+        sha256: sha256(Buffer.from(themeJs, 'utf8')),
+      },
+    },
     js: {
       file: '/build/app.min.js',
       sha256: sha256(Buffer.from(jsResult.code, 'utf8')),
@@ -131,6 +148,8 @@ async function watchMode() {
   const watchPaths = [
     ...jsInputs.map((p) => path.join(projectRoot, p)),
     ...cssInputs.map((p) => path.join(projectRoot, p)),
+    path.join(projectRoot, themeCssSource),
+    path.join(projectRoot, themeJsSource),
   ];
 
   const watchers = [];
@@ -145,7 +164,7 @@ async function watchMode() {
   console.log('Watching asset files for changes...');
 
   // Keep process alive
-  await new Promise(() => {});
+  await new Promise(() => { });
 }
 
 const { watch } = parseArgs(process.argv.slice(2));

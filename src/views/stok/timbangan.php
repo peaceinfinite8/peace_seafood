@@ -19,14 +19,16 @@
                     ✓ Tidak ada stok yang menunggu timbangan
                 </div>
                 <template x-for="item in pendingList" :key="item.id">
-                    <div :id="'timbangan-' + item.id" :data-highlight="'timbangan-' + item.id" class="p-4 mb-3 rounded-lg border cursor-pointer hover:shadow-sm transition-all"
+                    <div :id="'timbangan-' + item.id" :data-highlight="'timbangan-' + item.id"
+                        class="p-4 mb-3 rounded-lg border cursor-pointer hover:shadow-sm transition-all"
                         style="border-color: var(--border-color)"
                         :style="selectedId == item.id ? 'border-color: var(--color-primary); background: var(--color-primary-light)' : ''"
                         @click="selectItem(item)">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="font-semibold text-sm" x-text="item.nama_produk"></p>
-                                <p class="text-xs mt-1" style="color: var(--text-secondary)" x-text="'Supplier: ' + item.nama_supplier"></p>
+                                <p class="text-xs mt-1" style="color: var(--text-secondary)"
+                                    x-text="'Supplier: ' + item.nama_supplier"></p>
                             </div>
                             <div class="text-right">
                                 <p class="font-bold text-sm" x-text="formatKg(item.qty, 2)"></p>
@@ -51,7 +53,8 @@
             <div x-show="selectedId" x-cloak>
                 <!-- Selected item info -->
                 <div class="p-4 rounded-lg mb-4" style="background: var(--color-primary-light)">
-                    <p class="font-semibold text-sm" style="color: var(--color-primary)" x-text="selectedItem?.nama_produk"></p>
+                    <p class="font-semibold text-sm" style="color: var(--color-primary)"
+                        x-text="selectedItem?.nama_produk"></p>
                     <p class="text-xs mt-1" style="color: var(--text-secondary)">
                         Qty Teoritis: <strong x-text="formatKg(selectedItem?.qty||0, 2)"></strong>
                     </p>
@@ -60,8 +63,8 @@
                 <form @submit.prevent="submitTimbangan()">
                     <div class="form-group">
                         <label class="form-label">Qty Actual (kg) <span class="text-red-500">*</span></label>
-                        <input type="number" x-model="form.qty_actual" class="form-input"
-                            min="0" step="0.01" @input="calcSusut()" required>
+                        <input type="number" x-model="form.qty_actual" class="form-input" min="0" step="0.01"
+                            @input="calcSusut()" required>
                     </div>
 
                     <!-- Susut indicator -->
@@ -96,66 +99,4 @@
     </div>
 </div>
 
-<?php $scripts = <<<'JS'
-<script>
-function timbanganPage() {
-    return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        pendingList: [],
-        selectedId: null,
-        selectedItem: null,
-        form: { qty_actual: '', alasan_susut: '' },
-        saving: false,
-
-        get susut() {
-            if (!this.selectedItem || !this.form.qty_actual) return 0;
-            return parseFloat(this.selectedItem.qty) - parseFloat(this.form.qty_actual);
-        },
-        get susutPersen() {
-            if (!this.selectedItem || !this.form.qty_actual || !parseFloat(this.selectedItem.qty)) return 0;
-            return (this.susut / parseFloat(this.selectedItem.qty)) * 100;
-        },
-
-        async init() {
-            if (!['super_admin', 'admin', 'checker'].includes(this.user.role)) {
-                window.location.href = '/peace_seafood/dashboard';
-                return;
-            }
-            await this.loadPending();
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async loadPending() {
-            const token = localStorage.getItem('token');
-            const res = await axios.get('/peace_seafood/api/stok/pending-timbang', { headers: { Authorization: 'Bearer ' + token } });
-            this.pendingList = res.data?.data || [];
-        },
-
-        selectItem(item) {
-            this.selectedId = item.id;
-            this.selectedItem = item;
-            this.form = { qty_actual: item.qty, alasan_susut: '' };
-        },
-
-        calcSusut() {},
-
-        async submitTimbangan() {
-            if (!this.form.qty_actual) { iziToast.warning({ title: 'Peringatan', message: 'Qty actual wajib diisi', position: 'topRight' }); return; }
-            this.saving = true;
-            try {
-                const token = localStorage.getItem('token');
-                await axios.post('/peace_seafood/api/stok/timbang', {
-                    id_stok_masuk: this.selectedId, ...this.form,
-                }, { headers: { Authorization: 'Bearer ' + token } });
-                iziToast.success({ title: 'Berhasil', message: 'Timbangan dikonfirmasi! Stok diupdate.', position: 'topRight' });
-                this.selectedId = null; this.selectedItem = null; this.form = { qty_actual: '', alasan_susut: '' };
-                await this.loadPending();
-            } catch(e) {
-                iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal', position: 'topRight' });
-            } finally { this.saving = false; }
-        }
-    };
-}
-</script>
-JS;
-?>
+<?php $scripts = '<script src="/peace_seafood/inline-assets/js/stok/timbangan.js"></script>'; ?>

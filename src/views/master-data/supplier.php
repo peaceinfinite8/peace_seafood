@@ -30,11 +30,20 @@
         <div class="overflow-x-auto">
             <table class="table">
                 <thead>
-                    <tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th>Email</th><th x-show="['super_admin','admin'].includes(user.role)">Aksi</th></tr>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Telepon</th>
+                        <th>Alamat</th>
+                        <th>Email</th>
+                        <th x-show="['super_admin','admin'].includes(user.role)">Aksi</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr><td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="s in filtered" :key="s.id">
                         <tr>
@@ -94,57 +103,4 @@
     </div>
 </div>
 
-<?php $scripts = <<<'JS'
-<script>
-function supplierPage() {
-    return {
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        items: [], search: '', showModal: false, editId: null, saving: false,
-        form: { nama: '', telepon: '', alamat: '', email: '' },
-
-        get filtered() { const q = this.search.toLowerCase(); return this.items.filter(s => !q || s.nama?.toLowerCase().includes(q)); },
-
-        async init() {
-            await this.load();
-            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        },
-
-        async load() {
-            const token = localStorage.getItem('token');
-            const res = await axios.get('/peace_seafood/api/master/supplier', { headers: { Authorization: 'Bearer ' + token } });
-            this.items = res.data?.data || [];
-        },
-
-        openAdd() { this.editId = null; this.form = { nama: '', telepon: '', alamat: '', email: '' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
-        openEdit(s) { this.editId = s.id; this.form = { nama: s.nama, telepon: s.telpon||'', alamat: s.alamat||'', email: s.email||'' }; this.showModal = true; this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
-
-        async save() {
-            if (!this.form.nama) return;
-            this.saving = true;
-            try {
-                const token = localStorage.getItem('token');
-                const headers = { Authorization: 'Bearer ' + token };
-                if (this.editId) {
-                    await axios.put('/peace_seafood/api/master/supplier/' + this.editId, this.form, { headers });
-                } else {
-                    await axios.post('/peace_seafood/api/master/supplier', this.form, { headers });
-                }
-                iziToast.success({ title: 'Berhasil', message: 'Data tersimpan', position: 'topRight' });
-                this.showModal = false;
-                await this.load();
-            } catch(e) { iziToast.error({ title: 'Error', message: e.response?.data?.message || 'Gagal', position: 'topRight' }); }
-            this.saving = false;
-        },
-
-        async deleteItem(id) {
-            if (!await confirm('Hapus supplier ini?')) return;
-            const token = localStorage.getItem('token');
-            await axios.delete('/peace_seafood/api/master/supplier/' + id, { headers: { Authorization: 'Bearer ' + token } });
-            iziToast.success({ title: 'Berhasil', message: 'Supplier dihapus', position: 'topRight' });
-            await this.load();
-        }
-    };
-}
-</script>
-JS;
-?>
+<?php $scripts = '<script src="/peace_seafood/inline-assets/js/master-data/supplier.js"></script>'; ?>

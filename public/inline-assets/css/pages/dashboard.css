@@ -1,0 +1,84 @@
+/* extracted from pages_dashboard.style.1.css */
+/* extracted from src/views/pages/dashboard.php */
+.dashboard-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .dashboard-section {
+        padding: 20px;
+    }
+
+    .dashboard-section-header {
+        margin-bottom: 16px;
+    }
+
+    .dashboard-section-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dashboard-section-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin: 4px 0 0;
+    }
+
+    .dashboard-chart-card {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+    }
+
+    .dashboard-chart-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .dashboard-canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .kpi-card {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        padding: 1rem;
+    }
+
+    .kpi-card h4 {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .kpi-card .value {
+        color: var(--text-primary);
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .muted-border {
+        border-color: var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-section {
+            padding: 16px;
+        }
+
+        .section-chart-260 {
+            height: 200px !important;
+        }
+
+        .section-chart-200 {
+            height: 180px !important;
+        }
+    }

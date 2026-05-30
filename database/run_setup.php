@@ -21,7 +21,8 @@ echo "Reading environment configurations...\n";
 $envVars = [];
 $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 foreach ($lines as $line) {
-    if (strpos(trim($line), '#') === 0) continue;
+    if (strpos(trim($line), '#') === 0)
+        continue;
     $parts = explode('=', $line, 2);
     if (count($parts) === 2) {
         $key = trim($parts[0]);
@@ -43,6 +44,8 @@ try {
     // Connect without dbname first to create it if it doesn't exist
     $pdo = new PDO($dsn, $user, $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
     ]);
 
@@ -60,39 +63,49 @@ $migrationsDir = BASE_PATH . '/database/migrations';
 if (is_dir($migrationsDir)) {
     echo "Scanning migrations directory for SQL files...\n";
     $files = glob($migrationsDir . '/*.sql');
-    
+
     // Sort files chronologically by filename
     sort($files);
-    
+
     foreach ($files as $file) {
         $filename = basename($file);
         echo "Applying Migration: {$filename}...\n";
-        
+
         $sqlContent = file_get_contents($file);
-        
+
         // Remove SQL comments
         $sqlContent = preg_replace('/--.*\n/', '', $sqlContent);
-        $sqlContent = preg_replace('/\/*.*?\*\//', '', $sqlContent);
-        
+        $sqlContent = preg_replace('/\/\*.*?\*\//s', '', $sqlContent);
+
         // Split by semicolon
         $statements = explode(';', $sqlContent);
-        
+
         $successCount = 0;
         $skipCount = 0;
         $failCount = 0;
-        
+
         foreach ($statements as $statement) {
             $statement = trim($statement);
-            if (empty($statement)) continue;
-            
+            if (empty($statement))
+                continue;
+
             try {
-                $pdo->exec($statement);
+                $stmt = $pdo->prepare($statement);
+                $stmt->execute();
+
+                // Some migration SQL includes diagnostic SELECT statements.
+                // Fetch all rows to fully drain result sets and avoid HY000 2014.
+                if ($stmt->columnCount() > 0) {
+                    $stmt->fetchAll();
+                    $stmt->closeCursor();
+                }
+
                 $successCount++;
             } catch (PDOException $e) {
                 $msg = $e->getMessage();
                 if (
-                    strpos($msg, 'Duplicate column') !== false || 
-                    strpos($msg, 'already exists') !== false || 
+                    strpos($msg, 'Duplicate column') !== false ||
+                    strpos($msg, 'already exists') !== false ||
                     strpos($msg, 'Duplicate key') !== false ||
                     strpos($msg, 'already exist') !== false ||
                     strpos($msg, 'Duplicate entry') !== false
@@ -105,7 +118,7 @@ if (is_dir($migrationsDir)) {
                 }
             }
         }
-        
+
         echo "-> Finished {$filename}: {$successCount} succeeded, {$skipCount} skipped/already applied, {$failCount} failed.\n";
         if ($failCount > 0) {
             echo "-> Warning: Some statements failed. Please check the logs above.\n";

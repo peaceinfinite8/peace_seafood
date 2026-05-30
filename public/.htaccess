@@ -1,6 +1,11 @@
 Options -Indexes
 RewriteEngine On
 
+# If the app is accessed with a base path (/peace_seafood), silently strip
+# that prefix for static-file checks so existing files are served correctly.
+RewriteCond %{REQUEST_URI} ^/peace_seafood/(.*)
+RewriteRule ^peace_seafood/(.*)$ $1 [L]
+
 # PENTING: Teruskan Authorization header ke PHP (wajib di XAMPP/Apache)
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]

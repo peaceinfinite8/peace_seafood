@@ -1,8 +1,20 @@
 {
-  "generated_at": "2026-05-25T21:29:46.846Z",
+  "generated_at": "2026-05-30T17:29:28.768Z",
+  "theme": {
+    "css": {
+      "file": "/css/ui-theme.css",
+      "source": "public/css/ui-theme.css",
+      "sha256": "99a0dccd7afe890f7dda7796b9854ed5b3a139dee2c6b4f605d04a7ce7b96d88"
+    },
+    "js": {
+      "file": "/js/ui-theme.js",
+      "source": "public/js/ui-theme.js",
+      "sha256": "9c0f273a0c6f60f405ec30cf084eb82e390cf34f888168cfb0103ae6523d633c"
+    }
+  },
   "js": {
     "file": "/build/app.min.js",
-    "sha256": "f3781d228d7af2d2da4ff8448342d6b983b9c6456e0471276a95e2f7686880ab",
+    "sha256": "fc6ab26a46ce31b9b85fcf3a7286d1b83cb9368315302dbd8eea5791403ba9f1",
     "inputs": [
       "public/js/api-client.js",
       "public/js/utils.js",
@@ -11,7 +23,7 @@
   },
   "css": {
     "file": "/build/app.min.css",
-    "sha256": "58305525a51bd92aa8b782f3e25980cb8775e9984ff4a086aaaf08c9f985aa6c",
+    "sha256": "c3d7b4d6e396c522d092a22b92bbd9be4419d68c6d8449c5cf984bd4169ea030",
     "inputs": [
       "public/css/variables.css",
       "public/css/dark-mode.css",
