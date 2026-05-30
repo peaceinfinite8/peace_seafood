@@ -17,7 +17,10 @@ try {
 $appName = $dbNameSetting ? $dbNameSetting['nilai'] : 'Peace Seafood';
 $appLogoBase64 = $dbLogoSetting ? $dbLogoSetting['nilai'] : null;
 $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
-$baseUrl = '/peace_seafood';
+
+// Load base path from config
+$config = require __DIR__ . '/../../config/app.php';
+$baseUrl = $config['base_path'];
 ?>
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
