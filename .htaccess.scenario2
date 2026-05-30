@@ -1,0 +1,18 @@
+Options -Indexes
+RewriteEngine On
+
+# ============================================================
+# SCENARIO 2: DocumentRoot = C:/xampp/htdocs
+# Access URL: http://localhost:8080/peace_seafood/
+# ============================================================
+
+# Prevent direct access to root folder
+# Redirect /peace_seafood/ to /peace_seafood/public/
+RewriteCond %{REQUEST_URI} ^/peace_seafood/?$
+RewriteRule ^ /peace_seafood/public/ [L]
+
+# Redirect all requests to public/ folder
+RewriteCond %{REQUEST_URI} !^/peace_seafood/public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]
