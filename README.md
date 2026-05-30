@@ -1,261 +1,106 @@
-# Peace Seafood
+# Peace Seafood — README untuk Programmer
 
-Peace Seafood adalah web application berbasis PHP untuk manajemen gudang dan operasional seafood. Aplikasi ini mencakup stok, penjualan, penitipan, retur, keuangan, master data, laporan, dan pengaturan sistem.
+Ini README singkat yang menjelaskan tujuan project, alur pendaftaran `SAAS_OWNER`, dan langkah teknis untuk programmer agar fitur pendaftaran boss (pemilik usaha) bekerja otomatis seperti yang Anda inginkan.
 
-## Ringkasan
+## Tujuan proyek
+Project ini adalah aplikasi bisnis (SaaS) untuk kelola operasi seafood: stok, penjualan, penitipan, retur, laporan, dan keuangan. Tujuan update ini: menambahkan alur pendaftaran bisnis baru di mana `SAAS_OWNER` (akun yang memiliki hak approve) menerima permintaan pendaftaran dan sistem otomatis membuat credential login untuk boss lalu mengirimkannya lewat email (Gmail).
 
-- Backend PHP 8.2+
-- Autentikasi JWT
-- Akses berbasis role
-- Dashboard operasional
-- Export laporan PDF dan Excel
-- Dibuat untuk environment lokal XAMPP dan MySQL
+## Inti alur yang diminta
+1. Owner (admin SaaS) akan menerima email boss yang ingin mendaftar.
+2. Admin memasukkan email boss tersebut ke entri/record `SAAS_OWNER` di sistem.
+3. Saat email boss di-input, sistem otomatis:
+   - Membuat akun user untuk boss (generate password aman),
+   - Menyimpan hash password di tabel `users`/`saas_owners`,
+   - Mengirim email ke alamat boss berisi kredensial login (email + password) dan instruksi awal.
+4. Boss dapat login menggunakan kredensial yang dikirim.
 
-## Fitur Utama
+## Rekomendasi implementasi (tempat menaruh kode)
+- Model / migration: buat tabel baru `saas_owners` atau gunakan `users` dengan kolom `role = owner`.
+  - Lihat folder migrasi: [database/migrations](database/migrations)
+  - Contoh migrasi baru: `database/migrations/20260529_create_saas_owners.sql` (buat jika belum ada).
 
-### Operasional Gudang
+- Service: implementasikan logika pembuatan akun dan pengiriman email di [src/services](src/services), contoh `SaasService.php` yang memanggil `AuthService` / `UserService` dan [src/utils/Email.php](src/utils/Email.php).
 
-- Stok dan inventory
-- Input stok masuk
-- Timbangan dan susut
-- History stok
+- Controller & route: buat controller `SaasController` dan tambahkan route di [routes/web.php](routes/web.php) atau [routes/api.php](routes/api.php) untuk endpoint admin meng-input email boss.
 
-### Penjualan
+## Detail teknis langkah demi langkah
+1. Migration: tambah tabel `saas_owners` (id, email, created_by, created_at, status).
+2. Model: buat `src/models/SaasOwner.php` untuk akses DB.
+3. Service - `SaasService::createOwner($email, $creatorId)`:
+   - Validasi email (format, uniqueness).
+   - Generate password kuat (contoh: random 12+ chars) dan hash dengan `password_hash()`.
+   - Buat record user (atau saas_owner) di DB dan set role `owner`.
+   - Kirim email via `Email::send($to, $subject, $body)` dengan kredensial SMTP/Gmail.
+   - Log event di activity log.
 
-- Daftar nota penjualan
-- Buat nota penjualan
-- Finalize atau cancel nota
+4. Email: gunakan SMTP Gmail (disarankan App Password) atau service mail (SendGrid/Mailgun). Simpan kredensial di `.env`:
 
-### Penitipan
-
-- Terima titipan baru
-- Catat penjualan titipan
-- Settlement titipan
-
-### Retur
-
-- Retur stok
-- Retur piutang
-- Approve dan reject retur
-
-### Keuangan
-
-- Hutang dan piutang
-- Pembayaran
-- Biaya operasional
-
-### Master Data
-
-- Supplier
-- Pembeli
-- Jenis ikan
-- Produk
-- Riwayat harga
-
-### Laporan dan Settings
-
-- Laporan stok, penjualan, dan keuangan
-- Export PDF dan Excel
-- Manajemen user dan gudang
-- Pengaturan aplikasi
-
-## Teknologi
-
-- PHP 8.2+
-- MySQL
-- Composer
-- Firebase JWT
-- Dompdf
-- PhpSpreadsheet
-- Monolog
-- Chart.js di frontend
-
-## Persyaratan Sistem
-
-- PHP 8.2 atau lebih baru
-- MySQL/MariaDB
-- Composer
-- XAMPP atau web server setara
-- Ekstensi PHP yang umum dibutuhkan untuk project PHP modern, seperti PDO MySQL, mbstring, openssl, fileinfo, dan zip
-
-## Dev Tools (Static Analysis)
-
-- PHPStan config: `phpstan.neon.dist` (bootstrap: `phpstan-bootstrap.php`)
-- Rector config: `rector.php`
-
-Jalankan (butuh PHP 8.2+ sesuai `composer.json`):
-
-`php vendor/bin/phpstan analyse -c phpstan.neon.dist`
-
-`php vendor/bin/rector process`
-
-## Asset Bundling (CSS/JS)
-
-Bundling & minifying file CSS/JS lokal ke:
-
-- `public/build/app.min.css`
-- `public/build/app.min.js`
-
-Perintah:
-
-`npm.cmd install`
-
-`npm.cmd run build:assets`
-
-Mode watch:
-
-`npm.cmd run watch:assets`
-
-## Instalasi Lokal
-
-1. Clone atau salin project ke folder web server, misalnya `c:\xampp\htdocs\peace_seafood`.
-2. Jalankan instalasi dependency:
-
-	```bash
-	composer install
-	```
-
-3. Salin file `.env.example` menjadi `.env`.
-4. Sesuaikan konfigurasi database dan URL aplikasi di file `.env`.
-5. Buat database MySQL bernama `peace_seafood` atau sesuaikan dengan `DB_NAME`.
-6. Import file database berikut bila tersedia di environment kamu:
-	- `database/schema.sql`
-	- `database/seeders/seeder.sql`
-7. Pastikan Apache dan MySQL di XAMPP sudah berjalan.
-8. Buka aplikasi di browser:
-
-	`http://localhost:8080/peace_seafood/`
-
-   Jika ingin mengelola database, buka phpMyAdmin di:
-
-	`http://localhost/phpmyadmin/`
-
-## Contoh Konfigurasi .env
-
-```env
-APP_NAME=Peace Seafood
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost
-APP_TIMEZONE=Asia/Jakarta
-
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=peace_seafood
-DB_USER=root
-DB_PASSWORD=
-
-JWT_SECRET=change-this-to-a-random-secret-key-min-32-chars
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION=3600
-
-UPLOAD_MAX_SIZE=5242880
-UPLOAD_ALLOWED_TYPES=jpg,jpeg,png,gif,pdf
-
-EXPORT_MAX_ROWS=10000
-
-LOG_CHANNEL=single
-LOG_LEVEL=debug
-
-SESSION_TIMEOUT_MINUTES=30
-CORS_ORIGIN=http://localhost
+```
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=youremail@gmail.com
+MAIL_PASS=app-password-or-token
+MAIL_FROM=youremail@gmail.com
+MAIL_FROM_NAME="Peace Seafood"
 ```
 
-## Akses Aplikasi
+5. UI / Admin flow:
+   - Halaman admin untuk input email boss, tombol `Create owner`.
+   - Setelah submit, panggil endpoint yang memicu `SaasService::createOwner`.
 
-| Halaman | URL |
-|---|---|
-| Login | http://localhost:8080/peace_seafood/ |
-| Dashboard | http://localhost:8080/peace_seafood/dashboard |
-| Stok | http://localhost:8080/peace_seafood/stok |
-| Penjualan | http://localhost:8080/peace_seafood/penjualan |
-| Penitipan | http://localhost:8080/peace_seafood/penitipan |
-| Retur | http://localhost:8080/peace_seafood/retur |
-| Keuangan | http://localhost:8080/peace_seafood/keuangan |
-| Laporan | http://localhost:8080/peace_seafood/laporan |
-| Master Data | http://localhost:8080/peace_seafood/master-data |
-| Settings | http://localhost:8080/peace_seafood/settings |
-| API Base | http://localhost:8080/peace_seafood/api/ |
+6. Email content (saran):
+   - Subjek: `Akun Anda untuk Peace Seafood (nama_toko)`
+   - Isi: link login, username (email), password sementara, instruksi ganti password setelah login, dan kontak support.
 
-## Akun Demo Lokal
+7. Keamanan & operasional:
+   - Jangan kirim password plain kecuali memang diperlukan; alternatif: kirim link aktivasi ber-OTP yang mengarahkan boss set password.
+   - Jika tetap kirim password, gunakan App Password Gmail, serta simpan hanya hash password di DB.
+   - Catat dan limitasi percobaan pembuatan akun untuk mencegah spam.
 
-Gunakan akun berikut untuk environment development lokal.
+## File & lokasi kerja utama (quick links)
+- Routes: [routes/web.php](routes/web.php) atau [routes/api.php](routes/api.php)
+- Controllers: [src/controllers](src/controllers)
+- Services: [src/services](src/services)
+- Utils Email: [src/utils/Email.php](src/utils/Email.php)
+- Models: [src/models](src/models)
+- Migrations: [database/migrations](database/migrations)
 
-| Role | Email | Password |
-|---|---|---|
-| Bos | bos@example.com | bos123 |
-| Admin Gudang A | admin@example.com | admin123 |
-| Checker Gudang A | checker@example.com | checker123 |
-| Admin Gudang B | admin2@example.com | admin2 |
-
-## Role dan Hak Akses
-
-### Bos
-
-- Akses semua gudang
-- Approve dan reject retur
-- Kelola settings, user, dan gudang
-- Export laporan
-- Ubah harga produk
-
-### Admin
-
-- Input dan kelola stok masuk
-- Buat nota penjualan
-- Kelola penitipan
-- Kelola retur
-- Kelola keuangan
-- Kelola master data
-- Lihat laporan
-
-### Checker
-
-- Input stok masuk
-- Input timbangan dan susut
-- Input retur stok
-- Lihat stok dan laporan
-
-## Struktur Folder
-
-```text
-config/        Konfigurasi aplikasi, database, dan role
-database/      Schema dan seed data
-docs/          Dokumentasi tambahan
-public/        Entry point, aset CSS, JS, dan icon
-routes/        Routing web dan API
-src/           Controllers, models, services, middleware, utils, views
-storage/       Cache, export, log, dan upload
-vendor/        Dependency dari Composer
+## Contoh pseudocode (di `SaasService`)
+```php
+function createOwner(string $email, int $creatorId) {
+  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Exception('Invalid email');
+  // generate password
+  $plain = bin2hex(random_bytes(8)); // 16 chars
+  $hash = password_hash($plain, PASSWORD_DEFAULT);
+  // create user record (example using DB helper)
+  $userId = DB::insert('users', [
+    'email' => $email,
+    'password' => $hash,
+    'role' => 'owner',
+    'created_by' => $creatorId,
+  ]);
+  // send email
+  $body = "Akun Anda: $email\nPassword sementara: $plain\nSilakan ganti password setelah login.";
+  Email::send($email, 'Akun Peace Seafood', $body);
+  return $userId;
+}
 ```
 
-## Autentikasi dan Keamanan
+> Catatan: pseudocode di atas sederhana untuk kejelasan. Untuk produksi gunakan link aktivasi, token yang kedaluwarsa, dan jangan kirim password plaintext kecuali memang aturan internal mengizinkan.
 
-- Login menggunakan JWT
-- Token disimpan di localStorage
-- Akses endpoint dilindungi middleware auth dan role
-- Security headers dasar diaktifkan pada entry point aplikasi
+## Cara test manual cepat
+1. Pastikan `MAIL_*` di `.env` terisi dan `composer install` sudah dijalankan.
+2. Jalankan migrasi: lihat `database/run_setup.php` atau jalankan query SQL di `database/migrations`.
+3. Panggil endpoint admin untuk create owner (curl / Postman).
 
-## Endpoint API Utama
+Contoh curl:
+```bash
+curl -X POST "http://localhost/saas/create-owner" -d "email=boss@example.com" -u admin:adminpassword
+```
 
-- Auth: `/api/auth/login`, `/api/auth/logout`, `/api/auth/profile`
-- Dashboard: `/api/dashboard`
-- Stok: `/api/stok`, `/api/stok/masuk`, `/api/stok/timbang`, `/api/stok/history`
-- Penjualan: `/api/penjualan`
-- Penitipan: `/api/penitipan`
-- Retur: `/api/retur`
-- Keuangan: `/api/keuangan/hutang-piutang`, `/api/keuangan/bayar`, `/api/keuangan/biaya`
-- Laporan: `/api/laporan/stok`, `/api/laporan/penjualan`, `/api/laporan/keuangan`
-- Master data: `/api/master/supplier`, `/api/master/pembeli`, `/api/master/jenis-ikan`, `/api/master/produk`, `/api/master/harga`
-- Settings: `/api/settings`, `/api/settings/users`, `/api/settings/gudang`
+## Checklist sebelum produksi
+- Gunakan `App Password` untuk Gmail atau provider SMTP yang terverifikasi.
+- Terapkan rate-limit dan verifikasi input.
+- Pastikan audit log mencatat siapa yang membuat owner baru.
+- Uji alur aktivasi akun dan reset password.
 
-## Catatan Pengembangan
-
-- Jalankan project melalui document root yang mengarah ke folder `public/` atau gunakan konfigurasi rewrite yang sesuai.
-- Pastikan nilai `APP_URL` sesuai dengan URL akses lokal tanpa port, misalnya `http://localhost`.
-- Ubah `JWT_SECRET` sebelum dipakai di environment non-lokal.
-- Jika perlu akses database, gunakan phpMyAdmin di `http://localhost/phpmyadmin/`.
-- Dokumentasi halaman dan endpoint dapat dilihat di `docs/pages_map.json`.
-
-## Lisensi
-
-Project ini ditujukan untuk kebutuhan internal dan development. Sesuaikan lisensi sesuai kebijakan pemilik project.

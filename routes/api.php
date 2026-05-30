@@ -2,19 +2,23 @@
 
 declare(strict_types=1);
 
-use App\Middleware\AuthMiddleware;
-use App\Controllers\AuthController;
-use App\Controllers\DashboardController;
-use App\Controllers\StokController;
-use App\Controllers\PenjualanController;
-use App\Controllers\PenitipanController;
-use App\Controllers\ReturController;
-use App\Controllers\KeuanganController;
-use App\Controllers\LaporanController;
-use App\Controllers\MasterDataController;
-use App\Controllers\SettingsController;
-use App\Controllers\NotifikasiController;
-use App\Utils\Response;
+use App\middleware\AuthMiddleware;
+use App\controllers\AuthController;
+use App\controllers\DashboardController;
+use App\controllers\StokController;
+use App\controllers\PenjualanController;
+use App\controllers\PenitipanController;
+use App\controllers\ReturController;
+use App\controllers\KeuanganController;
+use App\controllers\LaporanController;
+use App\controllers\MasterDataController;
+use App\controllers\SettingsController;
+use App\controllers\NotifikasiController;
+use App\controllers\StokOpnameController;
+use App\controllers\StokTransferController;
+use App\controllers\ActivityLogController;
+use App\controllers\MigrationController;
+use App\utils\Response;
 
 require_once BASE_PATH . '/config/constants.php';
 
@@ -31,10 +35,15 @@ $uri = rtrim($uri, '/') ?: '/';
 // Route Table
 // ============================================================
 $routes = [
-    // Auth (no auth required)
-    'POST /auth/login'    => [AuthController::class,    'login',   false],
-    'POST /auth/logout'   => [AuthController::class,    'logout',  true],
-    'GET  /auth/profile'  => [AuthController::class,    'profile', true],
+    // Auth
+    'POST /auth/login'           => [AuthController::class,    'login',          false],
+    'POST /auth/logout'          => [AuthController::class,    'logout',         true],
+    'GET  /auth/profile'         => [AuthController::class,    'profile',        true],
+    'POST /auth/signup'          => [AuthController::class,    'signup',         false],
+    'POST /auth/change-password' => [AuthController::class,    'changePassword', true],
+    'POST /auth/forgot-password' => [AuthController::class,    'forgotPassword', false],
+    'POST /auth/reset-password'  => [AuthController::class,    'resetPassword',  false],
+    'POST /auth/impersonate'     => [AuthController::class,    'impersonate',    true],
 
     // Dashboard
     'GET /dashboard'      => [DashboardController::class, 'index',  true],
@@ -48,12 +57,13 @@ $routes = [
     'GET /stok/pending-timbang'  => [StokController::class, 'pendingTimbang', true],
 
     // Penjualan
-    'GET /penjualan'                  => [PenjualanController::class, 'index',    true],
-    'POST /penjualan'                 => [PenjualanController::class, 'create',   true],
-    'GET /penjualan/{id}'             => [PenjualanController::class, 'show',     true],
-    'PUT /penjualan/{id}'             => [PenjualanController::class, 'update',   true],
-    'POST /penjualan/{id}/finalize'   => [PenjualanController::class, 'finalize', true],
-    'POST /penjualan/{id}/cancel'     => [PenjualanController::class, 'cancel',   true],
+    'GET /penjualan'                  => [PenjualanController::class, 'index',       true],
+    'POST /penjualan'                 => [PenjualanController::class, 'create',      true],
+    'POST /penjualan/draft'           => [PenjualanController::class, 'createDraft', true],
+    'GET /penjualan/{id}'             => [PenjualanController::class, 'show',        true],
+    'PUT /penjualan/{id}'             => [PenjualanController::class, 'update',      true],
+    'POST /penjualan/{id}/finalize'   => [PenjualanController::class, 'finalize',    true],
+    'POST /penjualan/{id}/cancel'     => [PenjualanController::class, 'cancel',      true],
 
     // Penitipan
     'GET /penitipan'                  => [PenitipanController::class, 'index',      true],
@@ -85,6 +95,10 @@ $routes = [
     'GET /laporan/hutang-aging'  => [LaporanController::class, 'hutangAging', true],
     'POST /laporan/export/pdf'   => [LaporanController::class, 'exportPdf',   true],
     'POST /laporan/export/excel' => [LaporanController::class, 'exportExcel', true],
+    'GET /laporan/export/pdf'    => [LaporanController::class, 'exportPdf',   true],
+    'GET /laporan/export/excel'  => [LaporanController::class, 'exportExcel', true],
+    'GET /laporan/export-csv'    => [LaporanController::class, 'exportExcel', true],
+    'GET /laporan/export-pdf'    => [LaporanController::class, 'exportPdf',   true],
 
     // Master Data — Supplier
     'GET /master/supplier'          => [MasterDataController::class, 'supplierIndex',   true],
@@ -104,12 +118,14 @@ $routes = [
     'GET /master/jenis-ikan'        => [MasterDataController::class, 'jenisIkanIndex',  true],
     'POST /master/jenis-ikan'       => [MasterDataController::class, 'jenisIkanStore',  true],
     'PUT /master/jenis-ikan/{id}'   => [MasterDataController::class, 'jenisIkanUpdate', true],
+    'DELETE /master/jenis-ikan/{id}' => [MasterDataController::class, 'jenisIkanDestroy', true],
 
     // Master Data — Produk
     'GET /master/produk'            => [MasterDataController::class, 'produkIndex',  true],
     'POST /master/produk'           => [MasterDataController::class, 'produkStore',  true],
     'GET /master/produk/{id}'       => [MasterDataController::class, 'produkShow',   true],
     'PUT /master/produk/{id}'       => [MasterDataController::class, 'produkUpdate', true],
+    'GET /master/pembeli/{id}/credit-status' => [MasterDataController::class, 'pembeliCreditStatus', true],
 
     // Master Data — Harga
     'GET /master/harga'             => [MasterDataController::class, 'hargaIndex', true],
@@ -120,17 +136,52 @@ $routes = [
     'PUT /settings/{kunci}'         => [SettingsController::class, 'update',           true],
     'GET /settings/users'           => [SettingsController::class, 'users',            true],
     'POST /settings/users'          => [SettingsController::class, 'storeUser',        true],
+    'POST /settings/pre-approve'    => [SettingsController::class, 'preApproveUser',   true],
+    'POST /onboarding/complete'     => [SettingsController::class, 'completeOnboarding', true],
     'PUT /settings/users/{id}'      => [SettingsController::class, 'updateUser',       true],
     'DELETE /settings/users/{id}'   => [SettingsController::class, 'deleteUser',       true],
     'GET /settings/gudang'          => [SettingsController::class, 'gudang',           true],
     'POST /settings/gudang'         => [SettingsController::class, 'storeGudang',      true],
     'PUT /settings/gudang/{id}'     => [SettingsController::class, 'updateGudang',     true],
+    'DELETE /settings/gudang/{id}'  => [SettingsController::class, 'deleteGudang',     true],
     'POST /settings/backup'         => [SettingsController::class, 'backup',           true],
+
+    // Bank accounts (Rekening BOS)
+    'GET /settings/bank-accounts'           => [\App\Controllers\BankAccountController::class, 'index', true],
+    'POST /settings/bank-accounts'          => [\App\Controllers\BankAccountController::class, 'store', true],
+    'PUT /settings/bank-accounts/{id}'      => [\App\Controllers\BankAccountController::class, 'update', true],
+    'DELETE /settings/bank-accounts/{id}'   => [\App\Controllers\BankAccountController::class, 'delete', true],
 
     // Notifikasi
     'GET /notifikasi'               => [NotifikasiController::class, 'index',   true],
     'POST /notifikasi/{id}/read'    => [NotifikasiController::class, 'read',    true],
     'POST /notifikasi/read-all'     => [NotifikasiController::class, 'readAll', true],
+    'DELETE /notifikasi/{id}'       => [NotifikasiController::class, 'destroy', true],
+
+    // Stok Opname
+    'GET  /stok-opname'               => [StokOpnameController::class, 'index',    true],
+    'POST /stok-opname'               => [StokOpnameController::class, 'create',   true],
+    'GET  /stok-opname/{id}'          => [StokOpnameController::class, 'show',     true],
+    'POST /stok-opname/{id}/finalize' => [StokOpnameController::class, 'finalize', true],
+
+    // Transfer Antar Gudang
+    'GET  /stok-transfer'             => [StokTransferController::class, 'index',        true],
+    'POST /stok-transfer'             => [StokTransferController::class, 'create',       true],
+    'PUT  /stok-transfer/{id}/status' => [StokTransferController::class, 'updateStatus', true],
+
+    // Audit Trail Activity Log
+    'GET  /activity-log'              => [ActivityLogController::class, 'index', true],
+    'GET  /activity-log/resource'     => [ActivityLogController::class, 'resource', true],
+
+    // PDF Invoice Export
+    'GET  /penjualan/{id}/pdf'        => [PenjualanController::class, 'exportPdf', true],
+
+    // Pusat Migrasi Data Bahari
+    'GET  /migrasi/template'          => [MigrationController::class, 'downloadTemplate', true],
+    'POST /migrasi/excel/preview'     => [MigrationController::class, 'excelPreview', true],
+    'POST /migrasi/excel/import'      => [MigrationController::class, 'excelImport', true],
+    'POST /migrasi/ocr/preview'       => [MigrationController::class, 'ocrPreview', true],
+    'POST /migrasi/ocr/import'        => [MigrationController::class, 'excelImport', true],
 ];
 
 // ============================================================

@@ -13,9 +13,6 @@ class Response
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Pragma: no-cache');
-        header('Expires: 0');
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -25,7 +22,7 @@ class Response
         self::json([
             'success' => true,
             'message' => $message,
-            'data' => $data,
+            'data'    => $data,
         ], $status);
     }
 
@@ -34,17 +31,31 @@ class Response
         self::success($data, $message, 201);
     }
 
-    public static function error(
-        int $status,
-        string $errorCode,
-        string $message,
-        array $errors = []
-    ): never {
+    public static function error(...$args): never
+    {
+        // Backwards compatible:
+        // Old calls: Response::error(string $message, int $status = 422, array $errors = [])
+        // New calls: Response::error(int $status, string $errorCode, string $message, array $errors = [])
+
+        if (isset($args[0]) && is_int($args[0])) {
+            // new signature
+            $status = $args[0];
+            $errorCode = $args[1] ?? 'ERROR';
+            $message = $args[2] ?? '';
+            $errors = $args[3] ?? [];
+        } else {
+            // old signature
+            $message = $args[0] ?? '';
+            $status = $args[1] ?? 422;
+            $errors = $args[2] ?? [];
+            $errorCode = 'ERROR';
+        }
+
         self::json([
-            'success' => false,
+            'success'    => false,
             'error_code' => $errorCode,
-            'message' => $message,
-            'errors' => $errors,
+            'message'    => $message,
+            'errors'     => $errors,
         ], $status);
     }
 
@@ -77,14 +88,14 @@ class Response
     {
         self::json([
             'success' => true,
-            'data' => $data,
+            'data'    => $data,
             'pagination' => [
                 'current_page' => $page,
-                'per_page' => $perPage,
-                'total' => $total,
-                'total_pages' => (int) ceil($total / $perPage),
-                'has_next' => ($page * $perPage) < $total,
-                'has_prev' => $page > 1,
+                'per_page'     => $perPage,
+                'total'        => $total,
+                'total_pages'  => (int) ceil($total / $perPage),
+                'has_next'     => ($page * $perPage) < $total,
+                'has_prev'     => $page > 1,
             ],
         ]);
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Utils\Database;
-use App\Middleware\AuthMiddleware;
+use App\Utils\ActivityLogHelper;
 
 class KeuanganService
 {
@@ -16,31 +16,31 @@ class KeuanganService
     public function getHutangPiutangList(int $idGudang, array $filters = [], bool $allGudang = false): array
     {
         if ($allGudang && $idGudang === 0) {
-            $where = "1=1";
+            $where  = "1=1";
             $params = [];
         } else {
-            $where = "hp.id_gudang = ?";
+            $where  = "hp.id_gudang = ?";
             $params = [$idGudang];
         }
 
         if (!empty($filters['jenis'])) {
-            $where .= " AND hp.jenis = ?";
-            $params[] = $filters['jenis'];
+            $where    .= " AND hp.jenis = ?";
+            $params[]  = $filters['jenis'];
         }
         if (!empty($filters['status'])) {
-            $where .= " AND hp.status = ?";
-            $params[] = $filters['status'];
+            $where    .= " AND hp.status = ?";
+            $params[]  = $filters['status'];
         }
         if (!empty($filters['dari'])) {
-            $where .= " AND DATE(hp.created_at) >= ?";
-            $params[] = $filters['dari'];
+            $where    .= " AND DATE(hp.created_at) >= ?";
+            $params[]  = $filters['dari'];
         }
         if (!empty($filters['sampai'])) {
-            $where .= " AND DATE(hp.created_at) <= ?";
-            $params[] = $filters['sampai'];
+            $where    .= " AND DATE(hp.created_at) <= ?";
+            $params[]  = $filters['sampai'];
         }
 
-        $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+        $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
         $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON hp.id_gudang = g.id" : "";
 
         return Database::fetchAll(
@@ -60,99 +60,87 @@ class KeuanganService
         );
     }
 
-    /**
-     * Buat hutang/piutang manual
-     */
-    public function createHutangPiutang(array $data, int $idGudang): int
+    public function createHutangPiutang(array $data, int $idGudang, int $idUser): int
     {
-        return Database::insert('hutang_piutang', [
-            'id_gudang' => $idGudang,
-            'jenis' => $data['jenis'],      // 'hutang' atau 'piutang'
+        $payload = [
+            'id_gudang'   => $idGudang,
+            'jenis'       => $data['jenis'],      // 'hutang' atau 'piutang'
             'id_supplier' => $data['id_supplier'] ?? null,
-            'id_pembeli' => $data['id_pembeli'] ?? null,
-            'nominal' => $data['nominal'],
-            'nominal_bayar' => 0,
+            'id_pembeli'  => $data['id_pembeli'] ?? null,
+            'nominal'     => $data['nominal'],
             'jatuh_tempo' => $data['jatuh_tempo'] ?? null,
-            'catatan' => $data['catatan'] ?? null,
-            'status' => 'open',
-        ]);
+            'catatan'     => $data['catatan'] ?? null,
+            'status'      => 'open',
+            'created_by'  => $idUser,
+        ];
+        $idHP = Database::insert('hutang_piutang', $payload);
+
+        ActivityLogHelper::log('INSERT', 'hutang_piutang', $idHP, null, $payload);
+
+        return $idHP;
     }
 
     /**
      * Input pembayaran hutang/piutang.
      * Jika $allGudang = true, tidak filter by id_gudang (untuk BOS).
-     * 
-     * Formula:
-     * - Sisa Hutang Baru = Sisa Hutang Lama - Nominal Bayar
-     * - Total Bayar = Total Bayar Lama + Nominal Bayar
-     * - Status = 'lunas' jika Sisa Hutang <= 0
-     *          = 'sebagian' jika Total Bayar > 0 dan Sisa Hutang > 0
-     *          = 'open' jika Total Bayar = 0
-     * 
-     * Contoh:
-     * Hutang: Rp 10.000.000
-     * Sudah bayar: Rp 3.000.000
-     * Sisa: Rp 7.000.000
-     * Bayar sekarang: Rp 4.000.000
-     * 
-     * Total bayar baru: Rp 3.000.000 + Rp 4.000.000 = Rp 7.000.000
-     * Sisa hutang baru: Rp 7.000.000 - Rp 4.000.000 = Rp 3.000.000
-     * Status: 'sebagian' (masih ada sisa Rp 3.000.000)
      */
-    public function bayar(array $data, int $idGudang, bool $allGudang = false): bool
+    public function bayar(array $data, int $idGudang, int $idUser, bool $allGudang = false): bool
     {
         if ($allGudang && $idGudang === 0) {
             $hp = Database::fetchOne(
-                "SELECT * FROM hutang_piutang WHERE id = ? AND status != 'lunas' AND status != 'cancelled'",
-                [(int) $data['id_hutang_piutang']]
+                "SELECT * FROM hutang_piutang WHERE id = ? AND status != 'lunas'",
+                [(int)$data['id_hutang_piutang']]
             );
         } else {
             $hp = Database::fetchOne(
-                "SELECT * FROM hutang_piutang WHERE id = ? AND id_gudang = ? AND status != 'lunas' AND status != 'cancelled'",
-                [(int) $data['id_hutang_piutang'], $idGudang]
+                "SELECT * FROM hutang_piutang WHERE id = ? AND id_gudang = ? AND status != 'lunas'",
+                [(int)$data['id_hutang_piutang'], $idGudang]
             );
         }
 
-        if (!$hp)
+        if (!$hp) return false;
+
+        $nominalBayar = (float)$data['nominal_bayar'];
+        if ($nominalBayar > (float)$hp['sisa_hutang']) return false;
+
+        $sisaBaru = (float)$hp['sisa_hutang'] - $nominalBayar;
+        $status   = $sisaBaru <= 0 ? 'lunas' : 'sebagian';
+
+        try {
+            Database::beginTransaction();
+
+            // Update hutang piutang
+            Database::update('hutang_piutang', [
+                'nominal_bayar' => (float)$hp['nominal_bayar'] + $nominalBayar,
+                'status'        => $status,
+            ], 'id = ?', [(int)$hp['id']]);
+
+            ActivityLogHelper::log('UPDATE', 'hutang_piutang', (int)$hp['id'], $hp, [
+                'nominal_bayar' => (float)$hp['nominal_bayar'] + $nominalBayar,
+                'status'        => $status,
+            ]);
+
+            $payloadHistory = [
+                'id_hutang_piutang' => $hp['id'],
+                'nominal_bayar'     => $nominalBayar,
+                'keterangan'        => $data['catatan'] ?? null,
+                'created_by'        => $idUser,
+                'created_at'        => (isset($data['tanggal_bayar']) ? $data['tanggal_bayar'] : date('Y-m-d')) . ' ' . date('H:i:s'),
+            ];
+
+            // Simpan history pembayaran
+            $idHPH = Database::insert('hutang_piutang_history', $payloadHistory);
+
+            ActivityLogHelper::log('INSERT', 'hutang_piutang_history', $idHPH, null, $payloadHistory);
+
+            Database::commit();
+            return true;
+        } catch (\Throwable $e) {
+            if (Database::inTransaction()) {
+                Database::rollBack();
+            }
             return false;
-
-        $nominalBayar = (float) $data['nominal_bayar'];
-        $sisaHutangLama = (float) ($hp['sisa_hutang'] ?? $hp['nominal']);
-
-        // Validasi: nominal bayar tidak boleh lebih dari sisa hutang
-        if ($nominalBayar > $sisaHutangLama)
-            return false;
-
-        $nominalBayarLama = (float) ($hp['nominal_bayar'] ?? 0);
-        $sisaBaru = $sisaHutangLama - $nominalBayar;
-        $totalBayarBaru = $nominalBayarLama + $nominalBayar;
-
-        // Tentukan status
-        if ($sisaBaru <= 0) {
-            $status = 'lunas';
-        } elseif ($totalBayarBaru > 0) {
-            $status = 'sebagian';
-        } else {
-            $status = 'open';
         }
-
-        // Update hutang piutang: update `nominal_bayar` and `status` saja.
-        Database::update('hutang_piutang', [
-            'nominal_bayar' => $totalBayarBaru,
-            'status' => $status,
-        ], 'id = ?', [(int) $hp['id']]);
-
-        // Simpan history pembayaran (kolom sesuai schema)
-        $createdBy = $data['created_by'] ?? (AuthMiddleware::getAuthUser()['id'] ?? 0);
-        Database::insert('hutang_piutang_history', [
-            'id_hutang_piutang' => $hp['id'],
-            'nominal_bayar' => $nominalBayar,
-            'metode_bayar' => $data['metode_bayar'] ?? null,
-            'keterangan' => $data['catatan'] ?? $data['keterangan'] ?? null,
-            'created_by' => $createdBy,
-        ]);
-
-        return true;
     }
 
     /**
@@ -162,14 +150,14 @@ class KeuanganService
     public function getHutangAging(int $idGudang, bool $allGudang = false): array
     {
         if ($allGudang && $idGudang === 0) {
-            $where = "hp.status != 'lunas' AND hp.status != 'cancelled'";
+            $where  = "hp.status != 'lunas' AND hp.status != 'cancelled'";
             $params = [];
         } else {
-            $where = "hp.id_gudang = ? AND hp.status != 'lunas' AND hp.status != 'cancelled'";
+            $where  = "hp.id_gudang = ? AND hp.status != 'lunas' AND hp.status != 'cancelled'";
             $params = [$idGudang];
         }
 
-        $gudangCol = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
+        $gudangCol  = ($allGudang && $idGudang === 0) ? ", g.nama as nama_gudang" : "";
         $gudangJoin = ($allGudang && $idGudang === 0) ? "LEFT JOIN gudang g ON hp.id_gudang = g.id" : "";
 
         return Database::fetchAll(
@@ -200,20 +188,20 @@ class KeuanganService
     public function getBiayaList(int $idGudang, array $filters = [], bool $allGudang = false): array
     {
         if ($allGudang && $idGudang === 0) {
-            $where = "1=1";
+            $where  = "1=1";
             $params = [];
         } else {
-            $where = "id_gudang = ?";
+            $where  = "id_gudang = ?";
             $params = [$idGudang];
         }
 
         if (!empty($filters['dari'])) {
-            $where .= " AND DATE(tanggal) >= ?";
-            $params[] = $filters['dari'];
+            $where    .= " AND DATE(tanggal) >= ?";
+            $params[]  = $filters['dari'];
         }
         if (!empty($filters['sampai'])) {
-            $where .= " AND DATE(tanggal) <= ?";
-            $params[] = $filters['sampai'];
+            $where    .= " AND DATE(tanggal) <= ?";
+            $params[]  = $filters['sampai'];
         }
 
         return Database::fetchAll(
@@ -227,15 +215,19 @@ class KeuanganService
      */
     public function createBiaya(array $data, int $idUser, int $idGudang): int
     {
-        return Database::insert('biaya_operasional', [
-            'id_gudang' => $idGudang,
-            'nama_biaya' => $data['nama_biaya'],
-            'nominal' => $data['nominal'],
-            'tanggal' => $data['tanggal'] ?? date('Y-m-d'),
-            'kategori' => $data['kategori'] ?? 'operasional',
-            'catatan' => $data['catatan'] ?? null,
-            'id_user' => $idUser,
-        ]);
+        $payload = [
+            'id_gudang'   => $idGudang,
+            'kategori'    => $data['kategori'] ?? 'operasional',
+            'deskripsi'   => $data['nama_biaya'] . (!empty($data['catatan']) ? ' - ' . $data['catatan'] : ''),
+            'nominal'     => $data['nominal'],
+            'tanggal'     => $data['tanggal'] ?? date('Y-m-d'),
+            'created_by'  => $idUser,
+        ];
+        $idBiaya = Database::insert('biaya_operasional', $payload);
+
+        ActivityLogHelper::log('INSERT', 'biaya_operasional', $idBiaya, null, $payload);
+
+        return $idBiaya;
     }
 
     /**
@@ -262,6 +254,41 @@ class KeuanganService
                  WHERE status != 'lunas' AND jatuh_tempo < CURDATE()",
                 []
             )['cnt'] ?? 0;
+
+            // 💰 Keuangan Masuk: Total Penjualan Cash + Penerimaan Piutang
+            $penjualanCash = Database::fetchOne(
+                "SELECT COALESCE(SUM(total), 0) as total FROM nota 
+                 WHERE pembayaran = 'cash' AND status = 'final'"
+            )['total'] ?? 0;
+
+            $terimaPiutang = Database::fetchOne(
+                "SELECT COALESCE(SUM(hph.nominal_bayar), 0) as total 
+                 FROM hutang_piutang_history hph 
+                 JOIN hutang_piutang hp ON hph.id_hutang_piutang = hp.id 
+                 WHERE hp.jenis = 'piutang'"
+            )['total'] ?? 0;
+
+            $keuanganMasuk = (float)$penjualanCash + (float)$terimaPiutang;
+
+            // 💸 Keuangan Keluar: Pembelian Stok + Biaya Operasional + Pembayaran Hutang
+            $pembelianStok = Database::fetchOne(
+                "SELECT COALESCE(SUM(total), 0) as total FROM stok_masuk 
+                 WHERE status = 'confirmed'"
+            )['total'] ?? 0;
+
+            $biayaOperasional = Database::fetchOne(
+                "SELECT COALESCE(SUM(nominal), 0) as total FROM biaya_operasional"
+            )['total'] ?? 0;
+
+            $bayarHutang = Database::fetchOne(
+                "SELECT COALESCE(SUM(hph.nominal_bayar), 0) as total 
+                 FROM hutang_piutang_history hph 
+                 JOIN hutang_piutang hp ON hph.id_hutang_piutang = hp.id 
+                 WHERE hp.jenis = 'hutang'"
+            )['total'] ?? 0;
+
+            $keuanganKeluar = (float)$pembelianStok + (float)$biayaOperasional + (float)$bayarHutang;
+
         } else {
             $totalHutang = Database::fetchOne(
                 "SELECT COALESCE(SUM(sisa_hutang), 0) as total FROM hutang_piutang
@@ -280,12 +307,55 @@ class KeuanganService
                  WHERE id_gudang = ? AND status != 'lunas' AND jatuh_tempo < CURDATE()",
                 [$idGudang]
             )['cnt'] ?? 0;
+
+            // 💰 Keuangan Masuk: Total Penjualan Cash + Penerimaan Piutang
+            $penjualanCash = Database::fetchOne(
+                "SELECT COALESCE(SUM(total), 0) as total FROM nota 
+                 WHERE id_gudang = ? AND pembayaran = 'cash' AND status = 'final'",
+                [$idGudang]
+            )['total'] ?? 0;
+
+            $terimaPiutang = Database::fetchOne(
+                "SELECT COALESCE(SUM(hph.nominal_bayar), 0) as total 
+                 FROM hutang_piutang_history hph 
+                 JOIN hutang_piutang hp ON hph.id_hutang_piutang = hp.id 
+                 WHERE hp.id_gudang = ? AND hp.jenis = 'piutang'",
+                [$idGudang]
+            )['total'] ?? 0;
+
+            $keuanganMasuk = (float)$penjualanCash + (float)$terimaPiutang;
+
+            // 💸 Keuangan Keluar: Pembelian Stok + Biaya Operasional + Pembayaran Hutang
+            $pembelianStok = Database::fetchOne(
+                "SELECT COALESCE(SUM(total), 0) as total FROM stok_masuk 
+                 WHERE id_gudang = ? AND status = 'confirmed'",
+                [$idGudang]
+            )['total'] ?? 0;
+
+            $biayaOperasional = Database::fetchOne(
+                "SELECT COALESCE(SUM(nominal), 0) as total FROM biaya_operasional 
+                 WHERE id_gudang = ?",
+                [$idGudang]
+            )['total'] ?? 0;
+
+            $bayarHutang = Database::fetchOne(
+                "SELECT COALESCE(SUM(hph.nominal_bayar), 0) as total 
+                 FROM hutang_piutang_history hph 
+                 JOIN hutang_piutang hp ON hph.id_hutang_piutang = hp.id 
+                 WHERE hp.id_gudang = ? AND hp.jenis = 'hutang'",
+                [$idGudang]
+            )['total'] ?? 0;
+
+            $keuanganKeluar = (float)$pembelianStok + (float)$biayaOperasional + (float)$bayarHutang;
         }
 
         return [
-            'total_hutang' => (float) $totalHutang,
-            'total_piutang' => (float) $totalPiutang,
-            'overdue_count' => (int) $overdueCount,
+            'total_hutang'    => (float)$totalHutang,
+            'total_piutang'   => (float)$totalPiutang,
+            'overdue_count'   => (int)$overdueCount,
+            'keuangan_masuk'  => $keuanganMasuk,
+            'keuangan_keluar' => $keuanganKeluar,
+            'laba_rugi'       => $keuanganMasuk - $keuanganKeluar,
         ];
     }
 }

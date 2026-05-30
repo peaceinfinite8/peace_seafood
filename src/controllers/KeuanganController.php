@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Services\KeuanganService;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\RoleMiddleware;
 use App\Utils\Helper;
 use App\Utils\Response;
 
@@ -20,6 +21,7 @@ class KeuanganController
 
     public function index(): void
     {
+        RoleMiddleware::requirePermission('keuangan.view');
         $idGudang = AuthMiddleware::resolveGudang();
         $filters  = [
             'jenis'  => $_GET['jenis']  ?? null,
@@ -33,19 +35,22 @@ class KeuanganController
 
     public function create(): void
     {
+        RoleMiddleware::requirePermission('keuangan.create');
         $idGudang = AuthMiddleware::resolveGudang();
+        $user     = AuthMiddleware::getAuthUser();
         $body     = Helper::getRequestBody();
 
         if (empty($body['jenis']) || empty($body['nominal'])) {
             Response::error('Jenis dan nominal wajib diisi', 422);
         }
 
-        $id = $this->service->createHutangPiutang($body, $idGudang);
+        $id = $this->service->createHutangPiutang($body, $idGudang, (int)$user['id']);
         Response::created(['id' => $id], 'Data hutang/piutang berhasil ditambahkan');
     }
 
     public function show(string $id): void
     {
+        RoleMiddleware::requirePermission('keuangan.view');
         $idGudang = AuthMiddleware::resolveGudang();
         $where    = AuthMiddleware::isAllGudang()
             ? "id = ?"
@@ -60,20 +65,23 @@ class KeuanganController
 
     public function bayar(): void
     {
+        RoleMiddleware::requirePermission('keuangan.bayar');
         $idGudang = AuthMiddleware::resolveGudang();
+        $user     = AuthMiddleware::getAuthUser();
         $body     = Helper::getRequestBody();
 
         if (empty($body['id_hutang_piutang']) || empty($body['nominal_bayar'])) {
             Response::error('ID dan nominal bayar wajib diisi', 422);
         }
 
-        $ok = $this->service->bayar($body, $idGudang, AuthMiddleware::isAllGudang());
+        $ok = $this->service->bayar($body, $idGudang, (int)$user['id'], AuthMiddleware::isAllGudang());
         if (!$ok) Response::error('Gagal proses pembayaran. Periksa data dan sisa hutang.', 422);
         Response::success(null, 'Pembayaran berhasil dicatat');
     }
 
     public function biaya(): void
     {
+        RoleMiddleware::requirePermission('keuangan.view');
         $idGudang = AuthMiddleware::resolveGudang();
         $filters  = ['dari' => $_GET['dari'] ?? null, 'sampai' => $_GET['sampai'] ?? null];
         $data     = $this->service->getBiayaList($idGudang, $filters, AuthMiddleware::isAllGudang());
@@ -82,6 +90,7 @@ class KeuanganController
 
     public function storeBiaya(): void
     {
+        RoleMiddleware::requirePermission('keuangan.create');
         $user     = AuthMiddleware::getAuthUser();
         $idGudang = AuthMiddleware::resolveGudang();
         $body     = Helper::getRequestBody();

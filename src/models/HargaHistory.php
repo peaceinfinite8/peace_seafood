@@ -6,7 +6,7 @@ namespace App\Models;
 
 class HargaHistory extends Model
 {
-    protected string $table = 'harga_history';
+    protected static string $table = 'harga_history';
 
     public function findByProduk(int $produkId): array
     {

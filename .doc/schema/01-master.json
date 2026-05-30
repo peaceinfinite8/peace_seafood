@@ -1,0 +1,221 @@
+{
+  "module": "master_data",
+  "description": "Core master data tables for users, warehouses, suppliers, buyers, and products",
+  "tables": [
+    {
+      "name": "users",
+      "description": "System users (BOZ, Admin, Checker)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT",
+          "description": "User ID"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)",
+          "constraint": "NOT NULL",
+          "description": "User full name"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(100)",
+          "constraint": "NOT NULL UNIQUE",
+          "description": "Email address"
+        },
+        {
+          "name": "password",
+          "type": "VARCHAR(255)",
+          "constraint": "NOT NULL",
+          "description": "Hashed password (bcrypt)"
+        },
+        {
+          "name": "role",
+          "type": "ENUM('bos', 'admin', 'checker')",
+          "constraint": "NOT NULL",
+          "description": "User role"
+        },
+        {
+          "name": "id_gudang",
+          "type": "INT",
+          "constraint": "NULLABLE",
+          "description": "Assigned warehouse (NULL for BOZ)"
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "constraint": "DEFAULT 1",
+          "description": "Active status"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP",
+          "description": "Creation timestamp"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_email", "columns": ["email"] },
+        { "name": "idx_role", "columns": ["role"] },
+        { "name": "idx_id_gudang", "columns": ["id_gudang"] }
+      ],
+      "foreignKeys": [{ "column": "id_gudang", "references": "gudang(id)" }]
+    },
+    {
+      "name": "gudang",
+      "description": "Warehouses managed by BOZ",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_bos", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "nama", "type": "VARCHAR(100)", "constraint": "NOT NULL" },
+        { "name": "alamat", "type": "TEXT", "constraint": "NOT NULL" },
+        { "name": "kota", "type": "VARCHAR(50)", "constraint": "NOT NULL" },
+        { "name": "telpon", "type": "VARCHAR(20)" },
+        { "name": "is_active", "type": "TINYINT", "constraint": "DEFAULT 1" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_id_bos", "columns": ["id_bos"] },
+        { "name": "idx_is_active", "columns": ["is_active"] }
+      ],
+      "foreignKeys": [{ "column": "id_bos", "references": "users(id)" }]
+    },
+    {
+      "name": "supplier",
+      "description": "Fish suppliers",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_gudang", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "nama", "type": "VARCHAR(100)", "constraint": "NOT NULL" },
+        { "name": "nama_pemilik", "type": "VARCHAR(100)" },
+        { "name": "kontak_person", "type": "VARCHAR(100)" },
+        { "name": "telpon", "type": "VARCHAR(20)" },
+        { "name": "alamat", "type": "TEXT" },
+        { "name": "kota", "type": "VARCHAR(50)" },
+        { "name": "bank_name", "type": "VARCHAR(50)" },
+        { "name": "bank_account", "type": "VARCHAR(20)" },
+        { "name": "bank_owner", "type": "VARCHAR(100)" },
+        { "name": "is_active", "type": "TINYINT", "constraint": "DEFAULT 1" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_id_gudang", "columns": ["id_gudang"] },
+        { "name": "idx_nama", "columns": ["nama"] }
+      ],
+      "foreignKeys": [{ "column": "id_gudang", "references": "gudang(id)" }]
+    },
+    {
+      "name": "pembeli",
+      "description": "Fish buyers",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_gudang", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "nama", "type": "VARCHAR(100)", "constraint": "NOT NULL" },
+        { "name": "telpon", "type": "VARCHAR(20)" },
+        { "name": "alamat", "type": "TEXT" },
+        { "name": "kota", "type": "VARCHAR(50)" },
+        {
+          "name": "tipe",
+          "type": "ENUM('retail', 'bulk')",
+          "constraint": "NOT NULL"
+        },
+        { "name": "kredit_limit", "type": "BIGINT", "constraint": "DEFAULT 0" },
+        { "name": "is_active", "type": "TINYINT", "constraint": "DEFAULT 1" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_id_gudang", "columns": ["id_gudang"] },
+        { "name": "idx_nama", "columns": ["nama"] }
+      ],
+      "foreignKeys": [{ "column": "id_gudang", "references": "gudang(id)" }]
+    },
+    {
+      "name": "jenis_ikan",
+      "description": "Fish types/categories",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "nama", "type": "VARCHAR(100)", "constraint": "NOT NULL" },
+        { "name": "deskripsi", "type": "TEXT" },
+        { "name": "is_active", "type": "TINYINT", "constraint": "DEFAULT 1" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [{ "name": "idx_nama", "columns": ["nama"] }]
+    },
+    {
+      "name": "produk",
+      "description": "Products (specific fish items with pricing and stock)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "INT",
+          "constraint": "PRIMARY KEY AUTO_INCREMENT"
+        },
+        { "name": "id_jenis_ikan", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "id_gudang", "type": "INT", "constraint": "NOT NULL" },
+        { "name": "nama", "type": "VARCHAR(100)", "constraint": "NOT NULL" },
+        { "name": "deskripsi", "type": "TEXT" },
+        { "name": "harga_beli", "type": "BIGINT", "constraint": "NOT NULL" },
+        { "name": "harga_jual", "type": "BIGINT", "constraint": "NOT NULL" },
+        {
+          "name": "stok_qty",
+          "type": "DECIMAL(10,2)",
+          "constraint": "DEFAULT 0"
+        },
+        { "name": "nilai_stok", "type": "BIGINT", "constraint": "DEFAULT 0" },
+        {
+          "name": "stok_minimum",
+          "type": "DECIMAL(10,2)",
+          "constraint": "DEFAULT 0"
+        },
+        { "name": "is_active", "type": "TINYINT", "constraint": "DEFAULT 1" },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "constraint": "DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        { "name": "idx_id_gudang", "columns": ["id_gudang"] },
+        { "name": "idx_id_jenis_ikan", "columns": ["id_jenis_ikan"] },
+        { "name": "idx_nama", "columns": ["nama"] }
+      ],
+      "foreignKeys": [
+        { "column": "id_jenis_ikan", "references": "jenis_ikan(id)" },
+        { "column": "id_gudang", "references": "gudang(id)" }
+      ]
+    }
+  ]
+}

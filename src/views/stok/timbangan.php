@@ -19,17 +19,17 @@
                     ✓ Tidak ada stok yang menunggu timbangan
                 </div>
                 <template x-for="item in pendingList" :key="item.id">
-                    <div class="p-4 mb-3 rounded-lg border cursor-pointer hover:shadow-sm transition-all"
-                         style="border-color: var(--border-color)"
-                         :style="selectedId == item.id ? 'border-color: var(--color-primary); background: var(--color-primary-light)' : ''"
-                         @click="selectItem(item)">
+                    <div :id="'timbangan-' + item.id" :data-highlight="'timbangan-' + item.id" class="p-4 mb-3 rounded-lg border cursor-pointer hover:shadow-sm transition-all"
+                        style="border-color: var(--border-color)"
+                        :style="selectedId == item.id ? 'border-color: var(--color-primary); background: var(--color-primary-light)' : ''"
+                        @click="selectItem(item)">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="font-semibold text-sm" x-text="item.nama_produk"></p>
                                 <p class="text-xs mt-1" style="color: var(--text-secondary)" x-text="'Supplier: ' + item.nama_supplier"></p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-sm" x-text="parseFloat(item.qty) + ' kg'"></p>
+                                <p class="font-bold text-sm" x-text="formatKg(item.qty, 2)"></p>
                                 <span class="badge badge-warning text-xs">PENDING</span>
                             </div>
                         </div>
@@ -53,25 +53,25 @@
                 <div class="p-4 rounded-lg mb-4" style="background: var(--color-primary-light)">
                     <p class="font-semibold text-sm" style="color: var(--color-primary)" x-text="selectedItem?.nama_produk"></p>
                     <p class="text-xs mt-1" style="color: var(--text-secondary)">
-                        Qty Teoritis: <strong x-text="parseFloat(selectedItem?.qty||0) + ' kg'"></strong>
+                        Qty Teoritis: <strong x-text="formatKg(selectedItem?.qty||0, 2)"></strong>
                     </p>
                 </div>
 
                 <form @submit.prevent="submitTimbangan()">
                     <div class="form-group">
                         <label class="form-label">Qty Actual (kg) <span class="text-red-500">*</span></label>
-                        <input type="number" x-model="form.qty_actual" class="form-input" 
-                               min="0" step="0.01" @input="calcSusut()" required>
+                        <input type="number" x-model="form.qty_actual" class="form-input"
+                            min="0" step="0.01" @input="calcSusut()" required>
                     </div>
 
                     <!-- Susut indicator -->
-                    <div class="p-3 rounded-lg mb-4" 
-                         :style="susut < 0 ? 'background: rgba(239,68,68,0.1)' : 'background: rgba(16,185,129,0.1)'"
-                         x-show="form.qty_actual">
+                    <div class="p-3 rounded-lg mb-4"
+                        :style="susut < 0 ? 'background: rgba(239,68,68,0.1)' : 'background: rgba(16,185,129,0.1)'"
+                        x-show="form.qty_actual">
                         <div class="flex justify-between text-sm">
                             <span>Susut:</span>
                             <span :class="susut > 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold'"
-                                  x-text="(susut > 0 ? '-' : '') + Math.abs(susut).toFixed(2) + ' kg (' + susutPersen.toFixed(1) + '%)'"></span>
+                                x-text="(susut > 0 ? '-' : '') + formatKg(Math.abs(susut), 2) + ' (' + susutPersen.toFixed(1) + '%)'"></span>
                         </div>
                     </div>
 
@@ -117,6 +117,10 @@ function timbanganPage() {
         },
 
         async init() {
+            if (!['super_admin', 'admin', 'checker'].includes(this.user.role)) {
+                window.location.href = '/peace_seafood/dashboard';
+                return;
+            }
             await this.loadPending();
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },

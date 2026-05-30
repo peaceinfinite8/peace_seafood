@@ -1,20 +1,64 @@
 /**
  * Peace Seafood - Chart Configuration
  * Chart.js configurations for dashboard and reports
- * FIXED: Properly destroy previous charts before reusing canvas
  */
 
 const ChartConfig = (() => {
-  const defaultColors = [
-    '#2563eb', '#16a34a', '#d97706', '#dc2626',
-    '#0891b2', '#7c3aed', '#db2777', '#ea580c',
-  ];
+  // SafeChart wrapper prevents Chart.js from being called with a null/invalid target
+  function SafeChart(target, config) {
+    try {
+      let ctx = target;
+      if (!ctx) {
+        console.warn('SafeChart: target is null, skipping chart', config && config.type);
+        return { destroy: () => {} };
+      }
 
-  // Store chart instances to prevent canvas reuse errors
-  const chartInstances = {
-    'chart-penjualan': null,
-    'chart-stok': null,
-  };
+      if (typeof ctx === 'string') {
+        ctx = document.getElementById(ctx);
+        if (!ctx) {
+          console.warn('SafeChart: canvas id not found', target);
+          return { destroy: () => {} };
+        }
+      }
+
+      // If a CanvasRenderingContext2D is passed, extract its canvas element for better Chart.js compatibility
+      if (typeof CanvasRenderingContext2D !== 'undefined' && ctx instanceof CanvasRenderingContext2D) {
+        ctx = ctx.canvas;
+      }
+
+      // Always pass the canvas element to new Chart() for stability
+      if (ctx instanceof HTMLCanvasElement || (ctx && typeof ctx.getContext === 'function')) {
+        // Safely destroy any existing chart bound to this canvas to prevent "Canvas is already in use" and resizing crashes
+        try {
+          const existing = Chart.getChart(ctx);
+          if (existing) {
+            existing.destroy();
+          }
+        } catch (e) {
+          console.warn('SafeChart: error destroying existing chart', e);
+        }
+
+        return new Chart(ctx, config);
+      }
+
+      console.warn('SafeChart: invalid target type', target);
+      return { destroy: () => {} };
+    } catch (err) {
+      console.warn('SafeChart error', err);
+      return { destroy: () => {} };
+    }
+  }
+
+  const defaultColors = [
+    "#2563eb",
+    "#16a34a",
+    "#d97706",
+    "#dc2626",
+    "#0891b2",
+    "#7c3aed",
+    "#db2777",
+    "#ea580c",
+  ];
 
   /**
    * Default chart options
@@ -23,22 +67,23 @@ const ChartConfig = (() => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom' },
+      legend: { position: "bottom" },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${Utils.formatCurrency(ctx.parsed.y ?? ctx.parsed)}`,
+          label: (ctx) =>
+            ` ${Utils.formatCurrency(ctx.parsed.y ?? ctx.parsed)}`,
         },
       },
     },
   };
 
-  /**
-   * Destroy chart if it exists to prevent canvas reuse errors
-   */
+  // Safely destroy an existing Chart.js instance attached to a canvas id
   function destroyChart(canvasId) {
-    if (chartInstances[canvasId]) {
-      chartInstances[canvasId].destroy();
-      chartInstances[canvasId] = null;
+    try {
+      const existing = Chart.getChart(canvasId);
+      if (existing) existing.destroy();
+    } catch (e) {
+      // swallow any Chart.js lookup errors
     }
   }
 
@@ -49,26 +94,25 @@ const ChartConfig = (() => {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
 
-    // Destroy previous chart instance before creating new one
     destroyChart(canvasId);
 
-    chartInstances[canvasId] = new Chart(ctx, {
-      type: 'line',
+    return SafeChart(ctx, {
+      type: "line",
       data: {
         labels,
-        datasets: [{
-          label: 'Penjualan',
-          data,
-          borderColor: defaultColors[0],
-          backgroundColor: `${defaultColors[0]}20`,
-          fill: true,
-          tension: 0.4,
-        }],
+        datasets: [
+          {
+            label: "Penjualan",
+            data,
+            borderColor: defaultColors[0],
+            backgroundColor: `${defaultColors[0]}20`,
+            fill: true,
+            tension: 0.4,
+          },
+        ],
       },
       options: defaultOptions,
     });
-
-    return chartInstances[canvasId];
   }
 
   /**
@@ -77,53 +121,51 @@ const ChartConfig = (() => {
   function initStockChart(canvasId, labels, data) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
-
-    // Destroy previous chart instance before creating new one
     destroyChart(canvasId);
 
-    chartInstances[canvasId] = new Chart(ctx, {
-      type: 'bar',
+    return SafeChart(ctx, {
+      type: "bar",
       data: {
         labels,
-        datasets: [{
-          label: 'Stok (kg)',
-          data,
-          backgroundColor: defaultColors,
-        }],
+        datasets: [
+          {
+            label: "Stok (kg)",
+            data,
+            backgroundColor: defaultColors,
+          },
+        ],
       },
       options: defaultOptions,
-    });
-
-    return chartInstances[canvasId];
-  }
-
-  /**
-   * Destroy all dashboard charts (cleanup)
-   */
-  function destroyAll() {
-    Object.keys(chartInstances).forEach(key => {
-      destroyChart(key);
     });
   }
 
   /**
    * Initialize dashboard charts
    */
-  async function initDashboardCharts() {
+  function initDashboardCharts(data) {
+    const salesLabels = data?.sales_chart_labels || [];
+    const salesData = data?.sales_chart || [];
+    const stokLabels = data?.stok_chart?.labels || [];
+    const stokValues = data?.stok_chart?.values || [];
+
+    // Match IDs used in dashboard markup
     try {
-      const data = await ApiClient.get('/dashboard/chart-data');
-      initSalesChart('chart-penjualan', data.labels, data.penjualan);
-      initStockChart('chart-stok', data.stok_labels, data.stok_data);
-    } catch (err) {
-      console.error('Failed to load chart data', err);
+      initSalesChart("salesTrendChart", salesLabels, salesData);
+      initStockChart("stockCategoryChart", stokLabels, stokValues);
+    } catch (e) {
+      console.warn('initDashboardCharts warning', e);
     }
   }
 
-  return {
+  window.ChartConfig = {
     initSalesChart,
     initStockChart,
-    initDashboardCharts,
-    destroyAll,
     destroyChart,
+    initDashboardCharts,
   };
+
+  // Expose SafeChart globally so other inline scripts can use it
+  try { window.SafeChart = SafeChart; } catch (e) {}
+
+  return { initSalesChart, initStockChart, destroyChart, initDashboardCharts };
 })();

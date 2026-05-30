@@ -50,7 +50,7 @@ const Dashboard = (() => {
 
     tbody.innerHTML = transactions.map(t => `
       <tr>
-        <td><a href="#" class="font-mono" onclick="(window.showNotaDetail ? window.showNotaDetail(${t.id}) : (window.location.href='/peace_seafood/penjualan')) ; return false;">${t.nomor_nota}</a></td>
+        <td>${t.nomor_nota}</td>
         <td>${t.pembeli_nama}</td>
         <td>${Utils.formatCurrency(t.total)}</td>
         <td><span class="badge badge-status bg-${t.status_color}">${t.status_label}</span></td>
@@ -65,7 +65,13 @@ const Dashboard = (() => {
   function init() {
     loadStats();
     loadRecentTransactions();
-    ChartConfig.initDashboardCharts();
+    if (window.ChartConfig && typeof ChartConfig.initDashboardCharts === 'function' && window.dashboardStats && Object.keys(window.dashboardStats).length > 0) {
+      try {
+        ChartConfig.initDashboardCharts(window.dashboardStats);
+      } catch (e) {
+        console.warn('ChartConfig.initDashboardCharts failed', e);
+      }
+    }
   }
 
   return { init, loadStats, loadRecentTransactions };

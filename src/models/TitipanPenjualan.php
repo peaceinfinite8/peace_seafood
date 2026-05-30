@@ -6,7 +6,7 @@ namespace App\Models;
 
 class TitipanPenjualan extends Model
 {
-    protected string $table = 'titipan_penjualan';
+    protected static string $table = 'titipan_penjualan';
 
     public function findByTitipan(int $titipanId): array
     {

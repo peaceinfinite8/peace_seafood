@@ -11,7 +11,7 @@ const Auth = (() => {
    * Login user
    */
   async function login(username, password) {
-    const data = await ApiClient.post('/auth/login', { email: username, password });
+    const data = await ApiClient.post('/auth/login', { username, password });
     if (data.token) {
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));

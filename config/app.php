@@ -16,7 +16,7 @@ return [
     'jwt' => [
         'secret'     => $_ENV['JWT_SECRET']     ?? 'change-this-secret',
         'algorithm'  => $_ENV['JWT_ALGORITHM']  ?? 'HS256',
-        'expiration' => (int)($_ENV['JWT_EXPIRATION'] ?? 1800), // 30 minutes in seconds
+        'expiration' => (int)($_ENV['JWT_EXPIRATION'] ?? 3600),
     ],
 
     'upload' => [
@@ -33,13 +33,6 @@ return [
 
     'session' => [
         'timeout_minutes' => (int)($_ENV['SESSION_TIMEOUT_MINUTES'] ?? 30),
-        'name'            => $_ENV['SESSION_NAME'] ?? 'PEACE_SEAFOOD_SESSION',
-        'cookie_lifetime' => (int)($_ENV['SESSION_COOKIE_LIFETIME'] ?? 1800), // 30 minutes in seconds
-        'cookie_path'     => '/',
-        'cookie_domain'   => $_ENV['SESSION_COOKIE_DOMAIN'] ?? '',
-        'cookie_secure'   => ($_ENV['SESSION_COOKIE_SECURE'] ?? 'false') === 'true',
-        'cookie_httponly' => true,
-        'cookie_samesite' => $_ENV['SESSION_COOKIE_SAMESITE'] ?? 'Strict',
     ],
 
     'cors' => [

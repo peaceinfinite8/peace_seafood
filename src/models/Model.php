@@ -15,6 +15,13 @@ abstract class Model
     protected static string $table  = '';
     protected static string $pk     = 'id';
 
+    protected \PDO $db;
+
+    public function __construct()
+    {
+        $this->db = \App\Utils\Database::getInstance();
+    }
+
     public static function find(int $id): array|false
     {
         return Database::fetchOne(
@@ -60,15 +67,7 @@ abstract class Model
         return (int) Database::lastInsertId();
     }
 
-    public static function update(int $id, array $data): bool
-    {
-        $sets = implode(' = ?, ', array_map(fn($k) => "`{$k}`", array_keys($data))) . ' = ?';
-
-        return Database::execute(
-            "UPDATE `" . static::$table . "` SET {$sets} WHERE `" . static::$pk . "` = ?",
-            [...array_values($data), $id]
-        );
-    }
+    // removed static update to avoid duplicate method name with instance API
 
     public static function delete(int $id): bool
     {
@@ -96,5 +95,51 @@ abstract class Model
         }
 
         return (int)(Database::fetchOne($sql, $params)['cnt'] ?? 0) > 0;
+    }
+
+    // -----------------
+    // Instance compatibility helpers
+    // -----------------
+
+    public static function insert(array $data): int
+    {
+        return static::create($data);
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $condition = "`" . static::$pk . "` = ?";
+        return Database::update(static::$table, $data, $condition, [$id]);
+    }
+
+    public static function findById(int $id): array|false
+    {
+        return static::find($id);
+    }
+
+    public function findAll(array $where = [], string $orderBy = 'id DESC'): array
+    {
+        $sql = "SELECT * FROM `" . static::$table . "`";
+        $params = [];
+
+        if (!empty($where)) {
+            $clauses = [];
+            foreach ($where as $col => $val) {
+                $clauses[] = "`{$col}` = ?";
+                $params[] = $val;
+            }
+            $sql .= ' WHERE ' . implode(' AND ', $clauses);
+        }
+
+        $sql .= " ORDER BY {$orderBy}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public function findActive(string $orderBy = 'id DESC'): array
+    {
+        return $this->findAll(['is_active' => 1], $orderBy);
     }
 }

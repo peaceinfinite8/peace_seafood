@@ -19,18 +19,24 @@ class NotifikasiController
 
     public function index(): void
     {
-        AuthMiddleware::getAuthUser();
+        $user      = AuthMiddleware::getAuthUser();
         $idGudang  = AuthMiddleware::resolveGudang();
-        $allGudang = AuthMiddleware::isAllGudang();
 
-        // Trigger hutang jatuh tempo check (hanya jika ada gudang spesifik)
-        if ($idGudang) {
-            $this->notifService->checkHutangJatuhTempo($idGudang);
+        if ($user['role'] === 'bos') {
+            // Bos memantau hutang seluruh gudang secara agregat
+            $this->notifService->checkHutangJatuhTempo(null);
+            // Bos memantau eskalasi timbangan yang tertunda > 6 jam
+            $this->notifService->checkPendingTimbanganEscalation();
+        } else {
+            // Admin hanya memantau gudangnya sendiri
+            if ($idGudang) {
+                $this->notifService->checkHutangJatuhTempo($idGudang);
+            }
         }
 
         $unreadOnly  = isset($_GET['unread']) && $_GET['unread'] === '1';
-        $notifikasi  = $this->notifService->getNotifikasi($idGudang, $unreadOnly, $allGudang);
-        $unreadCount = $this->notifService->getUnreadCount($idGudang, $allGudang);
+        $notifikasi  = $this->notifService->getNotifikasi((int)$user['id'], $unreadOnly);
+        $unreadCount = $this->notifService->getUnreadCount((int)$user['id']);
 
         Response::success([
             'notifikasi'   => $notifikasi,
@@ -38,12 +44,12 @@ class NotifikasiController
         ]);
     }
 
-    public function read(int $id): void
+    public function read(string $id): void
     {
-        AuthMiddleware::getAuthUser();
-        $idGudang = AuthMiddleware::resolveGudang();
+        $id = (int)$id;
+        $user = AuthMiddleware::getAuthUser();
 
-        $ok = $this->notifService->markAsRead($id, $idGudang, AuthMiddleware::isAllGudang());
+        $ok = $this->notifService->markAsRead($id, (int)$user['id']);
         if (!$ok) {
             Response::notFound('Notifikasi tidak ditemukan');
         }
@@ -53,8 +59,21 @@ class NotifikasiController
 
     public function readAll(): void
     {
-        $idGudang = AuthMiddleware::resolveGudang();
-        $this->notifService->markAllAsRead($idGudang, AuthMiddleware::isAllGudang());
+        $user = AuthMiddleware::getAuthUser();
+        $this->notifService->markAllAsRead((int)$user['id']);
         Response::success(null, 'Semua notifikasi ditandai dibaca');
+    }
+
+    public function destroy(string $id): void
+    {
+        $id = (int)$id;
+        $user = AuthMiddleware::getAuthUser();
+
+        $ok = $this->notifService->deleteNotifikasi($id, (int)$user['id']);
+        if (!$ok) {
+            Response::notFound('Notifikasi tidak ditemukan');
+        }
+
+        Response::success(null, 'Notifikasi berhasil dihapus');
     }
 }

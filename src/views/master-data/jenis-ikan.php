@@ -1,33 +1,4 @@
-<?php
-$initialJenisIkan = \App\Utils\Database::fetchAll(
-    "SELECT ji.*, (SELECT COUNT(*) FROM produk p WHERE p.id_jenis_ikan = ji.id AND p.is_active = 1) AS jumlah_produk
-     FROM `jenis_ikan` ji
-     WHERE ji.is_active = 1
-     ORDER BY ji.nama ASC"
-);
-?>
-<div class="js-fallback">
-    <div class="card mb-4">
-        <div class="p-4 border-b flex items-center justify-between" style="border-color:var(--border-color)">
-            <h3 class="font-semibold text-sm">Jenis Ikan</h3>
-            <span class="text-xs" style="color:var(--text-secondary)"><?= count($initialJenisIkan) ?> data</span>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4">
-            <?php foreach ($initialJenisIkan as $row): ?>
-                <div class="card p-4 text-center">
-                    <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"
-                        style="background: var(--color-primary-light)">🐟</div>
-                    <p class="font-semibold text-sm mb-1 truncate">
-                        <?= htmlspecialchars((string) ($row['nama'] ?? ''), ENT_QUOTES, 'UTF-8') ?></p>
-                    <p class="text-xs mb-2" style="color:var(--text-secondary)">
-                        <?= htmlspecialchars((string) ($row['deskripsi'] ?? 'Tidak ada deskripsi'), ENT_QUOTES, 'UTF-8') ?>
-                    </p>
-                    <span class="badge badge-info"><?= (int) ($row['jumlah_produk'] ?? 0) ?> produk</span>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</div>
+<?php ?>
 <div x-data="jenisIkanPage()" x-init="init()">
 
     <div class="flex items-center justify-between mb-6">
@@ -35,7 +6,7 @@ $initialJenisIkan = \App\Utils\Database::fetchAll(
             <h2 class="text-xl font-bold" style="color: var(--text-primary)">Jenis Ikan</h2>
             <p class="text-sm" style="color: var(--text-secondary)">Kelola kategori/jenis ikan yang tersedia</p>
         </div>
-        <button @click="openAdd()" class="btn btn-primary" x-show="['bos','admin'].includes(user.role)">
+        <button @click="openAdd()" class="btn btn-primary" x-show="['super_admin','admin'].includes(user.role)">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Tambah Jenis Ikan
         </button>
@@ -44,8 +15,8 @@ $initialJenisIkan = \App\Utils\Database::fetchAll(
     <!-- Search -->
     <div class="card p-4 mb-6">
         <div class="flex gap-3">
-            <input type="text" x-model="search" placeholder="Cari jenis ikan..." class="form-input flex-1"
-                @input="filterList()">
+            <input type="text" x-model="search" placeholder="Cari jenis ikan..."
+                   class="form-input flex-1" @input="filterList()">
             <div class="flex items-center gap-2 text-sm" style="color:var(--text-secondary)">
                 <span x-text="filtered.length + ' data'"></span>
             </div>
@@ -68,14 +39,14 @@ $initialJenisIkan = \App\Utils\Database::fetchAll(
         <template x-for="jenis in filtered" :key="jenis.id">
             <div class="card p-4 text-center group hover:shadow-md transition-shadow">
                 <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"
-                    style="background: var(--color-primary-light)">
+                     style="background: var(--color-primary-light)">
                     🐟
                 </div>
                 <p class="font-semibold text-sm mb-1 truncate" x-text="jenis.nama"></p>
                 <p class="text-xs mb-3" style="color:var(--text-secondary)"
-                    x-text="jenis.deskripsi || 'Tidak ada deskripsi'"></p>
+                   x-text="jenis.deskripsi || 'Tidak ada deskripsi'"></p>
                 <div class="flex gap-1.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    x-show="['bos','admin'].includes(user.role)">
+                     x-show="['super_admin','admin'].includes(user.role)">
                     <button @click="openEdit(jenis)" class="btn btn-secondary p-1.5" title="Edit">
                         <i data-lucide="pencil" class="w-3 h-3"></i>
                     </button>
@@ -101,15 +72,12 @@ $initialJenisIkan = \App\Utils\Database::fetchAll(
                         <th>Nama Jenis Ikan</th>
                         <th>Deskripsi</th>
                         <th>Jumlah Produk</th>
-                        <th x-show="['bos','admin'].includes(user.role)">Aksi</th>
+                        <th x-show="['super_admin','admin'].includes(user.role)">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr>
-                            <td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data
-                            </td>
-                        </tr>
+                        <tr><td colspan="5" class="text-center py-8" style="color:var(--text-secondary)">Tidak ada data</td></tr>
                     </template>
                     <template x-for="(jenis, idx) in filtered" :key="jenis.id">
                         <tr>
@@ -120,12 +88,11 @@ $initialJenisIkan = \App\Utils\Database::fetchAll(
                                     <span class="font-medium text-sm" x-text="jenis.nama"></span>
                                 </div>
                             </td>
-                            <td><span class="text-sm" style="color:var(--text-secondary)"
-                                    x-text="jenis.deskripsi || '-'"></span></td>
+                            <td><span class="text-sm" style="color:var(--text-secondary)" x-text="jenis.deskripsi || '-'"></span></td>
                             <td>
                                 <span class="badge badge-info" x-text="(jenis.jumlah_produk || 0) + ' produk'"></span>
                             </td>
-                            <td x-show="['bos','admin'].includes(user.role)">
+                            <td x-show="['super_admin','admin'].includes(user.role)">
                                 <div class="flex gap-1.5">
                                     <button @click="openEdit(jenis)" class="btn btn-secondary p-1.5" title="Edit">
                                         <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
@@ -153,12 +120,28 @@ $initialJenisIkan = \App\Utils\Database::fetchAll(
                 <div class="form-group">
                     <label class="form-label">Nama Jenis Ikan <span class="text-red-500">*</span></label>
                     <input type="text" x-model="form.nama" class="form-input"
-                        placeholder="cth: Ikan Kerapu, Ikan Tuna, Udang Vannamei..." required autofocus>
+                           placeholder="cth: Ikan Kerapu, Ikan Tuna, Udang Vannamei..."
+                           required autofocus>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Deskripsi (opsional)</label>
-                    <textarea x-model="form.deskripsi" class="form-input" rows="2"
-                        placeholder="Keterangan singkat..."></textarea>
+                    <textarea x-model="form.deskripsi" class="form-input" rows="1"
+                              placeholder="Keterangan singkat..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Master Atribut: Size (Pisahkan dengan koma)</label>
+                    <input type="text" x-model="form.allowed_sizes" class="form-input"
+                           placeholder="cth: 200/300, 300/500, 1 Up, Size 10, Size 20, Polos">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Master Atribut: Grade (Pisahkan dengan koma)</label>
+                    <input type="text" x-model="form.allowed_grades" class="form-input"
+                           placeholder="cth: Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Master Atribut: Asal Capture (Pisahkan dengan koma)</label>
+                    <input type="text" x-model="form.allowed_origins" class="form-input"
+                           placeholder="cth: Bitung, Banda, Makassar, Ambon">
                 </div>
                 <div class="flex gap-3 justify-end mt-6">
                     <button type="button" @click="showModal = false" class="btn btn-secondary">Batal</button>
@@ -179,8 +162,8 @@ function jenisIkanPage() {
     return {
         user: JSON.parse(localStorage.getItem('user') || '{}'),
         loading: true,
-        list: <?= json_encode($initialJenisIkan, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-        filtered: <?= json_encode($initialJenisIkan, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+        list: [],
+        filtered: [],
         search: '',
         showModal: false,
         editMode: false,
@@ -189,10 +172,7 @@ function jenisIkanPage() {
         form: { nama: '', deskripsi: '' },
 
         async init() {
-            try {
-                await this.loadData();
-                document.querySelectorAll('.js-fallback').forEach(el => el.style.display = 'none');
-            } catch(e) {}
+            await this.loadData();
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
 
@@ -201,12 +181,9 @@ function jenisIkanPage() {
             try {
                 const token = localStorage.getItem('token');
                 const res = await axios.get('/peace_seafood/api/master/jenis-ikan', { headers: { Authorization: 'Bearer '+token } });
-                this.list = res.data?.data || this.list;
+                this.list = res.data?.data || [];
                 this.filterList();
-            } catch(e) {
-                iziToast.error({ title: 'Error', message: 'Gagal memuat data', position: 'topRight' });
-                this.filterList();
-            }
+            } catch(e) { iziToast.error({ title: 'Error', message: 'Gagal memuat data', position: 'topRight' }); }
             this.loading = false;
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
@@ -219,7 +196,7 @@ function jenisIkanPage() {
         openAdd() {
             this.editMode = false;
             this.editId = null;
-            this.form = { nama: '', deskripsi: '' };
+            this.form = { nama: '', deskripsi: '', allowed_sizes: '', allowed_grades: '', allowed_origins: '' };
             this.showModal = true;
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
@@ -227,7 +204,13 @@ function jenisIkanPage() {
         openEdit(jenis) {
             this.editMode = true;
             this.editId = jenis.id;
-            this.form = { nama: jenis.nama, deskripsi: jenis.deskripsi || '' };
+            this.form = { 
+                nama: jenis.nama, 
+                deskripsi: jenis.deskripsi || '', 
+                allowed_sizes: jenis.allowed_sizes || '', 
+                allowed_grades: jenis.allowed_grades || '', 
+                allowed_origins: jenis.allowed_origins || '' 
+            };
             this.showModal = true;
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
@@ -257,7 +240,7 @@ function jenisIkanPage() {
         },
 
         async deleteJenis(id) {
-            if (!confirm('Hapus jenis ikan ini? Data yang terkait mungkin terpengaruh.')) return;
+            if (!await confirm('Hapus jenis ikan ini? Data yang terkait mungkin terpengaruh.')) return;
             try {
                 const token = localStorage.getItem('token');
                 await axios.delete('/peace_seafood/api/master/jenis-ikan/' + id, { headers: { Authorization: 'Bearer '+token } });

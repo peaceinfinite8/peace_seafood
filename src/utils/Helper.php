@@ -113,6 +113,20 @@ class Helper
     }
 
     /**
+     * Backwards-compatible alias for controllers that still call the old helper name.
+     */
+    public static function getPaginationParams(): array
+    {
+        [$page, $perPage, $offset] = self::getPagination();
+
+        return [
+            'page'     => $page,
+            'perPage'  => $perPage,
+            'offset'   => $offset,
+        ];
+    }
+
+    /**
      * Get request body as array (JSON or form data)
      */
     public static function getRequestBody(): array

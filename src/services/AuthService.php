@@ -10,30 +10,32 @@ use App\Utils\Database;
 
 class AuthService
 {
+    private User $userModel;
+
+    public function __construct()
+    {
+        $this->userModel = new User();
+    }
+
     /**
      * Login user - return token + user data or null
      */
     public function login(string $email, string $password): ?array
     {
-        // Support login by email or username and include warehouse name for the UI.
+        // Support login by email or username
         $user = Database::fetchOne(
-            "SELECT u.*, g.nama AS nama_gudang
-             FROM users u
-             LEFT JOIN gudang g ON u.id_gudang = g.id
-             WHERE (u.email = ? OR u.name = ?) AND u.is_active = 1",
+            "SELECT * FROM users WHERE (email = ? OR name = ?) AND is_active = 1",
             [$email, $email]
         );
 
-        if (!$user)
-            return null;
-        if (!password_verify($password, $user['password']))
-            return null;
+        if (!$user) return null;
+        if (!password_verify($password, $user['password'])) return null;
 
         $token = JWT::generate([
-            'id' => $user['id'],
-            'name' => $user['name'],
-            'email' => $user['email'],
-            'role' => $user['role'],
+            'id'        => $user['id'],
+            'name'      => $user['name'],
+            'email'     => $user['email'],
+            'role'      => $user['role'],
             'id_gudang' => $user['id_gudang'],
         ]);
 
@@ -42,7 +44,7 @@ class AuthService
 
         return [
             'token' => $token,
-            'user' => $user,
+            'user'  => $user,
         ];
     }
 
@@ -52,10 +54,10 @@ class AuthService
     public function refreshToken(array $user): string
     {
         return JWT::generate([
-            'id' => $user['id'],
-            'name' => $user['name'],
-            'email' => $user['email'],
-            'role' => $user['role'],
+            'id'        => $user['id'],
+            'name'      => $user['name'],
+            'email'     => $user['email'],
+            'role'      => $user['role'],
             'id_gudang' => $user['id_gudang'] ?? null,
         ]);
     }
@@ -73,8 +75,7 @@ class AuthService
             [$userId]
         );
 
-        if (!$user)
-            return null;
+        if (!$user) return null;
         unset($user['password']);
         return $user;
     }
@@ -87,10 +88,10 @@ class AuthService
         $hashedPassword = password_hash($data['password'], PASSWORD_BCRYPT);
 
         return Database::insert('users', [
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $hashedPassword,
-            'role' => $data['role'],
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => $hashedPassword,
+            'role'      => $data['role'],
             'id_gudang' => $data['id_gudang'] ?? null,
             'is_active' => 1,
         ]);
@@ -102,9 +103,9 @@ class AuthService
     public function updateUser(int $userId, array $data): bool
     {
         $updateData = [
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'role' => $data['role'],
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'role'      => $data['role'],
             'id_gudang' => $data['id_gudang'] ?? null,
         ];
 
@@ -123,23 +124,38 @@ class AuthService
         return Database::update('users', ['is_active' => 0], 'id = ?', [$userId]);
     }
 
-    /**
-     * Get all users (for BOZ admin)
-     */
-    public function getAllUsers(?int $idGudang = null): array
+    public function getAllUsers(array $requester): array
     {
-        if ($idGudang) {
+        $role = $requester['role'] ?? '';
+
+        if ($role === 'super_admin' || $role === 'saas_owner') {
             return Database::fetchAll(
                 "SELECT u.id, u.name, u.email, u.role, u.id_gudang, u.is_active, g.nama as nama_gudang
                  FROM users u LEFT JOIN gudang g ON u.id_gudang = g.id
-                 WHERE u.id_gudang = ? ORDER BY u.name",
-                [$idGudang]
+                 ORDER BY u.role, u.name"
             );
         }
+
+        if ($role === 'bos') {
+            $bosId = (int)$requester['id'];
+            return Database::fetchAll(
+                "SELECT u.id, u.name, u.email, u.role, u.id_gudang, u.is_active, g.nama as nama_gudang
+                 FROM users u 
+                 LEFT JOIN gudang g ON u.id_gudang = g.id
+                 WHERE (u.id_gudang IN (SELECT id FROM gudang WHERE id_bos = ?) OR u.id = ?)
+                   AND u.role NOT IN ('super_admin', 'saas_owner')
+                 ORDER BY u.role, u.name",
+                [$bosId, $bosId]
+            );
+        }
+
+        $idGudang = (int)($requester['id_gudang'] ?? 0);
         return Database::fetchAll(
             "SELECT u.id, u.name, u.email, u.role, u.id_gudang, u.is_active, g.nama as nama_gudang
              FROM users u LEFT JOIN gudang g ON u.id_gudang = g.id
-             ORDER BY u.role, u.name"
+             WHERE u.id_gudang = ? AND u.role NOT IN ('super_admin', 'saas_owner')
+             ORDER BY u.name",
+            [$idGudang]
         );
     }
 }

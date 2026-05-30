@@ -7,8 +7,8 @@
             <p class="text-sm" style="color: var(--text-secondary)">Kelola barang titipan (konsinyasi)</p>
         </div>
         <a href="/peace_seafood/penitipan/create"
-           class="btn btn-primary"
-           x-show="['bos','admin'].includes(user.role)">
+            class="btn btn-primary"
+            x-show="['super_admin','admin'].includes(user.role)">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Terima Titipan
         </a>
@@ -40,17 +40,17 @@
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Aktif</p>
             <p class="text-2xl font-bold text-blue-500"
-               x-text="list.filter(t => ['masuk','dijual_sebagian'].includes(t.status)).length"></p>
+                x-text="list.filter(t => ['masuk','dijual_sebagian'].includes(t.status)).length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Selesai</p>
             <p class="text-2xl font-bold text-green-500"
-               x-text="list.filter(t => t.status === 'selesai').length"></p>
+                x-text="list.filter(t => t.status === 'selesai').length"></p>
         </div>
         <div class="stat-card">
             <p class="text-xs mb-1" style="color: var(--text-secondary)">Total Qty</p>
             <p class="text-lg font-bold" style="color: var(--color-primary)"
-               x-text="list.reduce((s,t) => s + parseFloat(t.jumlah||0), 0).toFixed(1) + ' kg'"></p>
+                x-text="list.reduce((s,t) => s + parseFloat(t.jumlah||0), 0).toFixed(1) + ' kg'"></p>
         </div>
     </div>
 
@@ -77,9 +77,11 @@
                 </thead>
                 <tbody>
                     <template x-if="filtered.length === 0">
-                        <tr><td colspan="8" class="text-center py-10" style="color:var(--text-secondary)">
-                            Tidak ada data penitipan
-                        </td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-10" style="color:var(--text-secondary)">
+                                Tidak ada data penitipan
+                            </td>
+                        </tr>
                     </template>
                     <template x-for="t in filtered" :key="t.id">
                         <tr>
@@ -88,31 +90,31 @@
                             <td>
                                 <span class="text-sm font-semibold" x-text="parseFloat(t.jumlah||0).toFixed(1) + ' kg'"></span>
                                 <span x-show="t.jumlah_terjual > 0" class="block text-xs text-green-600"
-                                      x-text="'Terjual: ' + parseFloat(t.jumlah_terjual||0).toFixed(1) + ' kg'"></span>
+                                    x-text="'Terjual: ' + parseFloat(t.jumlah_terjual||0).toFixed(1) + ' kg'"></span>
                             </td>
                             <td><span class="text-sm" x-text="'Rp ' + parseFloat(t.harga_titip||0).toLocaleString('id-ID')"></span></td>
                             <td><span class="text-sm" x-text="(t.komisi_persen||0) + '%'"></span></td>
                             <td><span class="text-sm" x-text="formatDate(t.tanggal_masuk)"></span></td>
                             <td>
                                 <span class="badge"
-                                      :class="{
+                                    :class="{
                                         'badge-info':    t.status==='masuk',
                                         'badge-warning': t.status==='dijual_sebagian',
                                         'badge-success': t.status==='selesai'||t.status==='dijual_semua'
                                       }"
-                                      x-text="statusLabel(t.status)"></span>
+                                    x-text="statusLabel(t.status)"></span>
                             </td>
                             <td>
                                 <div class="flex gap-1.5">
                                     <button @click="openDetail(t.id)" class="btn btn-secondary p-1.5" title="Detail">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                     </button>
-                                    <button x-show="['masuk','dijual_sebagian'].includes(t.status) && ['bos','admin'].includes(user.role)"
-                                            @click="openJual(t)" class="btn btn-primary p-1.5" title="Catat Penjualan">
+                                    <button x-show="['masuk','dijual_sebagian'].includes(t.status) && ['super_admin','admin'].includes(user.role)"
+                                        @click="openJual(t)" class="btn btn-primary p-1.5" title="Catat Penjualan">
                                         <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
                                     </button>
-                                    <button x-show="t.status==='dijual_semua' && ['bos','admin'].includes(user.role)"
-                                            @click="doSettlement(t.id)" class="btn btn-success p-1.5" title="Settlement">
+                                    <button x-show="t.status==='dijual_semua' && ['super_admin','admin'].includes(user.role)"
+                                        @click="doSettlement(t.id)" class="btn btn-success p-1.5" title="Settlement">
                                         <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
@@ -164,8 +166,8 @@
                     <div class="p-3 rounded-lg" style="background:var(--bg-gray)">
                         <p class="text-xs mb-1" style="color:var(--text-secondary)">Status</p>
                         <span class="badge"
-                              :class="{'badge-info':detail.status==='masuk','badge-warning':detail.status==='dijual_sebagian','badge-success':['selesai','dijual_semua'].includes(detail.status)}"
-                              x-text="statusLabel(detail.status)"></span>
+                            :class="{'badge-info':detail.status==='masuk','badge-warning':detail.status==='dijual_sebagian','badge-success':['selesai','dijual_semua'].includes(detail.status)}"
+                            x-text="statusLabel(detail.status)"></span>
                     </div>
                 </div>
             </template>
@@ -248,6 +250,10 @@ function penitipanPage() {
         },
 
         async init() {
+            if (!['super_admin', 'bos', 'admin'].includes(this.user.role)) {
+                window.location.href = '/peace_seafood/dashboard';
+                return;
+            }
             await this.loadData();
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
@@ -293,7 +299,7 @@ function penitipanPage() {
         },
 
         async doSettlement(id) {
-            if (!confirm('Lakukan settlement untuk titipan ini?')) return;
+            if (!await confirm('Lakukan settlement untuk titipan ini?')) return;
             try {
                 const token = localStorage.getItem('token');
                 await axios.post('/peace_seafood/api/penitipan/' + id + '/selesai', { titipan_id: id }, { headers: { Authorization: 'Bearer '+token } });

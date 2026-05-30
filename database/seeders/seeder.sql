@@ -1,252 +1,210 @@
 -- ============================================================
--- PEACE SEAFOOD — SEEDER DATA
--- Run after schema.sql
+-- PEACE SEAFOOD — BRAND NEW PREMIUM SEEDER DATA
+-- Focuses on: Ikan Cakalang, Ikan Tongkol, Ikan Salem, Ikan Bandeng
 -- ============================================================
 
 USE `peace_seafood`;
 
--- ============================================================
--- STEP 1: Insert BOZ user first (no gudang yet)
--- ============================================================
-INSERT INTO `users` (`name`, `email`, `password`, `role`, `id_gudang`, `is_active`) VALUES
-('Bos Gudang', 'bos@example.com', '$2y$10$JxE6REWeabOrTEYgXNMtY.Uzml.WIqkr0ZGo7jTMEm95RhN4p5tSi', 'bos', NULL, 1);
--- password: bos123
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Truncate all tables in proper order
+TRUNCATE TABLE `notifikasi`;
+TRUNCATE TABLE `hutang_piutang_history`;
+TRUNCATE TABLE `hutang_piutang`;
+TRUNCATE TABLE `biaya_operasional`;
+TRUNCATE TABLE `retur`;
+TRUNCATE TABLE `titipan_penjualan`;
+TRUNCATE TABLE `titipan`;
+TRUNCATE TABLE `nota_detail`;
+TRUNCATE TABLE `nota`;
+TRUNCATE TABLE `timbangan`;
+TRUNCATE TABLE `stok_masuk`;
+TRUNCATE TABLE `harga_history`;
+TRUNCATE TABLE `produk`;
+TRUNCATE TABLE `jenis_ikan`;
+TRUNCATE TABLE `pembeli`;
+TRUNCATE TABLE `supplier`;
+TRUNCATE TABLE `gudang`;
+TRUNCATE TABLE `users`;
+TRUNCATE TABLE `settings`;
+TRUNCATE TABLE `stok_opname`;
 
 -- ============================================================
--- STEP 2: Insert Gudang (referencing bos user id=1)
+-- 1. USERS
 -- ============================================================
-INSERT INTO `gudang` (`id_bos`, `nama`, `alamat`, `kota`, `telpon`, `is_active`) VALUES
-(1, 'Gudang A - Pusat',     'Jl. Merdeka No. 1',   'Jakarta',   '021-12345678', 1),
-(1, 'Gudang B - Cabang',    'Jl. Sudirman No. 5',  'Jakarta',   '021-87654321', 1),
-(1, 'Gudang C - Satellite', 'Jl. Thamrin No. 10',  'Tangerang', '021-55555555', 1);
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `id_gudang`, `is_active`) VALUES
+(1, 'Super Admin', 'superadmin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'super_admin', NULL, 1),
+(2, 'Bos Gudang', 'bos@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'bos', NULL, 1),
+(3, 'Admin Gudang A', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 1, 1),
+(4, 'Checker Gudang A', 'checker@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'checker', 1, 1),
+(5, 'Admin Gudang B', 'admin2@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 2, 1);
+-- password for all: password
 
 -- ============================================================
--- STEP 3: Insert Admin & Checker users (assigned to gudang)
+-- 2. GUDANG (Warehouse)
 -- ============================================================
-INSERT INTO `users` (`name`, `email`, `password`, `role`, `id_gudang`, `is_active`) VALUES
-('Admin Gudang A',   'admin@example.com',   '$2y$10$I8UNIJXElAl9hgW7Un0mru2ziep/hYZ6c6px5FiqIiFltwVMYJB62', 'admin',   1, 1),
-('Checker Gudang A', 'checker@example.com', '$2y$10$w.ku/nvdLtSJBRBtGxEDdu30A.7vXrmqTjHHVf7dZGbIMLCSiEZTC', 'checker', 1, 1),
-('Admin Gudang B',   'admin2@example.com',  '$2y$10$BoQIaCGlEBBDsO4IHPoUlOTwHI/vz4VOBA3lYJLe2biJyYIXICMAi', 'admin',   2, 1);
--- passwords: admin123, checker123, admin2
+INSERT INTO `gudang` (`id`, `id_bos`, `nama`, `alamat`, `kota`, `telpon`, `is_active`) VALUES
+(1, 2, 'Gudang Utama Bitung', 'Jl. Pelabuhan Samudera No. 42', 'Bitung', '0438-334455', 1),
+(2, 2, 'Gudang Cabang Jakarta', 'Jl. Muara Baru Ujung No. 12', 'Jakarta Utara', '021-667788', 1);
+
+-- Apply foreign keys from users back to gudang
+UPDATE `users` SET `id_gudang` = 1 WHERE `id` = 3;
+UPDATE `users` SET `id_gudang` = 1 WHERE `id` = 4;
+UPDATE `users` SET `id_gudang` = 2 WHERE `id` = 5;
 
 -- ============================================================
--- STEP 4: Jenis Ikan
+-- 3. JENIS_IKAN (Fish Type with Attribute Masters)
 -- ============================================================
-INSERT INTO `jenis_ikan` (`nama`, `deskripsi`, `is_active`) VALUES
-('Ikan Laut Segar',  'Ikan laut dari nelayan langsung',    1),
-('Ikan Darat Segar', 'Ikan dari kolam/budidaya',           1),
-('Ikan Beku',        'Ikan yang sudah dibekukan',          1),
-('Ikan Olahan',      'Ikan yang sudah diproses/diolah',    1),
-('Seafood Lainnya',  'Udang, cumi, kepiting, dll',         1);
+INSERT INTO `jenis_ikan` (`id`, `nama`, `deskripsi`, `allowed_sizes`, `allowed_grades`, `allowed_origins`, `is_active`) VALUES
+(1, 'Ikan Cakalang', 'Skipjack Tuna - komoditas utama ekspor & lokal', '200/300, 300/500, 1 Up, Size 10, Size 20, Polos', 'Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC', 'Bitung, Banda, Makassar, Ambon', 1),
+(2, 'Ikan Tongkol', 'Mackerel Tuna - sangat diminati pasar retail lokal', '200/300, 300/500, 500/800, Size 15, Size 25', 'Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC', 'Bitung, Kendari, Sibolga, Bali', 1),
+(3, 'Ikan Salem', 'Mackerel - produk impor premium untuk sarden/konsumsi', '100/150, 150/200, 200/300, Size 30, Size 40', 'Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC', 'Jepang, Tiongkok, Cile', 1),
+(4, 'Ikan Bandeng', 'Milkfish - ikan air payau budidaya unggulan', '2-3 pcs/kg, 4-5 pcs/kg, 6-8 pcs/kg, Jumbo', 'Grade A - Beku Kapal, Grade B - Beku Darat, Grade C - AC', 'Sidoarjo, Juwana, Gresik, Pinrang', 1);
 
 -- ============================================================
--- STEP 5: Supplier
+-- 4. SUPPLIER
 -- ============================================================
-INSERT INTO `supplier` (`id_gudang`, `nama`, `nama_pemilik`, `kontak_person`, `telpon`, `alamat`, `kota`, `bank_name`, `bank_account`, `bank_owner`, `is_active`) VALUES
-(1, 'Supplier Laut Jaya',    'Budi Santoso',    'Adi',     '0812-11111111', 'Jl. Pelabuhan No.1',  'Jakarta',  'BCA',     '1234567890', 'PT LAUT JAYA',     1),
-(1, 'Supplier Ikan Nusa',    'Siti Nurhaliza',  'Rini',    '0812-22222222', 'Jl. Perikanan No.5',  'Depok',    'BRI',     '0987654321', 'CV IKAN NUSA',     1),
-(1, 'Supplier Seafood Indah','Ahmad Wijaya',    'Bambang', '0812-33333333', 'Jl. Pelindo No.10',   'Medan',    'Mandiri', '1111111111', 'PT SEAFOOD INDAH', 1),
-(1, 'Supplier Premium Fish', 'Tina Wijaya',     'Supri',   '0812-44444444', 'Jl. Dermaga No.15',   'Surabaya', 'BNI',     '2222222222', 'PT PREMIUM FISH',  1),
-(2, 'Supplier Nusantara',    'Hendra Gunawan',  'Dedi',    '0812-55555555', 'Jl. Nelayan No.3',    'Jakarta',  'BCA',     '3333333333', 'CV NUSANTARA',     1);
+INSERT INTO `supplier` (`id`, `id_gudang`, `nama`, `nama_pemilik`, `kontak_person`, `telpon`, `alamat`, `kota`, `bank_name`, `bank_account`, `bank_owner`, `is_active`) VALUES
+(1, 1, 'PT Bitung Samudra Sejahtera', 'Hendra Wijaya', 'Budi', '0812-4455-6677', 'Kawasan Industri Pelabuhan Bitung', 'Bitung', 'BCA', '1234567890', 'PT BITUNG SAMUDRA', 1),
+(2, 1, 'CV Banda Fishery', 'Syarifuddin', 'Lutfi', '0813-8899-0011', 'Jl. Dermaga Pantai Indah No. 5', 'Banda', 'Mandiri', '0987654321', 'Syarifuddin Banda', 1),
+(3, 1, 'PT Juwana Tambak Makmur', 'Bambang Sukijo', 'Rudi', '0857-2233-4455', 'Jl. Tambak Juwana KM 2', 'Pati', 'BRI', '111222333444', 'PT JUWANA TAMBAK', 1),
+(4, 2, 'PT Muara Seafood Import', 'Tan Wijaya', 'Alvin', '0811-9988-7766', 'Kawasan Muara Baru No. 100', 'Jakarta', 'BCA', '5554443332', 'PT MUARA IMPORT', 1);
 
 -- ============================================================
--- STEP 6: Pembeli (Buyer)
+-- 5. PEMBELI (Buyer)
 -- ============================================================
-INSERT INTO `pembeli` (`id_gudang`, `nama`, `telpon`, `alamat`, `kota`, `tipe`, `kredit_limit`, `is_active`) VALUES
-(1, 'PT Restoran Mewah',    '021-11111111', 'Jl. Gatot Subroto No.1',  'Jakarta', 'bulk',    50000000,  1),
-(1, 'Pasar Senen',          '021-22222222', 'Pasar Senen Blok A',      'Jakarta', 'retail',  10000000,  1),
-(1, 'Hotel Grand Indonesia','021-33333333', 'Jl. Thamrin No.1',        'Jakarta', 'bulk',    100000000, 1),
-(1, 'Toko Ikan Segar',      '021-44444444', 'Jl. Hayam Wuruk No.5',   'Jakarta', 'retail',  5000000,   1),
-(1, 'Restoran Seafood',     '021-55555555', 'Jl. Blora No.10',         'Jakarta', 'bulk',    30000000,  1),
-(1, 'Pasar Tradisional',    '021-66666666', 'Pasar Tanah Abang',       'Jakarta', 'retail',  8000000,   1),
-(2, 'Catering Nusantara',   '021-77777777', 'Jl. Sudirman No.20',      'Jakarta', 'bulk',    25000000,  1);
+INSERT INTO `pembeli` (`id`, `id_gudang`, `nama`, `telpon`, `alamat`, `kota`, `tipe`, `kredit_limit`, `is_active`) VALUES
+(1, 1, 'PT Restoran Ocean Star', '021-554433', 'Jl. Boulevard Kelapa Gading No. 1', 'Jakarta', 'bulk', 150000000, 1),
+(2, 1, 'CV Berkah Seafood Pasar Senen', '0821-2233-44', 'Pasar Senen Blok A No. 12', 'Jakarta', 'retail', 30000000, 1),
+(3, 1, 'Catering Mandiri Utama', '0821-8899-22', 'Jl. Kebon Jeruk No. 50', 'Jakarta', 'reseller', 50000000, 1),
+(4, 1, 'PT Bandeng Juwana Cabang Depok', '021-778899', 'Jl. Margonda Raya No. 10', 'Depok', 'bulk', 75000000, 1),
+(5, 2, 'Distributor Ikan Jakarta Barat', '0815-5566-77', 'Kawasan Pasar Ikan Cengkareng', 'Jakarta', 'bulk', 200000000, 1);
 
 -- ============================================================
--- STEP 7: Produk
+-- 6. PRODUK (with dynamic Size, Grade, Origin)
 -- ============================================================
-INSERT INTO `produk` (`id_jenis_ikan`, `id_gudang`, `nama`, `deskripsi`, `gambar`, `harga_beli`, `harga_jual`, `stok_qty`, `nilai_stok`, `stok_minimum`, `is_active`) VALUES
-(1, 1, 'Ikan Kakap Merah',  'Ikan kakap merah segar berkualitas',  'kakap_merah.webp',      55000, 70000,  0, 0, 50,  1),
-(1, 1, 'Ikan Kerapu',       'Ikan kerapu segar pilihan',           NULL,                    75000, 95000,  0, 0, 30,  1),
-(1, 1, 'Ikan Tenggiri',     'Ikan tenggiri segar premium',         'tenggiri.webp',         60000, 78000,  0, 0, 40,  1),
-(1, 1, 'Ikan Tuna',         'Ikan tuna segar grade A',             'tuna.webp',             65000, 85000,  0, 0, 30,  1),
-(2, 1, 'Ikan Nila Segar',   'Ikan nila dari kolam budidaya',       'nila.webp',             30000, 42000,  0, 0, 100, 1),
-(2, 1, 'Ikan Lele Segar',   'Ikan lele segar dari kolam',          'lele.webp',             25000, 35000,  0, 0, 100, 1),
-(3, 1, 'Ikan Kakap Beku',   'Ikan kakap beku -18°C',               'kakap_merah_beku.webp', 48000, 62000,  0, 0, 50,  1),
-(5, 1, 'Udang Windu',       'Udang windu segar ukuran besar',      'udang_windu.webp',      120000, 150000, 0, 0, 25,  1),
-(5, 1, 'Cumi-cumi Segar',   'Cumi-cumi segar dari laut',           'cumi.webp',             55000, 72000,  0, 0, 30,  1),
-(1, 2, 'Ikan Kakap Merah',  'Ikan kakap merah segar',              'kakap_merah.webp',      55000, 70000,  0, 0, 50,  1),
-(2, 2, 'Ikan Nila Segar',   'Ikan nila segar',                     'nila.webp',             30000, 42000,  0, 0, 100, 1);
+INSERT INTO `produk` (`id`, `id_jenis_ikan`, `id_gudang`, `nama`, `deskripsi`, `satuan`, `size`, `grade`, `asal`, `harga_beli`, `harga_jual`, `stok_qty`, `nilai_stok`, `stok_minimum`, `is_active`) VALUES
+-- Gudang 1
+(1, 1, 1, 'Cakalang 300/500 A Bitung', 'Cakalang Premium Beku Kapal', 'kg', '300/500', 'Grade A - Beku Kapal', 'Bitung', 32000, 45000, 4500.00, 144000000, 100.00, 1),
+(2, 1, 1, 'Cakalang 1 Up B Banda', 'Cakalang Beku Darat Banda', 'kg', '1 Up', 'Grade B - Beku Darat', 'Banda', 28000, 38000, 3000.00, 84000000, 100.00, 1),
+(3, 1, 1, 'Cakalang Size 10 C Makassar', 'Cakalang AC Makassar', 'kg', 'Size 10', 'Grade C - AC', 'Makassar', 20000, 28000, 0.00, 0, 50.00, 1),
+(4, 2, 1, 'Tongkol 300/500 A Kendari', 'Tongkol Beku Kapal Kendari', 'kg', '300/500', 'Grade A - Beku Kapal', 'Kendari', 25000, 35000, 4000.00, 100000000, 100.00, 1),
+(5, 2, 1, 'Tongkol 500/800 B Sibolga', 'Tongkol Beku Darat Sibolga', 'kg', '500/800', 'Grade B - Beku Darat', 'Sibolga', 22000, 30000, 0.00, 0, 100.00, 1),
+(6, 3, 1, 'Salem 150/200 A Jepang', 'Salem Impor Premium Beku Kapal', 'kg', '150/200', 'Grade A - Beku Kapal', 'Jepang', 30000, 42000, 5000.00, 150000000, 200.00, 1),
+(7, 3, 1, 'Salem 200/300 B Tiongkok', 'Salem Impor Beku Darat Tiongkok', 'kg', '200/300', 'Grade B - Beku Darat', 'Tiongkok', 26000, 36000, 0.00, 0, 100.00, 1),
+(8, 4, 1, 'Bandeng 4-5 pcs A Sidoarjo', 'Bandeng Sidoarjo Premium', 'kg', '4-5 pcs/kg', 'Grade A - Beku Kapal', 'Sidoarjo', 24000, 33000, 2500.00, 60000000, 100.00, 1),
+(9, 4, 1, 'Bandeng Jumbo B Juwana', 'Bandeng Cabut Duri Juwana', 'kg', 'Jumbo', 'Grade B - Beku Darat', 'Juwana', 28000, 39000, 0.00, 0, 50.00, 1),
+-- Gudang 2
+(10, 1, 2, 'Cakalang 300/500 A Bitung', 'Cakalang Premium Beku Kapal', 'kg', '300/500', 'Grade A - Beku Kapal', 'Bitung', 32000, 45000, 500.00, 16000000, 50.00, 1),
+(11, 3, 2, 'Salem 150/200 A Jepang', 'Salem Impor Jepang', 'kg', '150/200', 'Grade A - Beku Kapal', 'Jepang', 30000, 42000, 400.00, 12000000, 50.00, 1);
 
 -- ============================================================
--- STEP 8: Settings (Default per gudang)
+-- 7. SETTINGS
 -- ============================================================
 INSERT INTO `settings` (`id_gudang`, `kunci`, `nilai`, `deskripsi`) VALUES
-(1, 'multi_warehouse_aktif',        '0',      'Multi warehouse feature aktif/nonaktif'),
-(1, 'stok_minimum_threshold',       '50',     'Default stok minimum dalam kg'),
-(1, 'susut_alert_threshold',        '5',      'Alert jika susut > X% dari qty teoritis'),
-(1, 'komisi_penitipan_tipe',        'potong', 'Metode komisi: potong atau bayar_terpisah'),
-(1, 'komisi_penitipan_persen',      '5',      'Persentase komisi default'),
-(1, 'pajak_default_persen',         '0',      'Pajak default untuk nota penjualan'),
-(1, 'jatuh_tempo_default_hari',     '30',     'Periode kredit default dalam hari'),
-(1, 'session_timeout_menit',        '30',     'Auto-logout setelah inaktif X menit'),
-(1, 'onboarding_wizard_aktif',      '1',      'Tampilkan wizard setup pertama kali'),
-(1, 'backup_otomatis',              '1',      'Backup database otomatis'),
-(1, 'harga_locked_untuk',           'bos',    'Siapa yang bisa ubah harga: bos/admin/semua'),
-(1, 'export_permission',            'bos',    'Siapa yang bisa export: bos/admin/semua'),
-(2, 'multi_warehouse_aktif',        '0',      'Multi warehouse feature aktif/nonaktif'),
-(2, 'stok_minimum_threshold',       '50',     'Default stok minimum dalam kg'),
-(2, 'komisi_penitipan_tipe',        'potong', 'Metode komisi'),
-(2, 'pajak_default_persen',         '0',      'Pajak default'),
-(2, 'jatuh_tempo_default_hari',     '30',     'Periode kredit default'),
-(2, 'harga_locked_untuk',           'bos',    'Siapa yang bisa ubah harga'),
-(2, 'export_permission',            'bos',    'Siapa yang bisa export');
+-- Gudang 1
+(1, 'multi_warehouse_aktif', '1', 'Multi warehouse feature aktif/nonaktif'),
+(1, 'stok_minimum_threshold', '100', 'Default batas stok minimum dalam kg'),
+(1, 'susut_alert_threshold', '5', 'Peringatan jika susut timbangan melebihi persen ini'),
+(1, 'komisi_penitipan_tipe', 'potong', 'Metode komisi: potong atau bayar_terpisah'),
+(1, 'komisi_penitipan_persen', '5', 'Persentase komisi default'),
+(1, 'pajak_default_persen', '0', 'Pajak penjualan default dalam %'),
+(1, 'jatuh_tempo_default_hari', '30', 'Jatuh tempo default untuk pembayaran piutang'),
+(1, 'session_timeout_menit', '60', 'Sesi login aktif dalam menit'),
+(1, 'onboarding_wizard_aktif', '0', 'Tampilkan wizard panduan user'),
+(1, 'backup_otomatis', '1', 'Pencadangan database otomatis'),
+(1, 'harga_locked_untuk', 'bos', 'Otoritas ubah harga produk'),
+(1, 'export_permission', 'admin', 'Otoritas export file laporan'),
+(1, 'company_name', 'Peace Seafood', 'Nama Identitas Gudang/Perusahaan Global'),
+(1, 'company_logo_initial', 'PS', 'Inisial Logo Sidebar Utama'),
+(1, 'kapasitas_cold_storage_kg', '10000', 'Kapasitas maksimal Cold Storage (kg) untuk indikator gauge'),
+-- Gudang 2
+(2, 'multi_warehouse_aktif', '1', 'Multi warehouse'),
+(2, 'stok_minimum_threshold', '100', 'Stok minimum'),
+(2, 'komisi_penitipan_tipe', 'potong', 'Metode komisi'),
+(2, 'pajak_default_persen', '0', 'Pajak default'),
+(2, 'jatuh_tempo_default_hari', '30', 'Jatuh tempo default'),
+(2, 'harga_locked_untuk', 'bos', 'Otoritas ubah harga'),
+(2, 'export_permission', 'admin', 'Otoritas export'),
+(2, 'kapasitas_cold_storage_kg', '5000', 'Kapasitas maksimal Cold Storage (kg) Cabang');
 
 -- ============================================================
--- STEP 9: Sample Stok Masuk (7 hari terakhir)
+-- 8. STOK_MASUK
 -- ============================================================
-INSERT INTO `stok_masuk` (`id_gudang`, `id_produk`, `id_supplier`, `qty`, `harga_beli`, `status`, `created_by`, `created_at`) VALUES
-(1, 1, 1, 500, 55000, 'confirmed', 2, DATE_SUB(NOW(), INTERVAL 7 DAY)),
-(1, 2, 1, 200, 75000, 'confirmed', 2, DATE_SUB(NOW(), INTERVAL 6 DAY)),
-(1, 3, 2, 300, 60000, 'confirmed', 2, DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(1, 5, 2, 800, 30000, 'confirmed', 2, DATE_SUB(NOW(), INTERVAL 4 DAY)),
-(1, 8, 3, 100, 120000,'confirmed', 2, DATE_SUB(NOW(), INTERVAL 3 DAY)),
-(1, 1, 1, 300, 55000, 'confirmed', 2, DATE_SUB(NOW(), INTERVAL 2 DAY)),
-(1, 4, 4, 150, 65000, 'confirmed', 2, DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(1, 6, 2, 400, 25000, 'pending',   2, NOW());
+-- Seeding data data pasokan baru masuk minggu ini (sebagian kecil dari total kapasitas)
+INSERT INTO `stok_masuk` (`id`, `id_gudang`, `id_produk`, `id_supplier`, `qty`, `harga_beli`, `status`, `catatan`, `created_by`, `created_at`) VALUES
+(1, 1, 1, 1, 500.00, 32000, 'confirmed', 'Pasokan Cakalang Bitung Kapal', 3, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(2, 1, 2, 2, 400.00,  28000, 'confirmed', 'Pasokan Cakalang Banda Darat', 3, DATE_SUB(NOW(), INTERVAL 6 DAY)),
+(3, 1, 4, 1, 300.00,  25000, 'confirmed', 'Pasokan Tongkol Kendari Kapal', 3, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+(4, 1, 6, 4, 600.00,  30000, 'confirmed', 'Kontainer Salem Jepang Impor', 3, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+(5, 1, 8, 3, 400.00,  24000, 'confirmed', 'Panen Tambak Bandeng Sidoarjo', 3, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(6, 1, 1, 1, 500.00,  32000, 'pending',   'Menunggu timbangan fisik masuk', 3, NOW());
 
 -- ============================================================
--- STEP 10: Timbangan (untuk stok_masuk yang confirmed)
+-- 9. TIMBANGAN (Susut timbangan sesungguhnya)
 -- ============================================================
-INSERT INTO `timbangan` (`id_stok_masuk`, `id_produk`, `qty_teoritis`, `qty_actual`, `alasan_susut`, `created_by`, `created_at`) VALUES
-(1, 1, 500, 495, 'Kemasan sedikit bocor',    3, DATE_SUB(NOW(), INTERVAL 7 DAY)),
-(2, 2, 200, 200, NULL,                       3, DATE_SUB(NOW(), INTERVAL 6 DAY)),
-(3, 3, 300, 297, 'Evaporasi normal',         3, DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(4, 5, 800, 790, 'Kualitas jelek 10kg',      3, DATE_SUB(NOW(), INTERVAL 4 DAY)),
-(5, 8, 100, 100, NULL,                       3, DATE_SUB(NOW(), INTERVAL 3 DAY)),
-(6, 1, 300, 298, 'Sedikit susut perjalanan', 3, DATE_SUB(NOW(), INTERVAL 2 DAY)),
-(7, 4, 150, 150, NULL,                       3, DATE_SUB(NOW(), INTERVAL 1 DAY));
+INSERT INTO `timbangan` (`id`, `id_stok_masuk`, `id_produk`, `qty_teoritis`, `qty_actual`, `alasan_susut`, `created_by`, `created_at`) VALUES
+(1, 1, 1, 500.00, 500.00, NULL, 4, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(2, 2, 2, 400.00, 400.00,  NULL, 4, DATE_SUB(NOW(), INTERVAL 6 DAY)),
+(3, 3, 4, 300.00, 300.00, NULL, 4, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+(4, 4, 6, 600.00, 600.00, NULL, 4, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+(5, 5, 8, 400.00, 400.00,  NULL, 4, DATE_SUB(NOW(), INTERVAL 2 DAY));
 
 -- ============================================================
--- STEP 11: Update stok produk setelah timbangan confirmed
--- ============================================================
-UPDATE `produk` SET `stok_qty` = 793,  `nilai_stok` = 793  * 55000  WHERE `id` = 1;  -- Kakap Merah (495+298)
-UPDATE `produk` SET `stok_qty` = 200,  `nilai_stok` = 200  * 75000  WHERE `id` = 2;  -- Kerapu
-UPDATE `produk` SET `stok_qty` = 297,  `nilai_stok` = 297  * 60000  WHERE `id` = 3;  -- Tenggiri
-UPDATE `produk` SET `stok_qty` = 150,  `nilai_stok` = 150  * 65000  WHERE `id` = 4;  -- Tuna
-UPDATE `produk` SET `stok_qty` = 790,  `nilai_stok` = 790  * 30000  WHERE `id` = 5;  -- Nila
-UPDATE `produk` SET `stok_qty` = 100,  `nilai_stok` = 100  * 120000 WHERE `id` = 8;  -- Udang Windu
-
--- ============================================================
--- STEP 12: Harga History (initial prices)
+-- 10. HARGA_HISTORY
 -- ============================================================
 INSERT INTO `harga_history` (`id_produk`, `harga_lama`, `harga_baru`, `tipe`, `reason`, `changed_by`, `created_at`) VALUES
-(1, NULL,  55000, 'beli', 'Harga awal setup',          1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
-(1, NULL,  70000, 'jual', 'Harga awal setup',          1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
-(2, NULL,  75000, 'beli', 'Harga awal setup',          1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
-(2, NULL,  95000, 'jual', 'Harga awal setup',          1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
-(3, NULL,  60000, 'beli', 'Harga awal setup',          1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
-(3, NULL,  78000, 'jual', 'Harga awal setup',          1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
-(1, 50000, 55000, 'beli', 'Harga naik dari supplier',  1, DATE_SUB(NOW(), INTERVAL 10 DAY)),
-(1, 65000, 70000, 'jual', 'Adjustment market',         1, DATE_SUB(NOW(), INTERVAL 10 DAY));
+(1, NULL,  32000, 'beli', 'Setup awal harga beli', 1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
+(1, NULL,  45000, 'jual', 'Setup awal harga jual', 1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
+(2, NULL,  28000, 'beli', 'Setup awal harga beli', 1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
+(2, NULL,  38000, 'jual', 'Setup awal harga jual', 1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
+(4, NULL,  25000, 'beli', 'Setup awal harga beli', 1, DATE_SUB(NOW(), INTERVAL 30 DAY)),
+(4, NULL,  35000, 'jual', 'Setup awal harga jual', 1, DATE_SUB(NOW(), INTERVAL 30 DAY));
 
 -- ============================================================
--- STEP 13: Sample Nota Penjualan
+-- 11. NOTA PENJUALAN (Historical Sales)
 -- ============================================================
-INSERT INTO `nota` (`id_gudang`, `id_pembeli`, `no_nota`, `tanggal_nota`, `subtotal`, `diskon_nominal`, `pajak`, `total`, `pembayaran`, `status`, `created_by`, `created_at`) VALUES
-(1, 1, 'PS-250510-0001', DATE_SUB(CURDATE(), INTERVAL 7 DAY), 5250000, 250000, 0, 5000000, 'cash',   'final', 2, DATE_SUB(NOW(), INTERVAL 7 DAY)),
-(1, 2, 'PS-250511-0001', DATE_SUB(CURDATE(), INTERVAL 6 DAY), 2940000, 0,      0, 2940000, 'hutang', 'final', 2, DATE_SUB(NOW(), INTERVAL 6 DAY)),
-(1, 3, 'PS-250512-0001', DATE_SUB(CURDATE(), INTERVAL 5 DAY), 9500000, 500000, 0, 9000000, 'hutang', 'final', 2, DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(1, 1, 'PS-250513-0001', DATE_SUB(CURDATE(), INTERVAL 4 DAY), 3500000, 0,      0, 3500000, 'cash',   'final', 2, DATE_SUB(NOW(), INTERVAL 4 DAY)),
-(1, 4, 'PS-250514-0001', DATE_SUB(CURDATE(), INTERVAL 3 DAY), 1680000, 0,      0, 1680000, 'cash',   'final', 2, DATE_SUB(NOW(), INTERVAL 3 DAY)),
-(1, 2, 'PS-250515-0001', DATE_SUB(CURDATE(), INTERVAL 2 DAY), 4200000, 200000, 0, 4000000, 'hutang', 'final', 2, DATE_SUB(NOW(), INTERVAL 2 DAY)),
-(1, 5, 'PS-250516-0001', DATE_SUB(CURDATE(), INTERVAL 1 DAY), 7800000, 0,      0, 7800000, 'cash',   'final', 2, DATE_SUB(NOW(), INTERVAL 1 DAY));
+INSERT INTO `nota` (`id`, `id_gudang`, `id_pembeli`, `no_nota`, `tanggal_nota`, `subtotal`, `diskon_nominal`, `pajak`, `total`, `pembayaran`, `status`, `catatan`, `created_by`, `created_at`) VALUES
+(1, 1, 1, 'PS-260519-0001', DATE_SUB(CURDATE(), INTERVAL 6 DAY), 27000000, 0, 0, 27000000, 'cash',   'final', 'Lunas tunai di tempat', 3, DATE_SUB(NOW(), INTERVAL 6 DAY)),
+(2, 1, 2, 'PS-260520-0001', DATE_SUB(CURDATE(), INTERVAL 5 DAY), 19000000, 1000000, 0, 18000000, 'hutang', 'final', 'Term 30 hari pasar senen', 3, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(3, 1, 3, 'PS-260521-0001', DATE_SUB(CURDATE(), INTERVAL 4 DAY), 28000000, 0, 0, 28000000, 'hutang', 'final', 'Kredit langganan catering', 3, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+(4, 1, 1, 'PS-260522-0001', DATE_SUB(CURDATE(), INTERVAL 3 DAY), 50400000, 1400000, 0, 49000000, 'cash', 'final', 'Partai besar restoran', 3, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+(5, 1, 4, 'PS-260523-0001', DATE_SUB(CURDATE(), INTERVAL 2 DAY), 19800000, 0, 0, 19800000, 'cash', 'final', 'Lunas Bandeng Juwana', 3, DATE_SUB(NOW(), INTERVAL 2 DAY));
 
 -- ============================================================
--- STEP 14: Nota Detail
+-- 12. NOTA_DETAIL
 -- ============================================================
 INSERT INTO `nota_detail` (`id_nota`, `id_produk`, `qty`, `harga_jual`, `subtotal`) VALUES
-(1, 1, 50, 70000, 3500000),
-(1, 3, 25, 70000, 1750000),
-(2, 5, 70, 42000, 2940000),
-(3, 2, 50, 95000, 4750000),
-(3, 8, 31, 150000,4650000),
-(4, 1, 50, 70000, 3500000),
-(5, 5, 40, 42000, 1680000),
-(6, 3, 60, 70000, 4200000),
-(7, 1, 60, 70000, 4200000),
-(7, 9, 50, 72000, 3600000);
+(1, 1, 600.00, 45000, 27000000), -- 600 kg Cakalang 300/500 A
+(2, 2, 500.00, 38000, 19000000), -- 500 kg Cakalang 1 Up B
+(3, 4, 800.00, 35000, 28000000), -- 800 kg Tongkol Kendari A
+(4, 6, 1200.00, 42000, 50400000), -- 1200 kg Salem Jepang A
+(5, 8, 600.00, 33000, 19800000); -- 600 kg Bandeng Sidoarjo A
 
--- Update stok setelah penjualan
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 50  WHERE `id` = 1;  -- nota 1
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 25  WHERE `id` = 3;  -- nota 1
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 70  WHERE `id` = 5;  -- nota 2
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 50  WHERE `id` = 2;  -- nota 3
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 31  WHERE `id` = 8;  -- nota 3
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 50  WHERE `id` = 1;  -- nota 4
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 40  WHERE `id` = 5;  -- nota 5
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 60  WHERE `id` = 3;  -- nota 6
-UPDATE `produk` SET `stok_qty` = `stok_qty` - 60  WHERE `id` = 1;  -- nota 7
+-- Update stok setelah dikurangi penjualan historis
+UPDATE `produk` SET `stok_qty` = 3900.00, `nilai_stok` = 3900.00 * 32000 WHERE `id` = 1;
+UPDATE `produk` SET `stok_qty` = 2500.00, `nilai_stok` = 2500.00 * 28000 WHERE `id` = 2;
+UPDATE `produk` SET `stok_qty` = 3200.00, `nilai_stok` = 3200.00 * 25000 WHERE `id` = 4;
+UPDATE `produk` SET `stok_qty` = 3800.00, `nilai_stok` = 3800.00 * 30000 WHERE `id` = 6;
+UPDATE `produk` SET `stok_qty` = 1900.00, `nilai_stok` = 1900.00 * 24000 WHERE `id` = 8;
 
 -- ============================================================
--- STEP 15: Hutang Piutang (dari nota hutang)
+-- 13. HUTANG PIUTANG
 -- ============================================================
-INSERT INTO `hutang_piutang` (`id_gudang`, `jenis`, `id_supplier`, `id_pembeli`, `id_nota`, `nominal`, `nominal_bayar`, `jatuh_tempo`, `status`, `created_by`) VALUES
-(1, 'piutang', NULL, 2, 2, 2940000, 0,       DATE_ADD(CURDATE(), INTERVAL 23 DAY), 'open',     2),
-(1, 'piutang', NULL, 3, 3, 9000000, 3000000, DATE_ADD(CURDATE(), INTERVAL 25 DAY), 'sebagian', 2),
-(1, 'piutang', NULL, 2, 6, 4000000, 0,       DATE_ADD(CURDATE(), INTERVAL 28 DAY), 'open',     2),
-(1, 'hutang',  1,    NULL, NULL, 5000000, 2000000, DATE_ADD(CURDATE(), INTERVAL 15 DAY), 'sebagian', 2),
-(1, 'hutang',  2,    NULL, NULL, 3000000, 0,       DATE_ADD(CURDATE(), INTERVAL 20 DAY), 'open',     2),
-(1, 'hutang',  3,    NULL, NULL, 8000000, 5000000, DATE_ADD(CURDATE(), INTERVAL 5  DAY), 'sebagian', 2);
+INSERT INTO `hutang_piutang` (`id_gudang`, `jenis`, `id_supplier`, `id_pembeli`, `id_nota`, `no_referensi`, `nominal`, `nominal_bayar`, `jatuh_tempo`, `status`, `created_by`, `created_at`) VALUES
+-- Piutang Penjualan
+(1, 'piutang', NULL, 2, 2, 'PS-260520-0001', 18000000, 0, DATE_ADD(CURDATE(), INTERVAL 25 DAY), 'open', 3, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(1, 'piutang', NULL, 3, 3, 'PS-260521-0001', 28000000, 8000000, DATE_ADD(CURDATE(), INTERVAL 26 DAY), 'sebagian', 3, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+-- Hutang Supplier
+(1, 'hutang', 1, NULL, NULL, 'INV-BSS-9912', 23500000, 10000000, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 'sebagian', 3, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(1, 'hutang', 2, NULL, NULL, 'INV-BANDA-881', 11200000, 0, DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'open', 3, DATE_SUB(NOW(), INTERVAL 6 DAY));
 
 -- ============================================================
--- STEP 16: Biaya Operasional
+-- 14. BIAYA_OPERASIONAL
 -- ============================================================
 INSERT INTO `biaya_operasional` (`id_gudang`, `kategori`, `deskripsi`, `nominal`, `tanggal`, `created_by`) VALUES
-(1, 'Gaji',      'Gaji karyawan bulan ini',    5000000, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 2),
-(1, 'Listrik',   'Tagihan listrik gudang',     1500000, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 2),
-(1, 'Transport', 'Ongkos kirim ke pembeli',    800000,  DATE_SUB(CURDATE(), INTERVAL 2 DAY), 2),
-(1, 'Lainnya',   'Perlengkapan gudang',        350000,  DATE_SUB(CURDATE(), INTERVAL 1 DAY), 2);
+(1, 'Gaji', 'Gaji bulanan checker & administrasi', 6500000, DATE_SUB(CURDATE(), INTERVAL 4 DAY), 3),
+(1, 'Listrik', 'Token listrik cold storage utama', 2400000, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 3),
+(1, 'Operasional', 'Es balok untuk pengiriman retail', 750000, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 3);
 
--- ============================================================
--- STEP 17: Hutang Piutang History (payment records)
--- ============================================================
-INSERT INTO `hutang_piutang_history` (`id_hutang_piutang`, `nominal_bayar`, `metode_bayar`, `keterangan`, `created_by`, `created_at`) VALUES
-(1, 0,        NULL,       'Belum ada pembayaran',                       2, DATE_SUB(NOW(), INTERVAL 7 DAY)),
-(2, 3000000,  'transfer', 'Pembayaran sebagian dari pembeli 3',         2, DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(4, 2000000,  'cash',     'Bayar sebagian ke supplier 1',               2, DATE_SUB(NOW(), INTERVAL 3 DAY)),
-(6, 5000000,  'transfer', 'Pembayaran sebagian untuk supplier 3',       2, DATE_SUB(NOW(), INTERVAL 1 DAY));
-
--- ============================================================
--- STEP 18: Titipan (Consignments)
--- ============================================================
-INSERT INTO `titipan` (`id_gudang`, `id_pengirim`, `no_titipan`, `tanggal_masuk`, `qty_total`, `qty_dijual`, `qty_tersisa`, `nominal_total`, `nominal_terjual`, `komisi_persen`, `komisi_tipe`, `status`, `catatan`, `created_by`, `created_at`) VALUES
-(1, 1, 'TTP-20260501-0001', DATE_SUB(CURDATE(), INTERVAL 10 DAY), 100, 30, 70, 100 * 55000, 30 * 70000, 5.00, 'potong', 'dijual_sebagian', 'Titipan dari Supplier Laut Jaya', 2, DATE_SUB(NOW(), INTERVAL 10 DAY)),
-(1, 2, 'TTP-20260505-0001', DATE_SUB(CURDATE(), INTERVAL 5 DAY),  50,  0,  50,  50 * 30000, 0,            7.00, 'potong', 'masuk',           'Titipan Nila dari Supplier Ikan Nusa', 2, DATE_SUB(NOW(), INTERVAL 5 DAY));
-
--- ============================================================
--- STEP 19: Titipan Penjualan (Consignment Sales)
--- ============================================================
-INSERT INTO `titipan_penjualan` (`id_titipan`, `id_penjual`, `id_pembeli`, `qty`, `harga_jual`, `nominal`, `komisi_nominal`, `tanggal_jual`, `status`, `created_by`, `created_at`) VALUES
-(1, NULL, 1, 30, 70000, 30 * 70000, FLOOR((30 * 70000) * 5.00 / 100), DATE_SUB(CURDATE(), INTERVAL 8 DAY), 'terjual', 2, DATE_SUB(NOW(), INTERVAL 8 DAY)),
-(2, NULL, 5, 10, 42000, 10 * 42000, FLOOR((10 * 42000) * 7.00 / 100), DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'pending',  2, DATE_SUB(NOW(), INTERVAL 3 DAY));
-
--- ============================================================
--- STEP 20: Retur (Returns)
--- ============================================================
-INSERT INTO `retur` (`id_gudang`, `id_produk`, `id_supplier`, `id_pembeli`, `id_nota`, `tipe`, `qty`, `nominal`, `alasan`, `status`, `catatan`, `created_by`, `approved_by`, `approved_at`, `created_at`) VALUES
-(1, 1, NULL, NULL, NULL, 'stok', 5, 5 * 55000, 'Ikan rusak saat perjalanan', 'approved', 'Retur diterima, dikembalikan ke supplier', 2, 3, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
-(1, NULL, 1, NULL, NULL, 'stok', 10, 10 * 55000, 'Quality issue on batch',       'pending',  'Menunggu verifikasi quality',           2, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY));
-
--- ============================================================
--- STEP 21: Notifikasi (Notifications)
--- ============================================================
-INSERT INTO `notifikasi` (`id_user`, `tipe`, `judul`, `pesan`, `reference_id`, `reference_tipe`, `is_read`, `created_at`) VALUES
-(2, 'info',    'Stok rendah', 'Stok Kakap Merah mencapai ambang minimum', 1, 'produk', 0, DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(3, 'reminder','Hutang jatuh tempo', 'Hutang ke supplier 3 akan jatuh tempo dalam 5 hari', 6, 'hutang_piutang', 0, NOW());
-
--- ============================================================
--- STEP 22: Stok Opname (Inventory Count)
--- ============================================================
-INSERT INTO `stok_opname` (`id_gudang`, `tanggal_opname`, `status`, `created_by`, `created_at`) VALUES
-(1, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'final', 2, DATE_SUB(NOW(), INTERVAL 2 DAY)),
-(2, CURDATE(), 'draft', 3, NOW());
+SET FOREIGN_KEY_CHECKS = 1;

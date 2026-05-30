@@ -8,8 +8,6 @@ use App\Services\AuthService;
 use App\Middleware\AuthMiddleware;
 use App\Utils\Helper;
 use App\Utils\Response;
-use App\Utils\Session;
-use App\Utils\JWT;
 
 class AuthController
 {
@@ -18,9 +16,6 @@ class AuthController
     public function __construct()
     {
         $this->authService = new AuthService();
-        
-        // Initialize session
-        Session::init();
     }
 
     /**
@@ -29,37 +24,19 @@ class AuthController
     public function login(): void
     {
         $body = Helper::getRequestBody();
-        $identifier = trim((string) ($body['email'] ?? $body['username'] ?? ''));
 
-        if ($identifier === '' || empty($body['password'])) {
+        if (empty($body['email']) || empty($body['password'])) {
             Response::error(422, 'VALIDATION_ERROR', 'Email dan password wajib diisi');
         }
 
-        $result = $this->authService->login($identifier, $body['password']);
+        $result = $this->authService->login($body['email'], $body['password']);
 
         if (!$result) {
             Response::unauthorized('Email atau password salah');
         }
 
-        // Store user data in session
-        Session::set('user_id', $result['user']['id']);
-        Session::set('user_email', $result['user']['email']);
-        Session::set('user_role', $result['user']['role']);
-        Session::set('user_name', $result['user']['name']);
-        Session::set('id_gudang', $result['user']['id_gudang']);
-        Session::set('authenticated', true);
-        
-        // Regenerate session ID for security
-        Session::regenerate();
-
-        // Set HTTP-only cookie with token (30 minutes = 1800 seconds)
-        JWT::setHttpOnlyCookie($result['token'], 1800);
-
-        // Add session info to response
-        $result['session'] = [
-            'timeout_minutes' => 30,
-            'expires_at' => date('Y-m-d H:i:s', time() + 1800),
-        ];
+        // Set HttpOnly cookie for web router server-side auth guard
+        \App\Utils\JWT::setHttpOnlyCookie($result['token']);
 
         Response::success($result, 'Login berhasil');
     }
@@ -69,12 +46,8 @@ class AuthController
      */
     public function logout(): void
     {
-        // Clear session
-        Session::destroy();
-        
-        // Clear auth cookie
-        JWT::clearCookie();
-        
+        // Clear HttpOnly cookie on logout
+        \App\Utils\JWT::clearCookie();
         Response::success(null, 'Logout berhasil');
     }
 
@@ -83,78 +56,248 @@ class AuthController
      */
     public function profile(): void
     {
-        // Validate session
-        if (!Session::isValid()) {
-            Response::unauthorized('Session expired');
-        }
-
-        $user = AuthMiddleware::getAuthUser();
-        $userId = (int) $user['id'];
-
+        $user   = AuthMiddleware::getAuthUser();
+        $userId = (int)$user['id'];
+        
         $fullProfile = $this->authService->getProfile($userId);
-
+        
         if (!$fullProfile) {
             Response::notFound('User tidak ditemukan');
         }
-
-        // Add session info
-        $fullProfile['session_info'] = [
-            'remaining_time_seconds' => Session::getRemainingTime(),
-            'remaining_time_minutes' => round(Session::getRemainingTime() / 60, 1),
-        ];
-
+        
         Response::success($fullProfile);
     }
 
     /**
-     * GET /auth/session-info
-     * Get current session information
+     * POST /auth/signup
      */
-    public function sessionInfo(): void
+    public function signup(): void
     {
-        if (!Session::isValid()) {
-            Response::unauthorized('Session expired');
+        $body = \App\Utils\Helper::getRequestBody();
+
+        if (empty($body['email'])) {
+            Response::error('Email wajib diisi.', 422);
         }
 
-        $info = Session::getInfo();
-        
-        // Add user info from session
-        $info['user'] = [
-            'id' => Session::get('user_id'),
-            'email' => Session::get('user_email'),
-            'role' => Session::get('user_role'),
-            'name' => Session::get('user_name'),
-            'id_gudang' => Session::get('id_gudang'),
-        ];
+        $email = trim($body['email']);
 
-        Response::success($info);
+        // Check if pre-approved Bos exists
+        $user = \App\Utils\Database::fetchOne(
+            "SELECT id, name FROM users WHERE email = ? AND registration_status = 'pending_signup'",
+            [$email]
+        );
+
+        if (!$user) {
+            Response::error('Email Anda belum disetujui oleh Developer. Silakan hubungi kami untuk pendaftaran!', 403);
+        }
+
+        // Generate strong secure random default password
+        $randomCode = strtoupper(bin2hex(random_bytes(3))); // 6 random chars
+        $defaultPassword = "Ps#" . $randomCode . "!";
+        $hashedPassword = password_hash($defaultPassword, PASSWORD_BCRYPT);
+
+        // Activate the user
+        \App\Utils\Database::update('users', [
+            'password' => $hashedPassword,
+            'is_first_login' => 1,
+            'registration_status' => 'active',
+            'is_active' => 1
+        ], 'id = ?', [$user['id']]);
+
+        // Send Welcome email with default password
+        $emailBody = "Halo " . $user['name'] . ",\n\n" .
+                     "Pendaftaran akun Bos Anda di Peace Seafood telah sukses disetujui!\n" .
+                     "Berikut adalah informasi login sementara Anda:\n\n" .
+                     "Email: " . $email . "\n" .
+                     "Password Sementara: " . $defaultPassword . "\n\n" .
+                     "Silakan gunakan informasi di atas untuk masuk. Demi keamanan, Anda wajib mengubah password sementara tersebut saat login pertama kali.\n\n" .
+                     "Salam hangat,\n" .
+                     "Peace Seafood Team";
+
+        \App\Utils\Email::send($email, 'Aktivasi Akun Bos Peace Seafood Sukses', $emailBody);
+
+        Response::success(null, 'Pendaftaran berhasil! Password default telah dikirim ke email Gmail Anda.');
     }
 
     /**
-     * POST /auth/refresh
-     * Refresh session and token
+     * POST /auth/change-password
      */
-    public function refresh(): void
+    public function changePassword(): void
     {
-        if (!Session::isValid()) {
-            Response::unauthorized('Session expired');
+        $user = AuthMiddleware::getAuthUser();
+        $body = \App\Utils\Helper::getRequestBody();
+
+        if (empty($body['password'])) {
+            Response::error('Password baru wajib diisi.', 422);
         }
 
+        $password = $body['password'];
+
+        // Strict Password Strength Check
+        $hasUppercase = preg_match('/[A-Z]/', $password);
+        $hasLowercase = preg_match('/[a-z]/', $password);
+        $hasNumber    = preg_match('/[0-9]/', $password);
+        $hasSpecial   = preg_match('/[^a-zA-Z0-9]/', $password);
+        $isValidLength = strlen($password) >= 8;
+
+        if (!$hasUppercase || !$hasLowercase || !$hasNumber || !$hasSpecial || !$isValidLength) {
+            Response::error('Sandi lemah! Password wajib minimal 8 karakter yang mengandung huruf besar, huruf kecil, angka, dan karakter khusus.', 422);
+        }
+
+        // Save new hashed password
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        \App\Utils\Database::update('users', [
+            'password' => $hashedPassword,
+            'is_first_login' => 0
+        ], 'id = ?', [$user['id']]);
+
+        Response::success(null, 'Password berhasil diperbarui secara aman!');
+    }
+
+    /**
+     * POST /auth/forgot-password
+     */
+    public function forgotPassword(): void
+    {
+        $body = \App\Utils\Helper::getRequestBody();
+
+        if (empty($body['email'])) {
+            Response::error('Email wajib diisi.', 422);
+        }
+
+        $email = trim($body['email']);
+
+        // Query database
+        $user = \App\Utils\Database::fetchOne("SELECT id, name FROM users WHERE email = ? AND is_active = 1", [$email]);
+
+        if (!$user) {
+            // Secure response to prevent user enumeration
+            Response::success(null, 'Instruksi reset sandi telah dikirim ke email Anda jika terdaftar.');
+        }
+
+        // Generate reset token and expires in 30 minutes
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', time() + 1800);
+
+        \App\Utils\Database::update('users', [
+            'reset_token' => $token,
+            'reset_token_expires_at' => $expiresAt
+        ], 'id = ?', [$user['id']]);
+
+        // Send Link via Email
+        $resetLink = "http://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/peace_seafood/reset-password?token=" . $token;
+        $emailBody = "Halo " . $user['name'] . ",\n\n" .
+                     "Kami menerima permintaan untuk mereset password akun Peace Seafood Anda.\n" .
+                     "Silakan klik link di bawah ini untuk mengatur ulang sandi Anda:\n\n" .
+                     $resetLink . "\n\n" .
+                     "Link di atas hanya berlaku selama 30 menit. Jika Anda tidak merasa meminta hal ini, silakan abaikan email ini.\n\n" .
+                     "Salam hangat,\n" .
+                     "Peace Seafood Team";
+
+        \App\Utils\Email::send($email, 'Permintaan Reset Password Peace Seafood', $emailBody);
+
+        Response::success(null, 'Instruksi reset sandi telah dikirim ke email Anda.');
+    }
+
+    /**
+     * POST /auth/reset-password
+     */
+    public function resetPassword(): void
+    {
+        $body = \App\Utils\Helper::getRequestBody();
+
+        if (empty($body['token']) || empty($body['password'])) {
+            Response::error('Token dan password baru wajib diisi.', 422);
+        }
+
+        $token = trim($body['token']);
+        $password = $body['password'];
+
+        // Verify token expiry
+        $user = \App\Utils\Database::fetchOne(
+            "SELECT id FROM users WHERE reset_token = ? AND reset_token_expires_at > CURRENT_TIMESTAMP AND is_active = 1",
+            [$token]
+        );
+
+        if (!$user) {
+            Response::error('Token reset tidak valid atau sudah kedaluwarsa.', 422);
+        }
+
+        // Strict Password Strength Check
+        $hasUppercase = preg_match('/[A-Z]/', $password);
+        $hasLowercase = preg_match('/[a-z]/', $password);
+        $hasNumber    = preg_match('/[0-9]/', $password);
+        $hasSpecial   = preg_match('/[^a-zA-Z0-9]/', $password);
+        $isValidLength = strlen($password) >= 8;
+
+        if (!$hasUppercase || !$hasLowercase || !$hasNumber || !$hasSpecial || !$isValidLength) {
+            Response::error('Sandi lemah! Password wajib minimal 8 karakter yang mengandung huruf besar, huruf kecil, angka, dan karakter khusus.', 422);
+        }
+
+        // Reset password
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        \App\Utils\Database::update('users', [
+            'password' => $hashedPassword,
+            'reset_token' => null,
+            'reset_token_expires_at' => null
+        ], 'id = ?', [$user['id']]);
+
+        Response::success(null, 'Password berhasil direset! Silakan masuk kembali.');
+    }
+
+    /**
+     * POST /auth/impersonate - Developer enters tenant session (God Mode)
+     */
+    public function impersonate(): void
+    {
         $user = AuthMiddleware::getAuthUser();
         
-        // Generate new token
-        $newToken = $this->authService->refreshToken($user);
-        
-        // Update session last activity
-        Session::set('last_activity', time());
-        
-        // Set new cookie
-        JWT::setHttpOnlyCookie($newToken, 1800);
+        // Strictly check if current logged in user is saas_owner
+        if ($user['role'] !== 'saas_owner') {
+            Response::forbidden('Hanya SaaS Owner / Developer yang dapat menggunakan fitur Impersonate.');
+        }
+
+        $body = \App\Utils\Helper::getRequestBody();
+        if (empty($body['user_id'])) {
+            Response::error('User ID wajib diisi.', 422);
+        }
+
+        $targetUserId = (int)$body['user_id'];
+
+        // Retrieve target user
+        $targetUser = \App\Utils\Database::fetchOne(
+            "SELECT id, name, email, role, id_gudang, is_active FROM users WHERE id = ?",
+            [$targetUserId]
+        );
+
+        if (!$targetUser || !$targetUser['is_active']) {
+            Response::notFound('User target tidak ditemukan atau tidak aktif.');
+        }
+
+        // Generate JWT token for target user
+        $token = \App\Utils\JWT::generate([
+            'id'        => $targetUser['id'],
+            'name'      => $targetUser['name'],
+            'email'     => $targetUser['email'],
+            'role'      => $targetUser['role'],
+            'id_gudang' => $targetUser['id_gudang']
+        ]);
+
+        // Set HttpOnly cookie
+        \App\Utils\JWT::setHttpOnlyCookie($token);
+
+        // Record Audit log
+        \App\Utils\ActivityLogHelper::log(
+            'IMPERSONATE',
+            'users',
+            $targetUser['id'],
+            ['developer_id' => $user['id']],
+            ['impersonated_user' => $targetUser['name']]
+        );
 
         Response::success([
-            'token' => $newToken,
-            'expires_at' => date('Y-m-d H:i:s', time() + 1800),
-            'remaining_time_seconds' => Session::getRemainingTime(),
-        ], 'Token refreshed successfully');
+            'token' => $token,
+            'user'  => $targetUser
+        ], 'Impersonation sukses! Anda sekarang masuk sebagai ' . $targetUser['name']);
     }
 }

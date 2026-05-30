@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Utils\Database;
+use App\utils\Database;
 
 class Nota extends Model
 {
