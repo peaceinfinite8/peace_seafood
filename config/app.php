@@ -10,7 +10,7 @@ return [
     'name'      => $_ENV['APP_NAME']      ?? 'Peace Seafood',
     'env'       => $_ENV['APP_ENV']       ?? 'local',
     'debug'     => ($_ENV['APP_DEBUG']    ?? 'true') === 'true',
-    'url'       => $_ENV['APP_URL']       ?? 'http://localhost:8080',
+    'url'       => $_ENV['APP_URL']       ?? 'http://localhost:8888',
     'base_path' => $_ENV['APP_BASE_PATH'] ?? '/peace_seafood',
     'timezone'  => $_ENV['APP_TIMEZONE']  ?? 'Asia/Jakarta',
 
@@ -33,11 +33,18 @@ return [
     ],
 
     'session' => [
+        'name'            => $_ENV['SESSION_NAME']            ?? 'peace_seafood_session',
         'timeout_minutes' => (int)($_ENV['SESSION_TIMEOUT_MINUTES'] ?? 30),
+        'cookie_lifetime' => (int)($_ENV['SESSION_COOKIE_LIFETIME'] ?? 0),
+        'cookie_path'     => $_ENV['SESSION_COOKIE_PATH']     ?? '/',
+        'cookie_domain'   => $_ENV['SESSION_COOKIE_DOMAIN']   ?? '',
+        'cookie_secure'   => ($_ENV['SESSION_COOKIE_SECURE']  ?? 'false') === 'true',
+        'cookie_httponly' => ($_ENV['SESSION_COOKIE_HTTPONLY'] ?? 'true') === 'true',
+        'cookie_samesite' => $_ENV['SESSION_COOKIE_SAMESITE'] ?? 'Lax',
     ],
 
     'cors' => [
-        'origin' => $_ENV['CORS_ORIGIN'] ?? 'http://localhost:8080',
+        'origin' => $_ENV['CORS_ORIGIN'] ?? 'http://localhost:8888',
     ],
 
     'log' => [

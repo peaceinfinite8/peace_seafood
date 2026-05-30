@@ -7,6 +7,12 @@ namespace App\Utils;
 /**
  * Session Manager
  * Handles session initialization, validation, and security
+ * 
+ * NOTE: This class is currently NOT USED in the application.
+ * The application uses JWT-based authentication via cookies instead.
+ * This class is kept for potential future use.
+ * 
+ * @see JWT::setHttpOnlyCookie() for current authentication method
  */
 class Session
 {

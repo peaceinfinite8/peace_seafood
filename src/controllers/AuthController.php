@@ -187,7 +187,7 @@ class AuthController
         // Send Link via Email
         $config = require dirname(__DIR__, 2) . '/config/app.php';
         $basePath = $config['base_path'];
-        $resetLink = "http://" . ($_SERVER['HTTP_HOST'] ?? 'localhost:8080') . "{$basePath}/reset-password?token=" . $token;
+        $resetLink = "http://" . ($_SERVER['HTTP_HOST'] ?? 'localhost:8888') . "{$basePath}/reset-password?token=" . $token;
         $emailBody = "Halo " . $user['name'] . ",\n\n" .
                      "Kami menerima permintaan untuk mereset password akun Peace Seafood Anda.\n" .
                      "Silakan klik link di bawah ini untuk mengatur ulang sandi Anda:\n\n" .

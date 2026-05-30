@@ -1,19 +1,62 @@
 Options -Indexes
 RewriteEngine On
 
+# ============================================================
+# SECURITY HEADERS (Production)
+# ============================================================
+# Uncomment these in production for enhanced security
+
+# Prevent MIME type sniffing
+# Header set X-Content-Type-Options "nosniff"
+
+# Prevent clickjacking
+# Header set X-Frame-Options "SAMEORIGIN"
+
+# Enable XSS protection
+# Header set X-XSS-Protection "1; mode=block"
+
+# Referrer Policy
+# Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Content Security Policy (adjust as needed)
+# Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data:;"
+
+# Strict Transport Security (HTTPS only - uncomment in production)
+# Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+# Permissions Policy
+# Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+# ============================================================
+# AUTHENTICATION
+# ============================================================
+
 # PENTING: Teruskan Authorization header ke PHP (wajib di XAMPP/Apache)
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+# ============================================================
+# HTTPS REDIRECT (Production)
+# ============================================================
 
 # Redirect to HTTPS (uncomment in production)
 # RewriteCond %{HTTPS} off
 # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# ============================================================
+# STATIC FILES
+# ============================================================
+
 # Allow static files (js, css, images, etc) to be served directly
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
+
+# ============================================================
+# ROUTING
+# ============================================================
 
 # Route all other requests to index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
+

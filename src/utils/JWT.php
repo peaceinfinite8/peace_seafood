@@ -47,6 +47,15 @@ class JWT
         }
     }
 
+    /**
+     * Set HttpOnly cookie for JWT token
+     * 
+     * Security Features:
+     * - HttpOnly: Prevents XSS attacks (JavaScript cannot access)
+     * - Secure: Only sent over HTTPS in production
+     * - SameSite=Strict: Prevents CSRF attacks
+     * - Path=/: Available site-wide
+     */
     public static function setHttpOnlyCookie(string $token): void
     {
         self::init();
@@ -60,6 +69,9 @@ class JWT
         ]);
     }
 
+    /**
+     * Clear HttpOnly cookie on logout
+     */
     public static function clearCookie(): void
     {
         setcookie('auth_token', '', [
