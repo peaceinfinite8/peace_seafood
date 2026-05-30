@@ -11,7 +11,7 @@ class CorsMiddleware
 {
     public static function handle(): void
     {
-        $config        = require __DIR__ . '/../../config/app.php';
+        $config        = require dirname(__DIR__, 2) . '/config/app.php';
         $allowedOrigin = $config['cors']['origin'];
 
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';

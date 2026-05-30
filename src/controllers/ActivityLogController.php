@@ -34,7 +34,7 @@ class ActivityLogController
             $log['after_value']  = $log['after_value'] ? json_decode($log['after_value'], true) : null;
 
             // Build a reference URL so UI can link to the related resource
-            $basePath = require __DIR__ . '/../../config/app.php';
+            $basePath = require dirname(__DIR__, 2) . '/config/app.php';
             $basePath = $basePath['base_path'];
             $refUrl = null;
             $id = (int)($log['record_id'] ?? 0);

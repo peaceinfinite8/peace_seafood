@@ -15,7 +15,7 @@ class FileUpload
 
     public function __construct(string $subDir = '')
     {
-        $config = require __DIR__ . '/../../config/app.php';
+        $config = require dirname(__DIR__, 2) . '/config/app.php';
 
         $this->uploadDir    = rtrim($config['upload']['path'], '/') . ($subDir ? '/' . $subDir : '');
         $this->maxSize      = $config['upload']['max_size'];

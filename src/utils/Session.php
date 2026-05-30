@@ -23,7 +23,7 @@ class Session
         }
 
         // Load configuration
-        $appConfig = require __DIR__ . '/../../config/app.php';
+        $appConfig = require dirname(__DIR__, 2) . '/config/app.php';
         self::$config = $appConfig['session'];
 
         // Prevent session fixation

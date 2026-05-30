@@ -19,7 +19,7 @@ class JWT
 
     private static function init(): void
     {
-        $config = require __DIR__ . '/../../config/app.php';
+        $config = require dirname(__DIR__, 2) . '/config/app.php';
         self::$secret     = $config['jwt']['secret'];
         self::$algorithm  = $config['jwt']['algorithm'];
         self::$expiration = $config['jwt']['expiration'];

@@ -19,7 +19,7 @@ $appLogoBase64 = $dbLogoSetting ? $dbLogoSetting['nilai'] : null;
 $appLogoInitial = $dbInitialSetting ? $dbInitialSetting['nilai'] : 'PS';
 
 // Load base path from config
-$config = require __DIR__ . '/../../config/app.php';
+$config = require dirname(__DIR__, 2) . '/config/app.php';
 $baseUrl = $config['base_path'];
 ?>
 <!DOCTYPE html>

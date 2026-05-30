@@ -185,7 +185,7 @@ class AuthController
         ], 'id = ?', [$user['id']]);
 
         // Send Link via Email
-        $config = require __DIR__ . '/../../config/app.php';
+        $config = require dirname(__DIR__, 2) . '/config/app.php';
         $basePath = $config['base_path'];
         $resetLink = "http://" . ($_SERVER['HTTP_HOST'] ?? 'localhost:8080') . "{$basePath}/reset-password?token=" . $token;
         $emailBody = "Halo " . $user['name'] . ",\n\n" .
