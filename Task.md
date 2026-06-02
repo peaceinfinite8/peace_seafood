@@ -1,4 +1,5 @@
 # 📝 Task — Peace Seafood SaaS WMS
+
 # Versi: 2.1 | Diperbarui: 1 Juni 2026
 
 Dokumen ini melacak seluruh rencana pengerjaan sistem secara dinamis.
@@ -41,12 +42,15 @@ Prioritas 7 → Task H (Redesign Template Email HTML)
 > Menyempurnakan lock screen yang sudah ada + menambahkan alur pembayaran manual via bukti transfer/QRIS dengan sistem Magic Link approval.
 
 ### A1. Perbaikan Lock Screen
+
 - `[x]` Sembunyikan sidebar sepenuhnya saat status tenant locked/suspended
 - `[x]` Hanya tampilkan: header minimal (logo + tombol logout) + konten lock screen
 - `[x]` Pastikan semua route API tetap menolak request dengan `402` saat locked (sudah ada di middleware — verifikasi saja tidak ada yang terlewat)
 
 ### A2. Form Pembayaran di Lock Screen
+
 Tampilan lock screen saat tenant expired:
+
 ```
 🔒 Masa Aktif Anda Telah Habis
 
@@ -62,6 +66,7 @@ Silakan lakukan pembayaran:
 
 [ Kirim untuk Diverifikasi ]
 ```
+
 - `[x]` Bangun form upload bukti pembayaran di lock screen
 - `[x]` Semua teks, nominal, rekening, foto QRIS diambil dari tabel `settings` — tidak ada yang hardcode
 - `[x]` Validasi file: format dan ukuran maksimal baca dari `settings`
@@ -71,7 +76,9 @@ Silakan lakukan pembayaran:
 - `[x]` Catat request pembayaran ke tabel `payment_requests` (baru)
 
 ### A3. Notifikasi Email ke SaaS Owner (Magic Link)
+
 Email yang diterima SaaS Owner setelah tenant submit bukti:
+
 ```
 ─────────────────────────────────────
   🐟 PEACE SEAFOOD — PERMINTAAN BAYAR
@@ -89,6 +96,7 @@ Email yang diterima SaaS Owner setelah tenant submit bukti:
   Kadaluarsa dalam [X] jam.
 ─────────────────────────────────────
 ```
+
 - `[x]` Kirim email ke SaaS Owner dengan foto bukti + tombol Magic Link
 - `[x]` Magic Link berisi token unik → arahkan ke `GET /api/saas/approve-payment?token=xxx`
 - `[x]` Token satu kali pakai — setelah diklik langsung hangus
@@ -97,7 +105,9 @@ Email yang diterima SaaS Owner setelah tenant submit bukti:
 - `[x]` Catat ke audit log platform
 
 ### A4. Recovery Popup Setelah Akses Dipulihkan
+
 Berlaku untuk: approve via Magic Link MAUPUN perpanjang manual oleh SaaS Owner dari dashboard.
+
 ```
 ┌────────────────────────────────────┐
 │   ✅ Akses Gudang Dipulihkan       │
@@ -109,11 +119,13 @@ Berlaku untuk: approve via Magic Link MAUPUN perpanjang manual oleh SaaS Owner d
 │         [ Mulai Bekerja ]          │
 └────────────────────────────────────┘
 ```
+
 - `[x]` Popup muncul sekali saja per sesi pemulihan (flag di session)
 - `[x]` Berlaku untuk semua role dalam gudang tersebut
 - `[x]` Animasi fade-in smooth via Alpine.js `x-transition`
 
 ### A5. File Baru Task A
+
 ```
 src/services/SaaS/PaymentApprovalService.php
 src/views/WMS/partials/lock_screen_payment_form.php
@@ -124,6 +136,7 @@ database/migrations/add_magic_link_tokens_table.sql
 ```
 
 ### A6. File Dimodifikasi Task A
+
 ```
 src/views/WMS/lock_screen.php   → sembunyikan sidebar, tambahkan form pembayaran
 routes/api.php                  → tambah GET /api/saas/approve-payment
@@ -137,29 +150,35 @@ src/views/WMS/layout.php        → include recovery_popup.php
 > Wizard langkah-demi-langkah untuk Bos yang login pertama kali, memastikan setup awal gudang selesai sebelum mulai operasional.
 
 ### B1. Trigger Wizard
+
 - `[x]` Deteksi login pertama kali Bos berdasarkan flag `is_first_login` di tabel `users`
 - `[x]` Redirect otomatis ke halaman onboarding sebelum masuk dashboard
 
 ### B2. Langkah-Langkah Wizard
 
 **Step 1 — Ganti Password Default**
+
 - `[x]` Form ganti password wajib diisi (tidak bisa skip)
 - `[x]` Validasi: min 8 karakter, kombinasi huruf & angka
 
 **Step 2 — Profil Gudang**
+
 - `[x]` Form: nama gudang, alamat, nomor telepon gudang
 - `[x]` Data disimpan ke tabel `gudang`
 
 **Step 3 — Pilih Jenis Ikan Bawaan**
+
 - `[x]` Tampilkan daftar jenis ikan default (multi-select)
 - `[x]` Data disimpan ke master produk gudang
 
 **Step 4 — Selesai**
+
 - `[x]` Set `subscription_until` = H+14 (baca durasi dari `settings`)
 - `[x]` Set `is_first_login` = false
 - `[x]` Redirect ke dashboard dengan pesan selamat datang
 
 ### B3. File Baru Task B
+
 ```
 src/controllers/Shared/OnboardingController.php
 src/services/Shared/OnboardingService.php
@@ -178,6 +197,7 @@ database/migrations/add_is_first_login_column.sql
 > Sistem peringatan bertahap sebelum akses dikunci + bell icon notifikasi real-time per role.
 
 ### C1. Banner Peringatan di Dashboard WMS
+
 - `[x]` Buat komponen `grace_banner.php` sebagai Alpine.js component mandiri (bukan nested ke x-data existing)
 - `[x]` Include di `src/views/WMS/layout.php` tepat di bawah navbar (hanya 1 baris include)
 - `[x]` Hitung sisa hari dari `subscription_until` vs `NOW()` dalam timezone dari `settings` (default `Asia/Jakarta`)
@@ -189,6 +209,7 @@ database/migrations/add_is_first_login_column.sql
 - `[x]` Tombol "Hubungi via WA" ambil nomor dari `settings.platform_whatsapp`
 
 Tampilan banner:
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ 🚨  Akses gudang akan terkunci dalam [X] hari               │
@@ -198,23 +219,26 @@ Tampilan banner:
 ```
 
 Spec visual:
+
 - Background: warna solid opacity 15% + border kiri 4px warna penuh
 - Border radius: `8px` | Padding: `12px 20px`
 - Semua class CSS prefix `gpa-`
 
 ### C2. Email Reminder Otomatis ke Tenant
+
 - `[x]` Jalankan pengecekan harian (via cron atau saat ada request masuk)
 - `[x]` Kirim email pada H-7, H-3, H-1 (threshold baca dari `settings`)
 - `[x]` Cek tabel `grace_email_log` sebelum kirim — **satu trigger satu email satu hari**
 - `[x]` Catat ke `grace_email_log` setelah kirim
 
-| Trigger | Subject |
-|---|---|
-| H-7 | `Masa aktif gudang Anda tersisa 7 hari` |
-| H-3 | `⚠️ 3 hari lagi — Gudang Anda akan terkunci` |
-| H-1 | `🚨 Besok akses gudang Anda terkunci!` |
+| Trigger | Subject                                      |
+| ------- | -------------------------------------------- |
+| H-7     | `Masa aktif gudang Anda tersisa 7 hari`      |
+| H-3     | `⚠️ 3 hari lagi — Gudang Anda akan terkunci` |
+| H-1     | `🚨 Besok akses gudang Anda terkunci!`       |
 
 ### C3. Bell Icon Notifikasi Real-Time
+
 - `[x]` Tambahkan bell icon di navbar (slot yang sudah ada, tidak geser layout)
 - `[x]` Badge angka update otomatis setiap 60 detik via polling ringan (endpoint return `{ unread_count: int }` saja)
 - `[x]` Polling menggunakan `apiClient` yang sudah ada — bukan instance baru
@@ -225,42 +249,51 @@ Spec visual:
 ### C4. Notifikasi Per Role
 
 **`saas_owner`**
+
 - `[x]` Tenant perpanjang subscription (via webhook maupun Magic Link)
 - `[x]` Tenant baru didaftarkan
 - `[x]` Tenant H-7, H-3, H-1 akan expired (digest — bukan satuan)
 - `[x]` Tenant di-suspend manual
 
 **`bos`**
+
 - `[x]` Pembayaran disetujui & akses dipulihkan
 - `[x]` H-7, H-3, H-1 expired
 - `[x]` Karyawan baru ditambahkan ke gudangnya
 
 **`super_admin` & `admin`**
+
 - `[x]` H-3, H-1 expired
 - `[x]` Retur baru diajukan
 - `[x]` Stok produk hampir habis
 
 **`financial_admin`**
+
 - `[x]` H-3 expired
 - `[x]` Transaksi penjualan baru dibuat
 - `[x]` Laporan siap diexport
 
 **`checker`**
+
 - `[x]` H-3 expired
 - `[x]` Draft nota disetujui atau ditolak admin
 
 **`helper` & `viewer`**
+
 - `[x]` H-3, H-1 expired saja
 
 ### C5. Email Digest Harian ke SaaS Owner
+
 - `[x]` Satu email per hari berisi ringkasan semua aktivitas tenant
 - `[x]` Jam kirim baca dari `settings.digest_send_time` (default 08:00 WIB)
 - `[x]` Toggle aktif/nonaktif dari `settings`
 
 ### C6. Notifikasi Saat Tenant Di-Suspend
+
 - `[x]` Saat SaaS Owner suspend tenant → Bos gudang dapat notifikasi in-app + email bahwa akses ditangguhkan
 
 ### C7. File Baru Task C
+
 ```
 src/services/WMS/GracePeriodService.php
 src/services/Shared/NotificationService.php
@@ -274,6 +307,7 @@ database/migrations/add_notifications_table.sql
 ```
 
 ### C8. File Dimodifikasi Task C
+
 ```
 src/views/WMS/layout.php     → include grace_banner + notification_bell
 src/views/SaaS/layout.php    → include notification_bell (versi saas_owner)
@@ -318,12 +352,14 @@ routes/api.php               → tambah endpoint polling + load notifikasi
 ### Tab 1 — 🏢 Platform
 
 **Identitas:**
+
 - `[x]` Nama platform (tampil di email & UI)
 - `[x]` Logo platform (upload, preview langsung)
 - `[x]` Warna tema utama (color picker, update CSS variable)
 - `[x]` Nomor WhatsApp bisnis (untuk tombol CTA di banner & email)
 
 **Pesan Kustom Lock Screen:**
+
 - `[x]` Judul lock screen
 - `[x]` Teks pesan utama
 - `[x]` Instruksi pembayaran (step by step)
@@ -334,6 +370,7 @@ routes/api.php               → tambah endpoint polling + load notifikasi
 ### Tab 2 — 📧 Email & Notifikasi
 
 **Konfigurasi SMTP:**
+
 - `[x]` Email pengirim (Gmail)
 - `[x]` App Password Gmail (disimpan terenkripsi, tampil `••••`, ada toggle show/hide)
 - `[x]` Nama pengirim (tampil di inbox penerima)
@@ -343,6 +380,7 @@ routes/api.php               → tambah endpoint polling + load notifikasi
   - `APP_ENV=production` → kirim sungguhan
 
 **Toggle Notifikasi:**
+
 - `[x]` Email reminder ke tenant (ON/OFF) — auto-save saat toggle
 - `[x]` Email digest harian ke SaaS Owner (ON/OFF) — auto-save
 - `[x]` Notifikasi in-app bell icon (ON/OFF) — auto-save
@@ -353,15 +391,18 @@ routes/api.php               → tambah endpoint polling + load notifikasi
 ### Tab 3 — 💳 Pembayaran
 
 **Rekening Bank:**
+
 - `[x]` Nama bank
 - `[x]` Nama pemilik rekening
 - `[x]` Nomor rekening
 
 **QRIS:**
+
 - `[x]` Upload foto QRIS (drag & drop atau klik)
 - `[x]` Preview foto QR yang sedang aktif
 
 **Harga & Kebijakan Upload:**
+
 - `[x]` Nominal sewa per periode (Rp)
 - `[x]` Maksimal ukuran file upload bukti (MB, min 1 max 10)
 - `[x]` Format file yang diizinkan (checkbox: JPG, PNG, PDF)
@@ -372,6 +413,7 @@ routes/api.php               → tambah endpoint polling + load notifikasi
 ### Tab 4 — ⚙️ Sistem
 
 **Durasi:**
+
 - `[x]` Durasi trial tenant baru (hari, default 14)
 - `[x]` Durasi perpanjangan per pembayaran (hari, default 30)
 - `[x]` Hari peringatan pertama — H-? (default 7)
@@ -381,10 +423,12 @@ routes/api.php               → tambah endpoint polling + load notifikasi
 - `[x]` Threshold banner merah (hari, default 3)
 
 **Lokalisasi:**
+
 - `[x]` Zona waktu (dropdown, default Asia/Jakarta)
 - `[x]` Bahasa sistem (dropdown, default Indonesia)
 
 **Maintenance Mode:**
+
 - `[x]` Toggle ON/OFF maintenance mode — auto-save saat toggle
 - `[x]` Pesan maintenance (tampil ke semua tenant saat mode aktif)
 - `[x]` Saat maintenance ON → semua tenant lihat halaman maintenance, bukan lock screen
@@ -402,6 +446,7 @@ routes/api.php               → tambah endpoint polling + load notifikasi
 - `[x]` Responsive: 2 kolom di desktop, 1 kolom di mobile
 
 ### F. File Baru Task F
+
 ```
 src/controllers/SaaS/PlatformSettingsController.php
 src/services/SaaS/PlatformSettingsService.php
@@ -415,6 +460,7 @@ database/migrations/add_platform_settings_keys.sql
 ```
 
 ### F. Kunci Settings di Tabel `settings`
+
 ```
 platform_name
 platform_logo
@@ -456,6 +502,7 @@ notification_inapp           ← default 1
 ```
 
 ### F. File Dimodifikasi Task F
+
 ```
 routes/web.php     → tambah GET /saas/settings
 routes/api.php     → tambah POST /api/saas/settings/save
@@ -480,29 +527,34 @@ src/views/SaaS/sidebar.php → tambah menu Settings
 ## TASK H — Redesign Template Email HTML
 
 > Redesign seluruh template email dengan tampilan modern, responsif, dan konsisten.
-> **Status: Belum Dikerjakan**
+> **Status: Selesai**
 
 ### H1. Spesifikasi Template
-- `[ ]` Target penerima: Bos Tenant (pemilik bisnis), tone formal dan profesional
-- `[ ]` Desain visual: background gradasi diagonal `#0ea5e9` → `#0284c7` → `#0f172a`
-- `[ ]` Card: putih, ditengah (centered), max-width 600px, border-radius 16px
-- `[ ]` Kompatibilitas: semua style menggunakan inline CSS agar didukung seluruh email client
-- `[ ]` Logo: diambil dari `settings.mail_logo` dengan fallback teks "Peace Seafood WMS"
-- `[ ]` CTA button: dengan gradasi `#38bdf8` → `#0ea5e9` dan teks putih bold
+
+- `[x]` Target penerima: Bos Tenant (pemilik bisnis), tone formal dan profesional
+- `[x]` Desain visual: background gradasi diagonal `#0ea5e9` → `#0284c7` → `#0f172a`
+- `[x]` Card: putih, ditengah (centered), max-width 600px, border-radius 16px
+- `[x]` Kompatibilitas: semua style menggunakan inline CSS agar didukung seluruh email client
+- `[x]` Logo: diambil dari `settings.mail_logo` dengan fallback teks "Peace Seafood WMS"
+- `[x]` CTA button: dengan gradasi `#38bdf8` → `#0ea5e9` dan teks putih bold
 
 ### H2. Struktur Template & Jenis Email
-- `[ ]` Sediakan template dasar (base layout) di `src/views/emails/` yang bisa di-extend oleh jenis email lainnya
-- `[ ]` Implementasi template untuk jenis-jenis email berikut:
-  - `grace_reminder` (reminder H-7, H-3, dan H-1)
-  - `magic_link` approval
-  - `daily_digest` untuk SaaS Owner
-  - `test_email` untuk uji coba SMTP
-  - `suspend_notify` untuk pemberitahuan suspend tenant
+
+-- `[x]` Sediakan template dasar (base layout) di `src/views/emails/` yang bisa di-extend oleh jenis email lainnya
+-- `[x]` Implementasi template untuk jenis-jenis email berikut:
+
+- `grace_reminder` (reminder H-7, H-3, dan H-1)
+- `magic_link` approval
+- `daily_digest` untuk SaaS Owner
+- `test_email` untuk uji coba SMTP
+- `suspend_notify` untuk pemberitahuan suspend tenant
 
 ### H3. Integrasi & Perbaikan Encoding
-- `[ ]` Tambahkan `$mail->CharSet = PHPMailer::CHARSET_UTF8` di `src/utils/Email.php` untuk memastikan subjek dan konten mendukung UTF-8
+
+- `[x]` Tambahkan `$mail->CharSet = PHPMailer::CHARSET_UTF8` di `src/utils/Email.php` untuk memastikan subjek dan konten mendukung UTF-8
 
 ### H4. File Baru Task H
+
 ```
 src/views/emails/base_layout.php
 src/views/emails/grace_reminder.php
@@ -513,6 +565,7 @@ src/views/emails/suspend_notify.php
 ```
 
 ### H5. File Dimodifikasi Task H
+
 ```
 src/utils/Email.php → set CHARSET_UTF8 & integrasikan pemanggilan HTML layout baru
 ```

@@ -22,11 +22,11 @@ class Email
         $logFile = $logDir . '/email_mock.log';
         $timestamp = date('Y-m-d H:i:s');
         $logContent = "============================================================\n" .
-                      "TIMESTAMP : {$timestamp}\n" .
-                      "TO        : {$to}\n" .
-                      "SUBJECT   : {$subject}\n" .
-                      "BODY      :\n{$body}\n" .
-                      "============================================================\n\n";
+            "TIMESTAMP : {$timestamp}\n" .
+            "TO        : {$to}\n" .
+            "SUBJECT   : {$subject}\n" .
+            "BODY      :\n{$body}\n" .
+            "============================================================\n\n";
         file_put_contents($logFile, $logContent, FILE_APPEND);
 
         // 2. Fetch configurations from global environment
@@ -56,9 +56,27 @@ class Email
 
                 // Content
                 $mail->isHTML(true);
+                $mail->CharSet = PHPMailer::CHARSET_UTF8;
+
+                // If caller passed plain text, try to wrap it with the base email layout
+                $htmlBody = $body;
+                $looksLikeHtml = (stripos($body, '<') !== false);
+                if (!$looksLikeHtml) {
+                    $layoutPath = BASE_PATH . '/src/views/emails/base_layout.php';
+                    if (is_file($layoutPath)) {
+                        $content = nl2br(htmlspecialchars($body));
+                        ob_start();
+                        include $layoutPath;
+                        $htmlBody = ob_get_clean();
+                    } else {
+                        // fallback to simple nl2br body
+                        $htmlBody = nl2br(htmlspecialchars($body));
+                    }
+                }
+
                 $mail->Subject = $subject;
-                $mail->Body    = nl2br($body);
-                $mail->AltBody = strip_tags($body);
+                $mail->Body    = $htmlBody;
+                $mail->AltBody = strip_tags($htmlBody);
 
                 $mail->send();
                 return true;
@@ -70,5 +88,31 @@ class Email
 
         // Return true because it was successfully recorded in local email_mock.log for the developer!
         return true;
+    }
+
+    /**
+     * Render an email template from `src/views/emails/{name}.php` and send it.
+     * Templates may set `$subject` and expect variables passed via `$vars`.
+     */
+    public static function sendTemplate(string $to, string $templateName, array $vars = []): bool
+    {
+        $templatePath = BASE_PATH . '/src/views/emails/' . $templateName . '.php';
+        if (!is_file($templatePath)) {
+            error_log("Email template not found: {$templatePath}");
+            return false;
+        }
+
+        // Make provided variables available to the template
+        extract($vars, EXTR_SKIP);
+
+        // Capture template output
+        ob_start();
+        include $templatePath;
+        $html = ob_get_clean();
+
+        // Template may set $subject; fall back to passed vars or default
+        $subject = $subject ?? ($vars['subject'] ?? 'Peace Seafood Notification');
+
+        return self::send($to, $subject, $html);
     }
 }
