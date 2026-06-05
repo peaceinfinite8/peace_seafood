@@ -15,14 +15,24 @@ $password = $_ENV['DB_PASSWORD'] ?? '';
 
 $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
 
+// Check if persistent connections are enabled (default: true for production)
+$usePersistentConnection = ($_ENV['DB_PERSISTENT'] ?? 'true') === 'true';
+
 try {
-    $pdo = new PDO($dsn, $user, $password, [
+    $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
         // Ensure DB session timezone aligns with application (WIB = UTC+7)
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+07:00'; SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
-    ]);
+    ];
+    
+    // Enable persistent connections for better performance under load
+    if ($usePersistentConnection) {
+        $options[PDO::ATTR_PERSISTENT] = true;
+    }
+    
+    $pdo = new PDO($dsn, $user, $password, $options);
 } catch (PDOException $e) {
     http_response_code(500);
     die(json_encode([

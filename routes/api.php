@@ -35,6 +35,9 @@ $uri = rtrim($uri, '/') ?: '/';
 // Route Table
 // ============================================================
 $routes = [
+    // Health Check (public endpoint for monitoring)
+    'GET  /health'               => [\App\Controllers\HealthController::class, 'check', false],
+    
     // Auth
     'POST /auth/login'           => [AuthController::class,    'login',          false],
     'POST /auth/logout'          => [AuthController::class,    'logout',         true],
@@ -42,6 +45,7 @@ $routes = [
     'POST /auth/signup'          => [AuthController::class,    'signup',         false],
     'POST /auth/change-password' => [AuthController::class,    'changePassword', true],
     'POST /auth/forgot-password' => [AuthController::class,    'forgotPassword', false],
+    'GET  /auth/verify-reset-token' => [AuthController::class, 'verifyResetToken', false],
     'POST /auth/reset-password'  => [AuthController::class,    'resetPassword',  false],
     'POST /auth/impersonate'     => [AuthController::class,    'impersonate',    true],
 
@@ -146,6 +150,12 @@ $routes = [
     'DELETE /settings/gudang/{id}'  => [SettingsController::class, 'deleteGudang',     true],
     'POST /settings/backup'         => [SettingsController::class, 'backup',           true],
 
+    // SaaS Platform Settings (Task F)
+    'GET /saas/settings'                => [\App\Controllers\SaaS\PlatformSettingsController::class, 'index', true],
+    'POST /saas/settings/save'          => [\App\Controllers\SaaS\PlatformSettingsController::class, 'save', true],
+    'POST /saas/settings/upload'        => [\App\Controllers\SaaS\PlatformSettingsController::class, 'upload', true],
+    'POST /saas/settings/test-email'    => [\App\Controllers\SaaS\PlatformSettingsController::class, 'testEmail', true],
+
     // Bank accounts (Rekening BOS)
     'GET /settings/bank-accounts'           => [\App\Controllers\BankAccountController::class, 'index', true],
     'POST /settings/bank-accounts'          => [\App\Controllers\BankAccountController::class, 'store', true],
@@ -157,6 +167,14 @@ $routes = [
     'POST /notifikasi/{id}/read'    => [NotifikasiController::class, 'read',    true],
     'POST /notifikasi/read-all'     => [NotifikasiController::class, 'readAll', true],
     'DELETE /notifikasi/{id}'       => [NotifikasiController::class, 'destroy', true],
+
+    // Grace Period & Notifications (Task C)
+    'GET /grace-period/banner'            => [\App\Controllers\GracePeriodController::class, 'getBanner', true],
+    'POST /grace-period/check-reminders'  => [\App\Controllers\GracePeriodController::class, 'checkReminders', true],
+    'GET /notifications/unread-count'     => [NotifikasiController::class, 'unreadCount', true],
+    'GET /notifications'                  => [NotifikasiController::class, 'list', true],
+    'POST /notifications/{id}/read'       => [NotifikasiController::class, 'markAsRead', true],
+    'POST /notifications/mark-all-read'   => [NotifikasiController::class, 'markAllAsRead', true],
 
     // Stok Opname
     'GET  /stok-opname'               => [StokOpnameController::class, 'index',    true],
@@ -182,6 +200,21 @@ $routes = [
     'POST /migrasi/excel/import'      => [MigrationController::class, 'excelImport', true],
     'POST /migrasi/ocr/preview'       => [MigrationController::class, 'ocrPreview', true],
     'POST /migrasi/ocr/import'        => [MigrationController::class, 'excelImport', true],
+
+    // Payment Approval System (Task A)
+    'POST /wms/submit-payment'        => [\App\Controllers\SaaS\PaymentApprovalController::class, 'submitPayment', true],
+    'GET  /wms/payment-settings'      => [\App\Controllers\SaaS\PaymentApprovalController::class, 'getPaymentSettings', false],
+    'GET  /saas/approve-payment'      => [\App\Controllers\SaaS\PaymentApprovalController::class, 'approvePaymentMagicLink', false],
+    'GET  /saas/payment-requests'     => [\App\Controllers\SaaS\PaymentApprovalController::class, 'getPaymentRequests', true],
+
+    // Centralized Logs (Task D)
+    'GET  /saas/logs'                 => [\App\Controllers\SaaS\CentralizedLogController::class, 'index', true],
+    'GET  /saas/logs/export'          => [\App\Controllers\SaaS\CentralizedLogController::class, 'export', true],
+    'GET  /saas/logs/filters'         => [\App\Controllers\SaaS\CentralizedLogController::class, 'filters', true],
+    
+    // Webhook Payment (Task Phase 1 Fix #2)
+    'POST /webhook/payment'           => [\App\Controllers\SaaS\WebhookController::class, 'handlePayment', false],
+    'POST /webhook/test'              => [\App\Controllers\SaaS\WebhookController::class, 'test', false],
 ];
 
 // ============================================================

@@ -89,6 +89,69 @@ class Email
         // Return true because it was successfully recorded in local email_mock.log for the developer!
         return true;
     }
+    
+    /**
+     * Queue email for asynchronous sending (non-blocking)
+     * Use this for non-critical emails that can be sent later
+     * 
+     * @param string $to Recipient email
+     * @param string $subject Email subject
+     * @param string $body Email body (HTML)
+     * @param int $priority 1=highest, 10=lowest (default 5)
+     * @param string|null $scheduledAt Future send time (Y-m-d H:i:s)
+     * @return int Queue ID
+     */
+    public static function queue(
+        string $to,
+        string $subject,
+        string $body,
+        int $priority = 5,
+        ?string $scheduledAt = null
+    ): int {
+        return \App\Services\Shared\EmailQueueService::enqueue(
+            $to,
+            $subject,
+            $body,
+            $priority,
+            $scheduledAt
+        );
+    }
+    
+    /**
+     * Send immediately OR queue based on environment
+     * Use this as default for all emails
+     * 
+     * @param string $to Recipient email
+     * @param string $subject Email subject  
+     * @param string $body Email body (HTML)
+     * @param bool $forceImmediate Force immediate send (bypass queue)
+     * @return bool|int True/false if immediate, queue ID if queued
+     */
+    public static function sendOrQueue(
+        string $to,
+        string $subject,
+        string $body,
+        bool $forceImmediate = false
+    ) {
+        // Check if queue is enabled
+        $useQueue = ($_ENV['EMAIL_QUEUE_ENABLED'] ?? 'true') === 'true';
+        
+        // Critical emails (password reset, payment approval) send immediately
+        $criticalKeywords = ['password', 'reset', 'verification', 'otp'];
+        $isCritical = false;
+        foreach ($criticalKeywords as $keyword) {
+            if (stripos($subject, $keyword) !== false) {
+                $isCritical = true;
+                break;
+            }
+        }
+        
+        if ($forceImmediate || $isCritical || !$useQueue) {
+            return self::send($to, $subject, $body);
+        } else {
+            return self::queue($to, $subject, $body);
+        }
+    }
 
     /**
      * Render an email template from `src/views/emails/{name}.php` and send it.

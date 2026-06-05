@@ -1093,8 +1093,12 @@ $baseUrl  = '/peace_seafood';
                 </h1>
 
                 <div class="flex-1"></div>
-                <!-- Notifications -->
-                <div class="relative" x-data="{ open: false }"
+                
+                <!-- Notification Bell Component (Task C) -->
+                <?php include __DIR__ . '/../partials/notification_bell.php'; ?>
+                
+                <!-- Legacy Notifications Dropdown (kept for backward compatibility) -->
+                <div class="relative" x-data="{ open: false }" style="display: none;"
                     @keydown.escape.window="open = false"
                     @close-notif-dropdown.window="open = false">
                     <button @click="open = !open; if(open) loadNotif();"
@@ -1237,6 +1241,9 @@ $baseUrl  = '/peace_seafood';
             </div>
         </header>
 
+        <!-- Grace Period Banner (Task C) -->
+        <?php include __DIR__ . '/../partials/grace_banner.php'; ?>
+
         <!-- Page Content -->
         <main class="flex-1 p-4 md:p-6">
             <?= $content ?? '' ?>
@@ -1344,6 +1351,11 @@ $baseUrl  = '/peace_seafood';
                     window.addEventListener('saas-payment-required', (e) => {
                         this.saasLocked = true;
                         this.saasLockReason = e.detail || 'Masa aktif uji coba gratis atau sewa bulanan Anda telah berakhir.';
+                        
+                        // Load payment settings when locked (Task A)
+                        if (this.currentUser.role === 'bos') {
+                            this.loadPaymentSettings();
+                        }
                     });
 
                     window.addEventListener('saas-password-change-required', () => {
@@ -1363,6 +1375,9 @@ $baseUrl  = '/peace_seafood';
                     } else if (['bos', 'admin', 'checker'].includes(this.currentUser.role)) {
                         this.checkOnboardingStatus();
                     }
+
+                    // Check recovery status (Task A)
+                    this.checkRecoveryStatus();
 
                     // Load unread count
                     this.loadUnreadCount();
@@ -1998,6 +2013,103 @@ $baseUrl  = '/peace_seafood';
                             buttonsStyling: false
                         });
                     }
+                },
+
+                // Payment Form State (Task A)
+                showPaymentForm: false,
+                paymentSettings: {},
+                selectedFile: null,
+                isSubmitting: false,
+                paymentSubmitted: false,
+                showRecoveryPopup: false,
+                recoveryData: {
+                    expiryDate: '',
+                    daysAdded: 0
+                },
+
+                async loadPaymentSettings() {
+                    try {
+                        const res = await apiClient.get('/wms/payment-settings');
+                        this.paymentSettings = res.data || {};
+                    } catch (e) {
+                        console.error('Failed to load payment settings:', e);
+                    }
+                },
+
+                handleFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.selectedFile = file;
+                        this.$nextTick(() => {
+                            if (window.lucide) lucide.createIcons();
+                        });
+                    }
+                },
+
+                async submitPaymentProof() {
+                    if (!this.selectedFile || this.isSubmitting) return;
+
+                    this.isSubmitting = true;
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('bukti_transfer', this.selectedFile);
+
+                        const res = await apiClient.post('/wms/submit-payment', formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        });
+
+                        this.paymentSubmitted = true;
+                        this.showPaymentForm = false;
+                        this.selectedFile = null;
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil Terkirim!',
+                            text: res.data.message || 'Bukti pembayaran berhasil dikirim untuk diverifikasi.',
+                            customClass: {
+                                popup: 'swal2-glassmorphic',
+                                confirmButton: 'swal2-confirm-btn'
+                            },
+                            buttonsStyling: false
+                        });
+
+                    } catch (e) {
+                        const msg = e.response?.data?.message || 'Gagal mengirim bukti pembayaran.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Mengirim',
+                            text: msg,
+                            customClass: {
+                                popup: 'swal2-glassmorphic',
+                                confirmButton: 'swal2-confirm-btn'
+                            },
+                            buttonsStyling: false
+                        });
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+
+                checkRecoveryStatus() {
+                    // Check if there's a recovery flag in session storage
+                    const recoveryFlag = sessionStorage.getItem('payment_approved');
+                    if (recoveryFlag) {
+                        try {
+                            const data = JSON.parse(recoveryFlag);
+                            this.recoveryData = data;
+                            this.showRecoveryPopup = true;
+                            sessionStorage.removeItem('payment_approved');
+                        } catch (e) {
+                            console.error('Failed to parse recovery data:', e);
+                        }
+                    }
+                },
+
+                closeRecoveryPopup() {
+                    this.showRecoveryPopup = false;
                 },
 
                 logout() {
@@ -2794,10 +2906,10 @@ $baseUrl  = '/peace_seafood';
     </div>
 
     <!-- 🔒 3. PREMIUM SAAS BILLING SUSPEND & SUBSCRIPTION LOCK SCREEN (402 OVERLAY) -->
-    <div class="fixed inset-0 bg-[#020617]/97 backdrop-blur-2xl z-[99999] flex items-center justify-center p-4 select-none"
+    <div class="fixed inset-0 bg-[#020617]/97 backdrop-blur-2xl z-[99999] flex items-center justify-center p-4 select-none overflow-y-auto"
         x-show="saasLocked"
         x-cloak>
-        <div class="w-full max-w-lg text-center space-y-8 p-6">
+        <div class="w-full max-w-lg text-center space-y-8 p-6 my-8">
 
             <!-- Lock icon with premium red & gold glow effects -->
             <div class="relative w-24 h-24 mx-auto">
@@ -2850,8 +2962,25 @@ $baseUrl  = '/peace_seafood';
                     Keluar Sesi
                 </button>
             </div>
+
+            <!-- Toggle Payment Form Button (for Bos role only) -->
+            <div x-show="currentUser.role === 'bos' && !paymentSubmitted" class="pt-4">
+                <button @click="showPaymentForm = !showPaymentForm" 
+                        class="mx-auto px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    <span x-text="showPaymentForm ? 'Tutup Form Pembayaran' : 'Lakukan Pembayaran'"></span>
+                </button>
+            </div>
+
+            <!-- Include Payment Form Component (Task A) -->
+            <?php include BASE_PATH . '/src/views/WMS/partials/lock_screen_payment_form.php'; ?>
+
         </div>
     </div>
+
+    <!-- Include Recovery Popup Component (Task A) -->
+    <?php include BASE_PATH . '/src/views/WMS/partials/recovery_popup.php'; ?>
+
 </body>
 
 </html>

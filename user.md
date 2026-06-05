@@ -8,11 +8,15 @@
 
 | # | Role | Nama | Email | Password | Gudang |
 |---|---|---|---|---|---|
-| 1 | **Super Admin** | Super Admin | `superadmin@example.com` | `password` | Semua Gudang |
-| 2 | **Bos** | Bos Gudang | `bos@example.com` | `password` | Semua Gudang |
-| 3 | **Admin** | Admin Gudang A | `admin@example.com` | `password` | Gudang A - Pusat |
-| 4 | **Checker** | Checker Gudang A | `checker@example.com` | `password` | Gudang A - Pusat |
-| 5 | **Admin** | Admin Gudang B | `admin2@example.com` | `password` | Gudang B - Cabang |
+| 1 | `saas_owner` (SaaS Owner) | SaaS Owner | `saas_owner@example.com` | `password` | - |
+| 2 | **Super Admin** | Super Admin | `superadmin@example.com` | `password` | Semua Gudang |
+| 3 | **Bos** | Bos Gudang | `bos@example.com` | `password` | Semua Gudang |
+| 4 | **Financial Admin** | Finance Admin | `finance@example.com` | `password` | Semua Gudang |
+| 5 | **Admin** | Admin Gudang A | `admin@example.com` | `password` | Gudang A - Pusat |
+| 6 | **Admin** | Admin Gudang B | `admin2@example.com` | `password` | Gudang B - Cabang |
+| 7 | **Checker** | Checker Gudang A | `checker@example.com` | `password` | Gudang A - Pusat |
+| 8 | **Helper** | Helper Gudang A | `helper@example.com` | `password` | Gudang A - Pusat |
+| 9 | **Viewer** | Viewer | `viewer@example.com` | `password` | Semua Gudang |
 
 > 💡 **Tip**: Di halaman login, klik kotak **Demo Credentials** untuk mengisi otomatis akun.
 

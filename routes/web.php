@@ -82,12 +82,20 @@ $routes = [
 
     // Settings
     '/settings'            => ['settings/index', 'Pengaturan', 'settings'],
+    
+    // SaaS Platform Settings (Task F)
+    '/saas/settings'       => ['saas/settings/index', 'Platform Settings', 'settings'],
+    
+    // Centralized Logs (Task D)
+    '/saas/logs'           => ['saas/logs/index', 'Centralized Logs', 'saas-logs'],
 ];
 
 // ── Halaman yang memerlukan role tertentu (server-side guard) ──────────────
 // Key = URI, Value = array role yang diizinkan
 $pageRoles = [
     '/settings'      => ['super_admin', 'saas_owner', 'bos'],
+    '/saas/settings' => ['saas_owner'], // Only SaaS Owner can access platform settings
+    '/saas/logs'     => ['saas_owner'], // Only SaaS Owner can access centralized logs (Task D)
     '/activity-log'  => ['super_admin', 'bos'],
     '/laporan'       => ['super_admin', 'bos', 'admin'],
     '/migrasi'       => ['super_admin', 'admin'],

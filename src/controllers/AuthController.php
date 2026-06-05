@@ -37,6 +37,10 @@ class AuthController
 
         // Set HttpOnly cookie for web router server-side auth guard
         \App\Utils\JWT::setHttpOnlyCookie($result['token']);
+        
+        // Generate new CSRF token for this session
+        $csrfToken = \App\Middleware\CsrfMiddleware::regenerateToken();
+        $result['csrf_token'] = $csrfToken;
 
         Response::success($result, 'Login berhasil');
     }
@@ -299,5 +303,88 @@ class AuthController
             'token' => $token,
             'user'  => $targetUser
         ], 'Impersonation sukses! Anda sekarang masuk sebagai ' . $targetUser['name']);
+    }
+}
+
+    /**
+     * POST /auth/forgot-password
+     * Send password reset link to email
+     */
+    public function forgotPassword(): void
+    {
+        $body = \App\Utils\Helper::getRequestBody();
+        
+        if (empty($body['email'])) {
+            Response::error('Email wajib diisi.', 422);
+        }
+        
+        $email = trim($body['email']);
+        
+        // Rate limiting: 3 attempts per hour per email
+        \App\Middleware\RateLimitMiddleware::handle('forgot_' . $email, 3, 3600);
+        
+        // Send reset link
+        $result = \App\Services\Auth\PasswordResetService::sendResetLink($email);
+        
+        if ($result['success']) {
+            Response::success(null, $result['message']);
+        } else {
+            Response::error($result['message'], 500);
+        }
+    }
+    
+    /**
+     * GET /auth/verify-reset-token
+     * Verify reset token validity
+     */
+    public function verifyResetToken(): void
+    {
+        $token = $_GET['token'] ?? '';
+        
+        if (empty($token)) {
+            Response::error('Token tidak ditemukan.', 400);
+        }
+        
+        $result = \App\Services\Auth\PasswordResetService::verifyToken($token);
+        
+        if ($result['valid']) {
+            Response::success([
+                'valid' => true,
+                'email' => $result['email']
+            ]);
+        } else {
+            Response::error($result['message'], 400);
+        }
+    }
+    
+    /**
+     * POST /auth/reset-password
+     * Reset password with token
+     */
+    public function resetPassword(): void
+    {
+        $body = \App\Utils\Helper::getRequestBody();
+        
+        if (empty($body['token']) || empty($body['password'])) {
+            Response::error('Token dan password wajib diisi.', 422);
+        }
+        
+        $token = trim($body['token']);
+        $password = $body['password'];
+        $passwordConfirm = $body['password_confirm'] ?? '';
+        
+        // Validate password confirmation
+        if ($password !== $passwordConfirm) {
+            Response::error('Konfirmasi password tidak cocok.', 422);
+        }
+        
+        // Reset password
+        $result = \App\Services\Auth\PasswordResetService::resetPassword($token, $password);
+        
+        if ($result['success']) {
+            Response::success(null, $result['message']);
+        } else {
+            Response::error($result['message'], 400);
+        }
     }
 }
